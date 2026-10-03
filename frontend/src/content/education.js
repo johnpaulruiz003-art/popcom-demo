@@ -502,6 +502,56 @@ export function resolveItemThumbnail(item) {
   return '';
 }
 
+// ---------------------------------------------------------------------------
+// Category fallbacks
+//
+// Used when a piece of Web Content has no uploaded thumbnail. Keyed on the
+// content's `label`, so the map has to cover every label an admin can choose -
+// otherwise several cards fall through to the same image and the grid looks
+// duplicated.
+// ---------------------------------------------------------------------------
+const EDUCATION_CATEGORY_IMAGES = {
+  'family planning':
+    'https://images.unsplash.com/photo-1584516150909-c43483ee7932?auto=format&fit=crop&w=1200&q=60',
+  'maternal health':
+    'https://images.unsplash.com/photo-1511174511562-5f7f18b874f8?auto=format&fit=crop&w=1200&q=60',
+  'fertility awareness':
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=60',
+  'human reproductive health':
+    'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&w=1200&q=60',
+  rpfp: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=60',
+  ahdp: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=60',
+  iec: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=60',
+  'population awareness':
+    'https://images.unsplash.com/photo-1541872705-1f73c6400ec9?auto=format&fit=crop&w=1200&q=60',
+  adolescent: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=60',
+  youth: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=60'
+};
+
+// Last-resort pool. A different item should not get the same picture, so the
+// entry is chosen from a hash of the item's title/id rather than always the first.
+const EDUCATION_GENERIC_IMAGES = [
+  'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=60',
+  'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=60',
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=60',
+  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=60',
+  'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=60'
+];
+
+/**
+ * Best-guess image for a Web Content item that has no uploaded thumbnail.
+ * `key` (usually the title or id) keeps the generic pick deterministic and
+ * different per item, so cards do not end up looking duplicated.
+ */
+export function resolveCategoryImage(category, key = '') {
+  const byCategory = EDUCATION_CATEGORY_IMAGES[String(category || '').toLowerCase().trim()];
+  if (byCategory) return byCategory;
+
+  const seed = String(key || category || '');
+  const hash = [...seed].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) % 100000, 7);
+  return EDUCATION_GENERIC_IMAGES[hash % EDUCATION_GENERIC_IMAGES.length];
+}
+
 // Map known education material IDs to their corresponding Diagram filenames
 const EDUCATION_DIAGRAM_BY_ID = {
   1: 'MaleReproductiveSystemDiagram.jpeg',

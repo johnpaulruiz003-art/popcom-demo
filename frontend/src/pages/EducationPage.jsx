@@ -21,7 +21,7 @@ import {
 import { Carousel } from '@mantine/carousel';
 import { useMediaQuery } from '@mantine/hooks';
 import { useMantineTheme } from '@mantine/core';
-import { EDUCATION_MATERIALS, resolveItemThumbnail } from '../content/education.js';
+import { EDUCATION_MATERIALS, resolveCategoryImage, resolveItemThumbnail } from '../content/education.js';
 import { listEducationWeb } from '../api/educationWeb.js';
 import { listBooklets, listBookletPages } from '../api/educationBooklets.js';
 
@@ -151,21 +151,18 @@ export function EducationPage() {
   };
 
   const getMaterialImageUrl = (item) => {
-    // Prefer mapped thumbnail from Education Web/Thumbnail
+    if (!item) return '';
+    // 1) Uploaded / mapped thumbnail for this item.
     const resolved = resolveItemThumbnail(item);
     if (resolved) return resolved;
 
-    // Fallbacks
-    const category = String(item?.category || '').toLowerCase();
-    const categoryImages = {
-      'family planning':
-        'https://images.unsplash.com/photo-1584516150909-c43483ee7932?auto=format&fit=crop&w=1200&q=60',
-      'maternal health':
-        'https://images.unsplash.com/photo-1511174511562-5f7f18b874f8?auto=format&fit=crop&w=1200&q=60',
-      youth:
-        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=60'
-    };
-    return item?.imageUrl || categoryImages[category] || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=60';
+    // 2) Image the API row carried (Education Web thumbnail / visual).
+    if (item.imageUrl) return item.imageUrl;
+
+    // 3) Category fallback. resolveCategoryImage covers every label an admin can
+    //    choose and picks deterministically per item, so cards never all end up
+    //    on the same picture.
+    return resolveCategoryImage(item?.category, item?.title || item?.id || '');
   };
 
   const filtered = (items || []).filter((it) => {

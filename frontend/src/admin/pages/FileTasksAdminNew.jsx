@@ -268,19 +268,19 @@ export function FileTasksAdmin() {
           <Text c="dimmed">Create and manage document report submissions required from all barangay officers.</Text>
         </div>
         <Group gap="xs">
-          <Button size="sm" onClick={openCreate}>New Document Report</Button>
+          <Button size="sm" onClick={openCreate} className="adm-btn adm-btn--primary adm-btn--sm">New Document Report</Button>
           <Button
-            size="sm"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
-            onClick={async () => {
-              const next = !showArchived;
-              const status = next ? 'Archived' : '';
-              setShowArchived(next);
-              setStatusFilter(status);
-              await fetchTasks({ page: 1, status });
-            }}
-          >
+ size="sm"
+ variant={showArchived ? 'filled' : 'outline'}
+ color={showArchived ? 'gray' : 'dark'}
+ onClick={async () => {
+ const next = !showArchived;
+ const status = next ? 'Archived' : '';
+ setShowArchived(next);
+ setStatusFilter(status);
+ await fetchTasks({ page: 1, status });
+ }}
+  className="adm-btn adm-btn--primary adm-btn--sm">
             Archived
           </Button>
         </Group>
@@ -369,41 +369,36 @@ export function FileTasksAdmin() {
                     </div>
                     <div className="d-flex gap-1">
                       <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEdit(g.rows[0]);
-                        }}
-                        disabled={rowActionLoadingId === actionId}
-                      >
+ size="xs"
+ onClick={(e) => {
+ e.stopPropagation();
+ openEdit(g.rows[0]);
+ }}
+ disabled={rowActionLoadingId === actionId}
+  className="adm-btn adm-btn--secondary adm-btn--sm">
                         Edit
                       </Button>
                       {!isArchived && (
                         <Button
-                          size="xs"
-                          color="red"
-                          variant="outline"
-                          disabled={rowActionLoadingId === actionId}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArchive(g);
-                          }}
-                        >
+ size="xs"
+ disabled={rowActionLoadingId === actionId}
+ onClick={(e) => {
+ e.stopPropagation();
+ handleArchive(g);
+ }}
+  className="adm-btn adm-btn--danger-outline adm-btn--sm">
                           Archive
                         </Button>
                       )}
                       {isArchived && (
                         <Button
-                          size="xs"
-                          color="green"
-                          variant="outline"
-                          disabled={rowActionLoadingId === actionId}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnarchive(g);
-                          }}
-                        >
+ size="xs"
+ disabled={rowActionLoadingId === actionId}
+ onClick={(e) => {
+ e.stopPropagation();
+ handleUnarchive(g);
+ }}
+  className="adm-btn adm-btn--secondary adm-btn--sm">
                           Unarchive
                         </Button>
                       )}
@@ -516,13 +511,12 @@ export function FileTasksAdmin() {
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
                   <Button
-                    variant="default"
-                    disabled={saving}
-                    onClick={() => { if (!saving) { closeModal(); resetForm(); } }}
-                  >
+ disabled={saving}
+ onClick={() => { if (!saving) { closeModal(); resetForm(); } }}
+  className="adm-btn adm-btn--neutral">
                     Cancel
                   </Button>
-                  <Button type="submit" loading={saving}>
+                  <Button type="submit" loading={saving} className="adm-btn adm-btn--primary">
                     Save
                   </Button>
                 </div>
@@ -580,7 +574,7 @@ export function FileTasksAdmin() {
                   {officerFilterType && (
                     <button
                       type="button"
-                      className="btn btn-link btn-sm text-muted position-absolute top-50 end-0 translate-middle-y px-2"
+                      className="adm-btn adm-btn--link"
                       onClick={() => { setOfficerFilterType(''); setOfficerFilterValue(''); }}
                       aria-label="Clear filter"
                     >

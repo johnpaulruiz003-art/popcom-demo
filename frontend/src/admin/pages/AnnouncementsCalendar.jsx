@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Stack,
-  Title,
   Group,
   Button,
   Table,
@@ -9,8 +8,6 @@ import {
   TextInput,
   Textarea,
   Loader,
-  Center,
-  Badge,
   Select,
   Pagination,
   Text
@@ -19,6 +16,7 @@ import { DatePickerInput, MonthPickerInput, YearPickerInput } from '@mantine/dat
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
+import { IconArchive, IconEye, IconListDetails } from '@tabler/icons-react';
 
 import { getCalendarEvents } from '../../api/calendar.js';
 import { socket } from '../../socket.js';
@@ -271,38 +269,65 @@ export function AnnouncementsCalendar() {
     }
   };
 
-  return (
-    <Stack>
-      <Group justify="space-between" align="center">
-        <Title order={2}>Events / Activity</Title>
-        <Group gap="sm">
-          <Button size="sm" variant="outline" onClick={() => setSummaryOpened(true)}>
-            Summary
-          </Button>
-          <Button
-            size="sm"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
+  // Maps an event status to its .adm-status--* modifier. Keeps the existing
+// label logic unchanged - only the presentation moves to the shared badge.
+function statusModifier(label) {
+  switch (String(label).toUpperCase()) {
+    case 'UPCOMING':
+      return 'adm-status--upcoming';
+    case 'ONGOING':
+      return 'adm-status--ongoing';
+    case 'CANCELLED':
+      return 'adm-status--cancelled';
+    case 'PAST':
+      return 'adm-status--finished';
+    default:
+      return 'adm-status--finished';
+  }
+}
+
+return (
+    <div className="adm-page">
+      <div className="adm-head">
+        <div>
+          <h1 className="adm-head__title">Events / Activity</h1>
+          <p className="adm-head__desc">
+            Manage announcements and activities shown on the public calendar.
+          </p>
+          <hr className="adm-head__rule" />
+        </div>
+        <div className="adm-head__toolbar">
+          <button
+            type="button"
+            className="adm-btn adm-btn--secondary adm-btn--icon-mobile"
+            onClick={() => setSummaryOpened(true)}
+            aria-label="Open events summary"
+          >
+            <span className="adm-btn__icon"><IconListDetails size={16} /></span>
+            <span className="adm-btn__label">Summary</span>
+          </button>
+          <button
+            type="button"
+            className="adm-btn adm-btn--secondary adm-btn--icon-mobile"
+            aria-pressed={showArchived}
+            aria-label={showArchived ? 'Show active events' : 'Show archived events'}
             onClick={() => setShowArchived((v) => !v)}
           >
-            Archived
-          </Button>
-        </Group>
-      </Group>
+            <span className="adm-btn__icon">{showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}</span>
+            <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Show archived'}</span>
+          </button>
+        </div>
+      </div>
 
       {loading ? (
-        <Center py="lg">
-          <Loader />
-        </Center>
+        <div className="adm-page-loader"><Loader /></div>
       ) : (
+        <div className="adm-table-wrap">
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -326,21 +351,18 @@ export function AnnouncementsCalendar() {
 
               const rawStatus = String(ev.status || '');
               const upper = rawStatus.toUpperCase();
+              // Label mapping is unchanged from the original; only the colour
+              // source moved from a Mantine Badge to .adm-status--*.
               let statusLabel = rawStatus || 'Unknown';
-              let statusColor = 'gray';
 
               if (upper === 'UPCOMING') {
                 statusLabel = 'UPCOMING';
-                statusColor = 'blue';
               } else if (upper === 'ONGOING') {
                 statusLabel = 'ONGOING';
-                statusColor = 'green';
               } else if (upper === 'PAST') {
                 statusLabel = 'PAST';
-                statusColor = 'gray';
               } else if (upper === 'ARCHIVED') {
                 statusLabel = 'CANCELLED';
-                statusColor = 'red';
               }
               return (
                 <Table.Tr key={ev.id}>
@@ -362,32 +384,33 @@ export function AnnouncementsCalendar() {
                   <Table.Td style={{ textAlign: 'left', verticalAlign: 'middle' }}>{ev.location || '—'}</Table.Td>
                   <Table.Td style={{ textAlign: 'left', verticalAlign: 'middle' }}>{ev.lead || '—'}</Table.Td>
                   <Table.Td style={{ textAlign: 'left', verticalAlign: 'middle', whiteSpace: 'nowrap', minWidth: 110 }}>
-                    <Badge color={statusColor}>{statusLabel}</Badge>
+                    <span className={`adm-status ${statusModifier(statusLabel)}`}>
+                      <span className="adm-status__dot" aria-hidden="true" />
+                      {statusLabel}
+                    </span>
                   </Table.Td>
-                  <Table.Td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                  <Table.Td style={{ textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                     {(isAdmin || isOfficer) && canManageEvent(ev) && (
-                      <div className="d-inline-flex gap-1">
+                      <div className="d-inline-flex gap-2">
                         <Button
                           type="button"
-                          variant="light"
-                          onClick={() => openEdit(ev)}
-                        >
+                          className="adm-btn adm-btn--secondary"
+ onClick={() => openEdit(ev)}
+ >
                           Edit
                         </Button>
                         {isArchivedEvent(ev) ? (
                           <Button
-                            color="green"
-                            variant="light"
-                            onClick={() => handleUnarchive(ev.id)}
-                          >
+                            className="adm-btn adm-btn--secondary"
+ onClick={() => handleUnarchive(ev.id)}
+ >
                             Unarchive
                           </Button>
                         ) : (
                           <Button
-                            color="red"
-                            variant="light"
-                            onClick={() => handleArchive(ev.id)}
-                          >
+                            className="adm-btn adm-btn--secondary adm-act--archive"
+ onClick={() => handleArchive(ev.id)}
+ >
                             Archive
                           </Button>
                         )}
@@ -399,9 +422,11 @@ export function AnnouncementsCalendar() {
             })}
           </Table.Tbody>
         </Table>
+        </div>
       )}
 
       <Modal
+        className="adm-modal"
         opened={summaryOpened}
         onClose={() => setSummaryOpened(false)}
         size="xl"
@@ -550,13 +575,10 @@ export function AnnouncementsCalendar() {
           </Text>
 
           <Table
-            striped
-            withTableBorder
-            withColumnBorders
             highlightOnHover
             verticalSpacing="xs"
             fontSize="sm"
-          >
+           className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -604,18 +626,21 @@ export function AnnouncementsCalendar() {
                     <Table.Td>{end ? end.format('h:mm A') : '—'}</Table.Td>
                     <Table.Td>{ev.location || '—'}</Table.Td>
                     <Table.Td>{ev.lead || '—'}</Table.Td>
-                    <Table.Td>{statusLabel}</Table.Td>
+                    <Table.Td>
+                      <span className={`adm-status ${statusModifier(statusLabel)}`}>
+                        <span className="adm-status__dot" aria-hidden="true" />
+                        {statusLabel}
+                      </span>
+                    </Table.Td>
                   </Table.Tr>
                 );
               })}
               {summaryPagedItems.length === 0 && (
                 <Table.Tr>
                   <Table.Td colSpan={8}>
-                    <Center>
-                      <Text size="sm" c="dimmed">
-                        No events or activities match the selected filters.
-                      </Text>
-                    </Center>
+                    <div className="adm-empty">
+                      No events or activities match the selected filters.
+                    </div>
                   </Table.Td>
                 </Table.Tr>
               )}
@@ -687,7 +712,7 @@ export function AnnouncementsCalendar() {
               </div>
               <button
                 type="button"
-                className="btn-close"
+                className="adm-iconbtn adm-iconbtn--neutral"
                 aria-label="Close"
                 onClick={closeModal}
               />
@@ -721,13 +746,13 @@ export function AnnouncementsCalendar() {
                 />
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="adm-btn adm-btn--primary">Save changes</Button>
                 </div>
               </Stack>
             </form>
           </div>
         </div>
       </Modal>
-    </Stack>
+    </div>
   );
 }

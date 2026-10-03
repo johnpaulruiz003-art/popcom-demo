@@ -1,0 +1,1265 @@
+/* ==================================================================
+   Schedule of Activities page - restyled to match the redesigned site.
+
+   Colours come from styles/eventColors.css (event types + statuses).
+   Design tokens and .btn-primary / .btn-secondary come from home.css.
+   ================================================================== */
+
+.sf-cal {
+  background: var(--sf-gray-50);
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.7;
+  /* 32px top, 80px bottom so the floating help / back-to-top buttons never
+     cover the last card. The min-height comes from .sf-page and keeps the
+     grey background running all the way down to the footer. */
+  padding: 32px 0 80px;
+}
+
+/* Same container as .sf-navbar__inner so both edges line up. */
+.sf-cal__container {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.sf-cal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+.sf-cal__main,
+.sf-cal__aside {
+  min-width: 0;
+}
+.sf-cal__aside {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+@media (min-width: 1024px) {
+  .sf-cal__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .sf-cal__aside {
+    position: sticky;
+    top: 88px; /* directly below the sticky navbar */
+  }
+}
+
+/* ---------- Page header ---------- */
+.sf-cal__head {
+  margin: 0 0 24px;
+}
+/* Title on the left, Add Schedule pushed to the right-most edge. */
+.sf-cal__headrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sf-cal__add {
+  flex: none;
+  margin-left: auto;
+}
+.sf-cal__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.125rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--sf-navy);
+}
+.sf-cal__rule {
+  width: 56px;
+  height: 3px;
+  opacity: 1;
+  margin: 0.75rem 0 0;
+  background: var(--sf-orange);
+  border: 0;
+}
+.sf-cal__lede {
+  margin: 0.75rem 0 0;
+  max-width: 72ch;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+/* ---------- Controls ---------- */
+.sf-cal__controls {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 8px;
+}
+.sf-cal__filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .sf-cal__filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* Mantine Select themed to the design system. */
+.sf-cal__select .mantine-Select-input {
+  height: 40px;
+  min-height: 40px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.9375rem;
+  transition: border-color 150ms ease;
+}
+.sf-cal__select .mantine-Select-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.sf-cal__select .mantine-Select-input:focus,
+.sf-cal__select .mantine-Select-input:focus-visible {
+  border-color: var(--sf-blue);
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 1px;
+}
+
+/* Month navigation - the row of controls sits above the filters, pushed to
+   the right-most side. */
+.sf-cal__monthbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+/* The chevrons reuse the shared .btn-secondary theme (white fill, navy
+   border, blue on hover) so every control on this row matches the rest of
+   the site; only the size and the icon alignment are page-specific. */
+.sf-cal__nav {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.sf-cal__nav:hover {
+  background: var(--sf-gray-50);
+  border-color: var(--sf-blue);
+  color: var(--sf-blue);
+}
+.sf-cal__nav:active {
+  background: var(--sf-gray-100);
+  border-color: var(--sf-blue-dark);
+  color: var(--sf-blue-dark);
+}
+.sf-cal__nav:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+.sf-cal__nav svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.sf-cal__month {
+  color: var(--sf-navy);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0 4px;
+}
+.sf-cal__total {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* ---------- Empty state ---------- */
+.sf-cal__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 180px;
+  padding: 32px 20px;
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 8px;
+  color: #4b5563;
+}
+
+/* ---------- Event cards ---------- */
+.sf-cal__list {
+  display: grid;
+  gap: 12px;
+}
+.sf-cal-event {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-left: 3px solid var(--sf-gray-200);
+  border-radius: 8px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  box-shadow: 0 1px 2px rgba(11, 42, 111, 0.05);
+  transition: border-color 150ms ease, background-color 150ms ease,
+    box-shadow 150ms ease, transform 150ms ease;
+}
+.sf-cal-event:hover {
+  border-color: var(--sf-blue);
+  border-left-color: var(--sf-orange);
+  background: var(--sf-gray-50);
+  box-shadow: 0 6px 16px rgba(11, 42, 111, 0.12);
+  transform: translateY(-2px);
+}
+.sf-cal-event:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(11, 42, 111, 0.1);
+}
+.sf-cal-event:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+/* The event-type avatar picks up the card's hover accent. */
+.sf-cal-event__avatar {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 150ms ease;
+}
+.sf-cal-event:hover .sf-cal-event__avatar {
+  transform: scale(1.06);
+}
+.sf-cal-event__body {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sf-cal-event__title {
+  color: var(--sf-navy);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  /* No truncation - long type labels wrap instead of being cut off. */
+  overflow-wrap: break-word;
+}
+.sf-cal-event__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+.sf-cal-event__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.sf-cal-event__meta-item svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* When the event has its own title, the type is shown beneath it as a
+   lighter secondary line instead of being the card title. */
+.sf-cal-event__type {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+  color: var(--sf-navy);
+  opacity: 0.7;
+}
+/* Status pill - identical to the Status Legends entries. */
+.sf-cal-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.sf-cal-status__dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+}
+.sf-cal-event > .sf-cal-status {
+  margin-left: auto;
+}
+@media (max-width: 639.98px) {
+  /* Below 640px the status drops under the title. */
+  .sf-cal-event > .sf-cal-status {
+    margin-left: 64px;
+  }
+}
+
+/* ---------- Popup mini calendar ----------
+   The tiles are real <button>s styled with the design system rather than
+   Bootstrap utilities, so they inherit the same focus ring and motion rules
+   as the rest of the page. */
+.sf-cal-mini__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sf-cal-mini__month {
+  flex: 1 1 auto;
+  text-align: center;
+  color: var(--sf-navy);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.sf-cal-mini__dows,
+.sf-cal-mini__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.sf-cal-mini__dows {
+  margin-bottom: 6px;
+  color: var(--sf-slate-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+.sf-cal-mini__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--sf-radius);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
+    box-shadow 150ms ease;
+}
+.sf-cal-mini__day:hover {
+  border-color: var(--sf-blue);
+  box-shadow: var(--sf-shadow-md);
+}
+.sf-cal-mini__day:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+.sf-cal-mini__daynum {
+  font-weight: 600;
+}
+/* Days carried over from the neighbouring months stay visible and clickable
+   (clicking one selects it) but are dimmed so the active month reads clearly. */
+.sf-cal-mini__day--outside {
+  opacity: 0.45;
+}
+.sf-cal-mini__day--outside:hover {
+  opacity: 1;
+}
+/* Today gets a ring rather than a fill, so it never hides the type colour. */
+/* The tile border is set inline from the event token, so the today/selected
+   overrides need !important to win over it. */
+.sf-cal-mini__day--today {
+  border-color: var(--sf-orange) !important;
+  font-weight: 700;
+}
+.sf-cal-mini__day--selected {
+  background: var(--sf-navy) !important;
+  border-color: var(--sf-navy) !important;
+  color: var(--sf-white) !important;
+  box-shadow: var(--sf-shadow-md);
+}
+/* Dots carry the type colours; on a selected tile they invert to white so they
+   stay visible against the navy fill. */
+.sf-cal-mini__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 5px;
+}
+.sf-cal-mini__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.sf-cal-mini__day--selected .sf-cal-mini__dot {
+  background: var(--sf-white) !important;
+}
+/* Always-on legend inside the popup calendar. */
+.sf-cal-mini__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.sf-cal-mini__legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sf-slate-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+/* "Clear selected date" under the Calendar View button. */
+.sf-cal__cleardate {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--sf-blue);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sf-cal__cleardate:hover {
+  color: var(--sf-blue-dark);
+  text-decoration: none;
+}
+.sf-cal__cleardate:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+}
+
+/* ---------- Sidebar cards ---------- */
+.sf-cal-card {
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 8px;
+  padding: 24px;
+}
+.sf-cal-card__title {
+  margin: 0 0 12px;
+  color: var(--sf-navy);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+/* Same card, used as a <button> when picking between events in the modal. */
+button.sf-cal-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+button.sf-cal-card:hover {
+  border-color: var(--sf-blue);
+  background: var(--sf-gray-50);
+  box-shadow: 0 4px 12px rgba(11, 42, 111, 0.1);
+}
+button.sf-cal-card:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+button.sf-cal-card svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* Event Type Legends: one item per line, dot + full label (no truncation). */
+.sf-cal-typelist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-cal-typelist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sf-cal-typelist li:hover {
+  background: var(--sf-gray-50);
+  color: var(--sf-navy);
+}
+/* The swatch is a miniature of the calendar day tile: same fill, same corner
+   radius, plus a hairline in the type's `fg` so the pale tints stay legible
+   against the white card. A plain 10px circle disappeared at these lightness
+   levels, which is what made the legend read as uncoloured next to the grid. */
+.sf-cal-typelist__dot {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 1px;
+  border: 1px solid currentColor;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transition: transform 150ms ease;
+}
+.sf-cal-typelist li:hover .sf-cal-typelist__dot {
+  transform: scale(1.12);
+}
+/* The border has to follow the token's own dark text colour so each swatch is
+   outlined in its own hue; set inline from the token's `fg`. */
+.sf-cal-typelist__label {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+/* Status Legends: the same pills used on the event cards. Each pill keeps its
+   label on one line; wrapping happens between pills. */
+.sf-cal-statuslist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-cal-statuslist li {
+  margin: 0;
+}
+/* ---------- Add / Edit schedule form ----------
+   These two modals are the last surfaces still on the Bootstrap grid. They use
+   the same design tokens as the rest of the page so the admin forms match the
+   public calendar instead of looking like a different product. */
+.sf-cal-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: calc(-1 * var(--mantine-spacing-md)) calc(-1 * var(--mantine-spacing-md)) 0;
+}
+@media (min-width: 768px) {
+  .sf-cal-form {
+    grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  }
+}
+/* Left preview rail. Stacks above the fields on narrow screens. */
+.sf-cal-form__aside {
+  background: var(--sf-gray-50);
+  border-bottom: 1px solid var(--sf-gray-200);
+  padding: var(--mantine-spacing-lg);
+}
+@media (min-width: 768px) {
+  .sf-cal-form__aside {
+    border-bottom: 0;
+    border-right: 1px solid var(--sf-gray-200);
+  }
+}
+.sf-cal-form__main {
+  padding: var(--mantine-spacing-lg);
+}
+.sf-cal-form__eyebrow {
+  margin: 0 0 2px;
+  color: var(--sf-slate-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sf-cal-form__title {
+  margin: 0 0 var(--mantine-spacing-md);
+  color: var(--sf-navy);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.sf-cal-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-md);
+}
+/* Placeholder shown in the preview rail before a date is picked. */
+.sf-cal-form__preview-date {
+  min-height: 1.7em;
+  color: var(--sf-navy);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+}
+.sf-cal-form__preview-date:empty::before {
+  content: 'No date selected';
+  color: var(--sf-slate-muted);
+  font-weight: 400;
+  font-size: 0.9375rem;
+}
+.sf-cal-form__preview-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--sf-slate-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.sf-cal-form__preview-row dt {
+  flex: none;
+  margin: 0;
+  color: var(--sf-slate-muted);
+  font-weight: 600;
+}
+.sf-cal-form__preview-row dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--sf-slate);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+/* Time pickers: three selects in a row, sharing one bordered control look. */
+.sf-cal-form__time {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 6px;
+}
+.sf-cal-form__time-sep {
+  color: var(--sf-slate-muted);
+  font-weight: 600;
+  text-align: center;
+}
+.sf-cal-form__label {
+  margin-bottom: 6px;
+  color: var(--sf-slate);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.sf-cal-form__error {
+  margin: 6px 0 0;
+  color: #c92a2a;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+/* Footer actions, pinned to the bottom of the form. */
+.sf-cal-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--mantine-spacing-md);
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--sf-gray-200);
+}
+.sf-cal-form__actions .sf-btn-navy.mantine-Button-root {
+  min-width: 132px;
+}
+
+/* ==================================================================
+   Add Schedule modal (route /calendar, admin only).
+
+   Scoped entirely under .sf-calsched, which is the Mantine Modal
+   `content` class. Nothing here overrides a global Mantine variable
+   or leaks outside this dialog.
+
+   Shell model: the modal content is a flex column; inside it a shell
+   is a 2-column grid (preview | form). The form column is itself a
+   flex column of header / body / footer, where ONLY the body scrolls.
+   The header and footer therefore cannot be pushed out of view by
+   validation messages or a long form.
+   ================================================================== */
+
+.sf-calsched {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, calc(100vw - 48px));
+  /* 100vh first, then 100dvh where supported (mobile browser chrome). */
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* Two panels side by side; the preview column is a fixed 240px.
+   The explicit row is minmax(0, 1fr): an `auto` row is content-sized, which
+   would let the form column grow past the modal's max-height instead of
+   handing the overflow to the scrolling body. */
+.sf-calsched__shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ---------- Preview panel ---------- */
+.sf-calsched__preview {
+  min-width: 0;
+  padding: 24px;
+  background: #f5f7fa;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sf-calsched__preview-eyebrow {
+  margin: 0 0 8px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.sf-calsched__preview-date {
+  margin: 0 0 16px;
+  color: #0b2a6f;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+/* "No date selected" is a placeholder, so it must not read as a value. */
+.sf-calsched__preview-date--empty {
+  color: #4b5563;
+  font-weight: 400;
+  font-size: 16px;
+}
+.sf-calsched__preview-list {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px 8px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+.sf-calsched__preview-list dt {
+  margin: 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sf-calsched__preview-list dd {
+  margin: 0;
+  min-width: 0;
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Form column: header / body / footer ---------- */
+.sf-calsched__form {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+/* 1. HEADER - fixed, never scrolls. */
+.sf-calsched__header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+.sf-calsched__eyebrow {
+  margin: 0 0 2px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.sf-calsched__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.sf-calsched__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #0b2a6f;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.sf-calsched__close:hover {
+  background: #f5f7fa;
+  border-color: #e5e7eb;
+}
+.sf-calsched__close:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+/* 2. BODY - the only scrolling part. */
+.sf-calsched__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* 3. FOOTER - fixed, never scrolls. */
+.sf-calsched__footer {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ---------- Field grid ----------
+   Source order is unchanged; the spans below only control placement. */
+.sf-calsched__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 16px;
+}
+.sf-calsched__span-2 {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Time fields ----------
+   Each time group is a single non-wrapping row: the two groups are grid
+   items side by side, and the three selects inside each share the row
+   evenly. `display: contents` lets the existing wrapper drop out of the
+   grid so the two groups become siblings without touching the DOM.
+   The child combinator raises specificity above Mantine's own
+   `.mantine-Stack-root { display: flex }` so it wins regardless of the
+   order the stylesheets end up in the bundle. */
+.sf-calsched__grid > .sf-calsched__times {
+  display: contents;
+}
+.sf-calsched__time-group {
+  min-width: 0;
+}
+.sf-calsched__time {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+.sf-calsched__time .sf-calsched__time-part {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.sf-calsched__time-sep {
+  flex: 0 0 10px;
+  width: 10px;
+  color: #4b5563;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------- Field styling ---------- */
+.sf-calsched .mantine-InputWrapper-label {
+  margin-bottom: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+/* Mantine already renders the asterisk with aria-hidden. */
+.sf-calsched .mantine-InputWrapper-required {
+  color: #b91c1c;
+}
+.sf-calsched .mantine-Input-input,
+.sf-calsched .mantine-Select-input {
+  min-height: 40px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  /* 16px prevents iOS Safari from zooming the viewport on focus. */
+  font-size: 16px;
+  line-height: 1.4;
+}
+.sf-calsched .mantine-Input-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.sf-calsched .mantine-Input-input:focus,
+.sf-calsched .mantine-Input-input:focus-visible,
+.sf-calsched .mantine-Select-input:focus,
+.sf-calsched .mantine-Select-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.sf-calsched .mantine-Input-input:disabled,
+.sf-calsched .mantine-Select-input:disabled {
+  background-color: #f5f7fa;
+  color: #4b5563;
+  opacity: 1;
+}
+/* Date field: 18px calendar icon on the right. */
+.sf-calsched .mantine-DatePickerInput-section {
+  width: 38px;
+  color: #4b5563;
+}
+.sf-calsched .mantine-DatePickerInput-section svg {
+  width: 18px;
+  height: 18px;
+}
+/* Textarea: autosizes, but only vertically. */
+.sf-calsched .mantine-Textarea-input {
+  min-height: 40px;
+  resize: vertical;
+}
+/* Validation messages sit inside the scrolling body and cannot move the
+   header or footer because those are outside this box. */
+.sf-calsched .mantine-InputWrapper-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Footer buttons use the site theme. */
+.sf-calsched__footer .btn-primary,
+.sf-calsched__footer .btn-secondary {
+  min-height: 40px;
+  min-width: 120px;
+  border-radius: 6px;
+  font-size: 15px;
+}
+/* global.css adds a glow + lift to every hovered button; this dialog is
+   portalled to <body> so the in-page reset does not reach it. */
+.sf-calsched__footer .btn-primary:hover,
+.sf-calsched__footer .btn-secondary:hover,
+.sf-calsched__close:hover {
+  transform: none;
+  box-shadow: none;
+}
+.sf-calsched__footer .btn-primary:focus-visible,
+.sf-calsched__footer .btn-secondary:focus-visible {
+  outline: 3px solid #e8712b;
+  outline-offset: 2px;
+}
+
+/* ---------- Responsive ----------
+   640px - 899px: single panel, the preview collapses into a compact
+   summary strip between the header and the scrolling body. `display:
+   contents` on the form column promotes its header/body/footer to grid
+   rows so the strip can sit between header and body. */
+@media (max-width: 899.98px) {
+  .sf-calsched {
+    width: min(720px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+  }
+  .sf-calsched__shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+  .sf-calsched__form {
+    display: contents;
+  }
+  .sf-calsched__header {
+    grid-row: 1;
+  }
+  .sf-calsched__preview {
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 12px;
+    background: #f5f7fa;
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: visible;
+  }
+  .sf-calsched__preview-eyebrow {
+    display: none;
+  }
+  .sf-calsched__preview-date {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .sf-calsched__preview-date--empty {
+    font-size: 14px;
+  }
+  /* Promote the dl's rows into the strip so it reads as one line. */
+  .sf-calsched__preview-list {
+    display: contents;
+  }
+  .sf-calsched__preview-list dt,
+  .sf-calsched__preview-list dd {
+    font-size: 13px;
+  }
+  .sf-calsched__preview-list dd {
+    color: #1f2937;
+    font-weight: 500;
+  }
+  .sf-calsched__body {
+    grid-row: 3;
+  }
+  .sf-calsched__footer {
+    grid-row: 4;
+  }
+}
+
+/* Below 640px: full screen, single-column grid, side-by-side actions. */
+@media (max-width: 639.98px) {
+  .sf-calsched {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+  .sf-calsched__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Every field spans the full width; the two time groups stack. */
+  .sf-calsched__grid > * {
+    grid-column: 1 / -1;
+  }
+  /* Each time group still stays on ONE row (hour : minute AM/PM). */
+  .sf-calsched__time {
+    flex-wrap: nowrap;
+  }
+  .sf-calsched__footer {
+    /* Room for the iOS home indicator. */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .sf-calsched__footer .btn-primary,
+  .sf-calsched__footer .btn-secondary {
+    flex: 1 1 50%;
+    width: 50%;
+    min-width: 0;
+  }
+}
+
+/* ---------- Motion ----------
+   transitionProps on the Modal sets both overlay and content to a plain
+   150ms fade. This block is the CSS-side guarantee for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .sf-calsched,
+  .sf-calsched * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+.sf-calsched__label {
+  margin-bottom: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.sf-calsched__error {
+  margin: 6px 0 0;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Google map embedded in the Population Office Location card. */
+.sf-cal__map {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 6px;
+}
+.sf-cal-card .btn-secondary {
+  width: 100%;
+  min-height: 40px;
+}
+
+/* ---------- Modal ----------
+   Mantine renders the modal in a portal on <body>, so it sits OUTSIDE
+   .sf-cal. global.css gives every "button:hover" a blue glow + a 1px lift,
+   which makes the default close (X) button light up with a halo and jump.
+   Both are reset here and replaced with the navy theme used elsewhere. */
+.sf-cal-modal .mantine-Modal-close {
+  background: transparent;
+  color: var(--sf-navy);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
+    transform 150ms ease, box-shadow 150ms ease;
+}
+.sf-cal-modal .mantine-Modal-close:hover {
+  background: var(--sf-gray-50);
+  border-color: var(--sf-gray-200);
+  color: var(--sf-blue);
+  transform: none;
+  box-shadow: none;
+}
+.sf-cal-modal .mantine-Modal-close:active {
+  background: var(--sf-gray-100);
+  color: var(--sf-blue-dark);
+  transform: none;
+  box-shadow: none;
+}
+.sf-cal-modal .mantine-Modal-close:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+
+/* Form controls inside the Add / Edit modals, themed to match .sf-cal__select
+   so the admin forms and the public filter bar share one input treatment. */
+.sf-cal-modal .mantine-Input-input,
+.sf-cal-modal .mantine-Select-input {
+  min-height: 40px;
+  background-color: var(--sf-white);
+  border: 1px solid #cbd5e1;
+  border-radius: var(--sf-radius);
+  color: var(--sf-slate);
+  font-size: 0.9375rem;
+}
+.sf-cal-modal .mantine-Input-input:focus,
+.sf-cal-modal .mantine-Input-input:focus-visible,
+.sf-cal-modal .mantine-Select-input:focus,
+.sf-cal-modal .mantine-Select-input:focus-visible {
+  border-color: var(--sf-blue);
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 1px;
+}
+.sf-cal-modal .mantine-InputWrapper-label {
+  margin-bottom: 6px;
+  color: var(--sf-slate);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+/* The three time selects share one row; keep their borders from doubling up. */
+.sf-cal-form__time .mantine-Select-input {
+  text-align: center;
+}
+.sf-cal-form__time .mantine-Select-section {
+  color: var(--sf-slate-muted);
+}
+
+/* "Book An Appointment" is a Mantine <Button>, so it also inherits the global
+   button hover. sf-btn-navy (home.css) supplies the navy theme; these rules
+   just make sure the global lift / glow do not creep back in. */
+.sf-cal-modal .sf-btn-navy.mantine-Button-root:hover {
+  transform: none;
+  box-shadow: none;
+}
+/* canBookPmo=false renders the link disabled - keep it visibly inert. */
+.sf-cal-modal .sf-btn-navy.mantine-Button-root[data-disabled],
+.sf-cal-modal .sf-btn-navy.mantine-Button-root:disabled {
+  background-color: var(--sf-gray-300) !important;
+  border-color: var(--sf-gray-300) !important;
+  color: var(--sf-white) !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- Motion ----------
+   global.css gives every "button:hover" a blue glow + a 1px lift, which fights
+   the flat design system used on this page. Both are reset for the page's own
+   buttons; the ones that should lift (.sf-cal-event) re-apply their values
+   below at a higher specificity. */
+.sf-cal button:hover {
+  transform: none;
+  box-shadow: none;
+}
+/* Re-apply the card lift / shadow. These selectors are scoped with .sf-cal so
+   they outrank the ".sf-cal button:hover" reset above. */
+.sf-cal .sf-cal-event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(11, 42, 111, 0.12);
+}
+.sf-cal .sf-cal-event:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(11, 42, 111, 0.1);
+}
+.sf-cal button.sf-cal-card:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(11, 42, 111, 0.1);
+}
+.sf-cal button:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-cal *,
+  .sf-cal *::before,
+  .sf-cal *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+  /* No lift on hover either - the shadow + border colour still change. */
+  .sf-cal .sf-cal-event:hover,
+  .sf-cal .sf-cal-event:active {
+    transform: none;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
 import { AppShellLayout } from './layout/AppShellLayout.jsx';
@@ -21,6 +21,12 @@ import { EducationPage } from './pages/EducationPage.jsx';
 import { EducationDetailPage } from './pages/EducationDetailPage.jsx';
 import { FAQPage } from './pages/FAQPage.jsx';
 import { ContactPage } from './pages/ContactPage.jsx';
+import { DataPrivacyPage } from './pages/DataPrivacyPage.jsx';
+import {
+  DataPrivacyModal,
+  hasAcknowledgedDataPrivacy,
+  DATA_PRIVACY_OPEN_EVENT,
+} from './components/common/DataPrivacyModal.jsx';
 import { AdminDashboardLayout } from './admin/AdminDashboardLayout.jsx';
 import { GeneralLayout } from './admin/GeneralLayout.jsx';
 import { PmoLayout } from './admin/PmoLayout.jsx';
@@ -58,10 +64,43 @@ function ScrollToTop() {
   return null;
 }
 
+/**
+ * Mounted once at the app level so the notice can appear on the visitor's
+ * first visit to any page. It stays hidden on /data-privacy so people can
+ * read the full notice without it being interrupted.
+ */
+function DataPrivacyNotice() {
+  const { pathname } = useLocation();
+  const onPrivacyPage = pathname === '/data-privacy';
+  const [opened, setOpened] = useState(() => !hasAcknowledgedDataPrivacy());
+
+  useEffect(() => {
+    if (!onPrivacyPage) setOpened((prev) => prev || !hasAcknowledgedDataPrivacy());
+  }, [onPrivacyPage]);
+
+  // Footer "Privacy settings" link reopens the notice
+  useEffect(() => {
+    const reopen = () => setOpened(true);
+    window.addEventListener(DATA_PRIVACY_OPEN_EVENT, reopen);
+    return () => window.removeEventListener(DATA_PRIVACY_OPEN_EVENT, reopen);
+  }, []);
+
+  if (onPrivacyPage) return null;
+
+  return (
+    <DataPrivacyModal
+      opened={opened}
+      onClose={() => setOpened(false)}
+      onAcknowledge={() => setOpened(false)}
+    />
+  );
+}
+
 export default function App() {
   return (
     <AppShellLayout>
       <ScrollToTop />
+      <DataPrivacyNotice />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/news/:id" element={<NewsDetailPage />} />
@@ -80,6 +119,7 @@ export default function App() {
         <Route path="/education/:id" element={<EducationDetailPage />} />
         <Route path="/faqs" element={<FAQPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/data-privacy" element={<DataPrivacyPage />} />
 
         {/* Legacy PMO booking pages removed in favor of PMOWizardModal */}
 

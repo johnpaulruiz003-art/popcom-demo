@@ -65,8 +65,9 @@ export function PmoAnswers() {
 
   return (
     <Stack>
-      <Title order={2}>PMO - Answers</Title>
-      <Text c="dimmed">Review submitted PMO questionnaire answers.</Text>
+      <h1 className="adm-head__title">PMO - Answers</h1>
+      <Text c="dimmed">
+      <p className="adm-head__desc">Review submitted PMO questionnaire answers.</p></Text>
 
       {loading ? (
         <Center>
@@ -76,7 +77,7 @@ export function PmoAnswers() {
         <Text size="sm" c="dimmed">No answers found.</Text>
       ) : (
         <>
-          <Table striped withTableBorder withColumnBorders highlightOnHover>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>
@@ -102,7 +103,7 @@ export function PmoAnswers() {
                       {r.husband_name} & {r.wife_name}
                     </Table.Td>
                     <Table.Td>
-                      <Button size="xs" variant="light" onClick={() => { setViewRow(r); setViewOpen(true); }}>
+                      <Button size="xs" onClick={() => { setViewRow(r); setViewOpen(true); }} className="adm-btn-secondary">
                         View
                       </Button>
                     </Table.Td>
@@ -181,7 +182,7 @@ export function PmoAnswers() {
           </div>
 
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => { setViewOpen(false); setViewRow(null); }}>Close</Button>
+            <Button onClick={() => { setViewOpen(false); setViewRow(null); }} className="adm-btn adm-btn--neutral">Close</Button>
           </Group>
         </Stack>
       </Modal>

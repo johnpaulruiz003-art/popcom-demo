@@ -12,15 +12,23 @@ import { LoginModal } from '../components/auth/LoginModal.jsx';
 import { RegisterModal } from '../components/auth/RegisterModal.jsx';
 import { ProfileModal } from '../components/profile/ProfileModal.jsx';
 import { DeleteConfirmModal } from '../components/common/DeleteConfirmModal.jsx';
+import { reopenDataPrivacyNotice } from '../components/common/DataPrivacyModal.jsx';
 
 import popcomLogo from '../content/POPCOM-Logo.jpg';
 import popcomBanner from '../content/POPCOM-Banner.jpg';
+// Top-strip marks: CPD wordmark (left) + Bagong Pilipinas (right).
+import cpdWordmark from '../content/CPD-Wordmark.png';
+import bagongPilipinasLogo from '../content/BagongPilipinas.png';
 import Page1Image from '../content/User Manual Images/Page1Image.png';
 import Page2Image from '../content/User Manual Images/Page2Image.png';
 import Page3Image from '../content/User Manual Images/Page3Image.png';
 import Page4Image from '../content/User Manual Images/Page4Image.png';
 import Page5Image from '../content/User Manual Images/Page5Image.png';
 import Page6Image from '../content/User Manual Images/Page6Image.png';
+
+// Landing-page design system. Imported here (not only in HomePageBootstrap)
+// so the shared navbar and footer are styled on every route.
+import '../styles/home.css';
 
 export function AppShellLayout({ children }) {
   const auth = useAuth() || {};
@@ -41,7 +49,9 @@ export function AppShellLayout({ children }) {
 
   const hasShownLandingLoginRef = useRef(false);
 
-  const isCompactNav = useMediaQuery('(max-width: 991px)');
+  // Mobile view kicks in at 1200px and below - must stay in sync with the
+  // `.sf-navbar__links` / `.sf-burger` breakpoint in styles/home.css.
+  const isCompactNav = useMediaQuery('(max-width: 1200px)');
 
   const headerHeight = 64;
   const footerHeight = 52;
@@ -61,7 +71,6 @@ export function AppShellLayout({ children }) {
 
   const links = [
     { to: '/', label: 'Home' },
-    { to: '/news', label: 'News' },
     { to: '/services', label: 'Services', hasDropdown: true },
     { to: '/calendar', label: 'Schedule of Activities' },
     { to: '/education', label: 'Education Corner' },
@@ -79,6 +88,13 @@ export function AppShellLayout({ children }) {
   const isHomePage = location.pathname === '/';
   const isAdminPage = location.pathname.startsWith('/admin');
   const isServicesPage = location.pathname.startsWith('/services');
+
+  // Footer "Privacy settings": clears the stored acknowledgment and reopens
+  // the Data Privacy notice modal.
+  const openDataPrivacySettings = () => {
+    setMobileNavOpened(false);
+    reopenDataPrivacyNotice();
+  };
 
   const activeNavStyle = { fontWeight: 600, color: '#0d6efd' };
 
@@ -120,12 +136,12 @@ export function AppShellLayout({ children }) {
 
           <Text size="sm" fw={600} mb={4}>Top navigation bar</Text>
           <ul className="small mb-2">
-            <li><b>Home</b> – overview, announcements, and shortcuts to services.</li>
-            <li><b>Services</b> – list of all population services with details and online forms.</li>
-            <li><b>Schedule of Activities</b> – calendar of upcoming activities.</li>
-            <li><b>Education Corner</b> – articles and educational resources.</li>
-            <li><b>FAQ</b> – common questions and answers.</li>
-            <li><b>About Us</b> – office profile and contact information.</li>
+            <li><b>Home</b> &ndash; overview, announcements, and shortcuts to services.</li>
+            <li><b>Services</b> &ndash; list of all population services with details and online forms.</li>
+            <li><b>Schedule of Activities</b> &ndash; calendar of upcoming activities.</li>
+            <li><b>Education Corner</b> &ndash; articles and educational resources.</li>
+            <li><b>FAQ</b> &ndash; common questions and answers.</li>
+            <li><b>About Us</b> &ndash; office profile and contact information.</li>
           </ul>
           <Text size="sm" fw={600} mb={4}>Logging in</Text>
           <ul className="small mb-2">
@@ -185,7 +201,7 @@ export function AppShellLayout({ children }) {
           <Text size="sm" fw={600} mb={4}>Good practices</Text>
           <ul className="small mb-2">
             <li>Regularly check pending requests from your barangay.</li>
-            <li>Verify residents’ contact numbers before submitting bookings or requests.</li>
+            <li>Verify residents&rsquo; contact numbers before submitting bookings or requests.</li>
           </ul>
         </>
       ),
@@ -240,33 +256,6 @@ export function AppShellLayout({ children }) {
     },
   ];
 
-  // Services dropdown hover handlers
-  const servicesDropdownRef = useRef(null);
-
-  const openServicesDropdown = () => {
-    const el = servicesDropdownRef.current;
-    if (!el) return;
-    el.classList.add('show');
-    const menu = el.querySelector('.dropdown-menu');
-    if (menu) menu.classList.add('show');
-    const toggle = el.querySelector('[data-bs-toggle="dropdown"]');
-    if (toggle) toggle.setAttribute('aria-expanded', 'true');
-  };
-
-  const closeServicesDropdown = () => {
-    const el = servicesDropdownRef.current;
-    if (!el) return;
-    el.classList.remove('show');
-    const menu = el.querySelector('.dropdown-menu');
-    if (menu) menu.classList.remove('show');
-    const toggle = el.querySelector('[data-bs-toggle="dropdown"]');
-    if (toggle) toggle.setAttribute('aria-expanded', 'false');
-  };
-
-  const handleServiceClick = () => {
-    closeServicesDropdown();
-  };
-
   useEffect(() => {
     setMobileNavOpened(false);
   }, [location.pathname]);
@@ -299,362 +288,375 @@ export function AppShellLayout({ children }) {
 
   const [brochureViewerOpen, setBrochureViewerOpen] = useState(false);
 
+  // Services dropdown is now plain React state instead of Bootstrap's JS plugin.
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const servicesRef = useRef(null);
+
+  useEffect(() => {
+    if (!servicesOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setServicesOpen(false);
+    };
+    const onClick = (e) => {
+      if (servicesRef.current && !servicesRef.current.contains(e.target)) {
+        setServicesOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [servicesOpen]);
+
+  const isActive = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const isServicesActive = location.pathname.startsWith('/services');
+
   // Previously auto-opened the login modal on the home page for guests;
   // this behavior has been removed so the login modal opens only on explicit user action.
 
   return (
-    <AppShell
-      header={{ height: headerHeight }}
-      padding="0"
-    >
-      <AppShell.Header px="0">
-        <nav className="navbar navbar-expand-lg sticky-top bg-white">
-          <div className="container d-flex align-items-center justify-content-between">
-            <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
-              <img src={popcomLogo} width="32" height="32" className="rounded flex-shrink-0" alt="POPCOM logo" />
-              <span className="fw-semibold">San Fabian Population Office</span>
-            </Link>
+    <>
+      <a className="sf-skip-link" href="#main-content">
+        Skip to main content
+      </a>
 
-            {/* Mobile/compact burger: shown whenever desktop nav is hidden */}
-            {isCompactNav && (
-              <Burger
-                onClick={() => setMobileNavOpened((o) => !o)}
-                aria-label="Toggle navigation menu"
-                size="md"
-                style={{
-                  borderRadius: 9999,
-                  padding: 4,
-                }}
+      <AppShell padding="0">
+        <AppShell.Header px="0" style={{ position: 'static' }}>
+          {/* Top strip: CPD wordmark (left) and Bagong Pilipinas (right) on white.
+              Hidden on /admin so the admin shell starts at the navy navbar and the
+              sticky sidebar has a predictable offset. */}
+          {!isAdminPage && (
+          <div className="sf-topbar">
+            <div className="sf-topbar__inner">
+              <img
+                className="sf-topbar__wordmark"
+                src={cpdWordmark}
+                alt="Republic of the Philippines, Commission on Population and Development"
               />
-            )}
+              <img
+                className="sf-topbar__bp"
+                src={bagongPilipinasLogo}
+                alt="Bagong Pilipinas"
+              />
+            </div>
+          </div>
+          )}
+
+          <nav className="sf-navbar" aria-label="Main navigation">
+            <div className="sf-navbar__inner">
+              <Link className="sf-navbar__brand" to="/">
+                <img className="sf-navbar__brand-logo" src={popcomLogo} alt="" width="36" height="36" />
+                <span className="sf-navbar__brand-text">
+                  San Fabian Population Office
+                  <span className="sf-navbar__brand-sub">Municipal Office of Population</span>
+                </span>
+              </Link>
+
+              <button
+                type="button"
+                className="sf-burger"
+                aria-label="Open navigation menu"
+                aria-expanded={mobileNavOpened}
+                aria-controls="sf-mobile-nav"
+                onClick={() => setMobileNavOpened((o) => !o)}
+              >
+                <span className="sf-burger__bars" />
+              </button>
 
             {/* Desktop navigation */}
-            <div className="collapse navbar-collapse d-none d-lg-block" id="mainTopNav">
-              <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
-                <li className="nav-item">
-                  <Link
-                    to="/"
-                    className={`nav-link${location.pathname === '/' ? ' active' : ''}`}
-                    style={location.pathname === '/' ? activeNavStyle : undefined}
-                  >
-                    Home
-                  </Link>
-                </li>
-
-                <li
-                  className="nav-item dropdown"
-                  ref={servicesDropdownRef}
-                  onMouseEnter={openServicesDropdown}
-                  onMouseLeave={closeServicesDropdown}
+            <ul className="sf-navbar__links">
+              <li>
+                <Link
+                  to="/"
+                  className={`sf-navbar__link${location.pathname === '/' ? ' is-active' : ''}`}
+                  aria-current={location.pathname === '/' ? 'page' : undefined}
                 >
-                  <a
-                    className={`nav-link dropdown-toggle${location.pathname.startsWith('/services') ? ' active' : ''}`}
-                    href="#"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                    style={location.pathname.startsWith('/services') ? activeNavStyle : undefined}
-                  >
-                    Services
-                  </a>
-                  <ul className="dropdown-menu">
-                    <li><Link className="dropdown-item" to="/services" onClick={handleServiceClick}>View All Services</Link></li>
-                    <li><hr className="dropdown-divider" /></li>
-                    {serviceItems.map((s) => (
-                      <li key={s.to}><Link className="dropdown-item" to={s.to} onClick={handleServiceClick}>{s.label}</Link></li>
-                    ))}
-                  </ul>
-                </li>
+                  Home
+                </Link>
+              </li>
 
-                <li className="nav-item">
-                  <Link
-                    to="/calendar"
-                    className={`nav-link${location.pathname.startsWith('/calendar') ? ' active' : ''}`}
-                    style={location.pathname.startsWith('/calendar') ? activeNavStyle : undefined}
-                  >
-                    Schedule of Activities
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/education"
-                    className={`nav-link${location.pathname.startsWith('/education') ? ' active' : ''}`}
-                    style={location.pathname.startsWith('/education') ? activeNavStyle : undefined}
-                  >
-                    Education Corner
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/faqs"
-                    className={`nav-link${location.pathname.startsWith('/faqs') ? ' active' : ''}`}
-                    style={location.pathname.startsWith('/faqs') ? activeNavStyle : undefined}
-                  >
-                    FAQ
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/contact"
-                    className={`nav-link${location.pathname.startsWith('/contact') ? ' active' : ''}`}
-                    style={location.pathname.startsWith('/contact') ? activeNavStyle : undefined}
-                  >
-                    About Us
-                  </Link>
-                </li>
-
-                {isAdmin && (
-                  <li className="nav-item">
-                    <Link to="/admin" className="btn btn-outline-secondary btn-sm ms-lg-2">Admin Dashboard</Link>
+              <li className="sf-dropdown" ref={servicesRef}>
+                <button
+                  type="button"
+                  className={`sf-navbar__link${isServicesActive ? ' is-active' : ''}`}
+                  aria-expanded={servicesOpen}
+                  aria-haspopup="true"
+                  onClick={() => setServicesOpen((o) => !o)}
+                  onMouseEnter={() => setServicesOpen(true)}
+                  onFocus={() => setServicesOpen(true)}
+                >
+                  Services
+                  <span className="sf-dropdown__caret" aria-hidden="true">&#9662;</span>
+                </button>
+                <ul
+                  className="sf-dropdown__menu"
+                  hidden={!servicesOpen}
+                  onMouseLeave={() => setServicesOpen(false)}
+                >
+                  <li>
+                    <Link className="sf-dropdown__link" to="/services" onClick={() => setServicesOpen(false)}>
+                      View All Services
+                    </Link>
                   </li>
-                )}
-                {user && !isAdmin && (
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm ms-lg-2"
-                      onClick={() => setProfileModalOpened(true)}
+                  <li><hr className="sf-dropdown__sep" /></li>
+                  {serviceItems.slice(1).map((s) => (
+                    <li key={s.to}>
+                      <Link className="sf-dropdown__link" to={s.to} onClick={() => setServicesOpen(false)}>
+                        {s.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+
+              {links
+                .filter((l) => l.to !== '/' && !l.hasDropdown)
+                .map((l) => (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      className={`sf-navbar__link${isActive(l.to) ? ' is-active' : ''}`}
+                      aria-current={isActive(l.to) ? 'page' : undefined}
                     >
-                      {isOfficer ? 'Officer Profile' : 'Profile'}
-                    </button>
+                      {l.label}
+                    </Link>
                   </li>
-                )}
+                ))}
 
-                <li className="nav-item ms-lg-2">
-                  {user ? (
-                    <button className="btn btn-link btn-sm text-decoration-none" onClick={logout}>Logout</button>
-                  ) : (
-                    <button className="btn btn-primary btn-sm" onClick={() => setLoginModalOpened(true)}>Login</button>
-                  )}
+              {isAdmin && (
+                <li>
+                  <Link to="/admin" className="sf-navbar__link" style={{ marginLeft: '0.5rem' }}>
+                    Admin Dashboard
+                  </Link>
                 </li>
-              </ul>
+              )}
+            </ul>
+
+            <div className="sf-navbar__actions">
+              {user && !isAdmin && (
+                <button
+                  type="button"
+                  className="btn-secondary sf-btn--sm"
+                  onClick={() => setProfileModalOpened(true)}
+                >
+                  {isOfficer ? 'Officer Profile' : 'Profile'}
+                </button>
+              )}
+              {!user && (
+                <button
+                  type="button"
+                  className="btn-primary sf-btn--sm"
+                  onClick={() => setLoginModalOpened(true)}
+                >
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </nav>
+
+        {/* Full-width mobile panel */}
+        <div className="sf-mobilenav" id="sf-mobile-nav" hidden={!mobileNavOpened}>
+          <div className="sf-mobilenav__inner">
+            <ul className="sf-mobilenav__list">
+              <li>
+                <Link
+                  to="/"
+                  className={`sf-mobilenav__link${location.pathname === '/' ? ' is-active' : ''}`}
+                  onClick={() => setMobileNavOpened(false)}
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="sf-mobilenav__link"
+                  aria-expanded={mobileServicesOpen}
+                  onClick={() => setMobileServicesOpen((o) => !o)}
+                >
+                  Services
+                </button>
+                {mobileServicesOpen && (
+                  <ul className="sf-mobilenav__sublist">
+                    {serviceItems.map((s) => (
+                      <li key={s.to}>
+                        <Link
+                          to={s.to}
+                          className="sf-mobilenav__link"
+                          onClick={() => {
+                            setMobileNavOpened(false);
+                            setMobileServicesOpen(false);
+                          }}
+                        >
+                          {s.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+              {links
+                .filter((l) => l.to !== '/' && !l.hasDropdown)
+                .map((l) => (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      className={`sf-mobilenav__link${isActive(l.to) ? ' is-active' : ''}`}
+                      onClick={() => setMobileNavOpened(false)}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              {isAdmin && (
+                <li>
+                  <Link
+                    to="/admin"
+                    className="sf-mobilenav__link"
+                    onClick={() => setMobileNavOpened(false)}
+                  >
+                    Admin Dashboard
+                  </Link>
+                </li>
+              )}
+            </ul>
+
+            <div className="sf-mobilenav__actions">
+              {user && !isAdmin && (
+                <button
+                  type="button"
+                  className="btn-secondary sf-btn--block"
+                  onClick={() => {
+                    setMobileNavOpened(false);
+                    setProfileModalOpened(true);
+                  }}
+                >
+                  {isOfficer ? 'Officer Profile' : 'Profile'}
+                </button>
+              )}
+              {!user && (
+                <button
+                  type="button"
+                  className="btn-primary sf-btn--block"
+                  onClick={() => {
+                    setMobileNavOpened(false);
+                    setLoginModalOpened(true);
+                  }}
+                >
+                  Login
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </AppShell.Header>
 
-      {/* Mobile/compact navigation drawer (slides in from the left) */}
-      {isCompactNav && (
-        <Drawer
-          opened={mobileNavOpened}
-          onClose={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-          position="left"
-          size={isCompactNav ? '85%' : '60%'}
-          padding="md"
-          title="San Fabian Population Office"
-        >
-          <Stack spacing="sm">
-            <Link
-              to="/"
-              onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-              className="text-decoration-none"
-            >
-              Home
-            </Link>
-            <button
-              type="button"
-              className="p-0 border-0 bg-transparent text-start text-decoration-none text-primary"
-              style={{ cursor: 'pointer', outline: 'none', boxShadow: 'none' }}
-              onClick={() => setMobileServicesOpen((o) => !o)}
-            >
-              Services
-            </button>
-
-            {mobileServicesOpen && serviceItems.map((s) => (
-              <Link
-                key={s.to}
-                to={s.to}
-                onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-                className="ms-3 text-decoration-none small"
-              >
-                {s.label}
-              </Link>
-            ))}
-            <Link
-              to="/calendar"
-              onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-              className="text-decoration-none"
-            >
-              Schedule of Activities
-            </Link>
-            <Link
-              to="/education"
-              onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-              className="text-decoration-none"
-            >
-              Education Corner
-            </Link>
-            <Link
-              to="/faqs"
-              onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-              className="text-decoration-none"
-            >
-              FAQ
-            </Link>
-            <Link
-              to="/contact"
-              onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-              className="text-decoration-none"
-            >
-              About Us
-            </Link>
-
-            <hr />
-
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => { setMobileNavOpened(false); setMobileServicesOpen(false); }}
-                className="text-decoration-none"
-              >
-                Admin Dashboard
-              </Link>
-            )}
-
-            {user && !isAdmin && (
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm w-100"
-                onClick={() => {
-                  setMobileNavOpened(false);
-                  setMobileServicesOpen(false);
-                  setProfileModalOpened(true);
-                }}
-              >
-                {isOfficer ? 'Officer Profile' : 'Profile'}
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn btn-primary btn-sm mt-2 w-100"
-              onClick={() => {
-                setMobileNavOpened(false);
-                setMobileServicesOpen(false);
-                if (user) {
-                  logout();
-                } else {
-                  setLoginModalOpened(true);
-                }
-              }}
-            >
-              {user ? 'Logout' : 'Login'}
-            </button>
-          </Stack>
-        </Drawer>
-      )}
-
       {/* FLEX WRAPPER: This ensures the footer stays at the bottom */}
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <AppShell.Main
-          style={{ minHeight: `calc(100vh - ${headerHeight + footerHeight}px)` }}
-        >
+      <div
+        className="sf-shell-wrap"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          '--sf-shell-main-min-height': `calc(100dvh - ${headerHeight + footerHeight}px)`,
+          '--sf-shell-main-min-height-fallback': `calc(100vh - ${headerHeight + footerHeight}px)`,
+        }}
+      >
+        <AppShell.Main className="sf-shell-main">
           <div
+            className="sf-shell-content"
             style={{ minHeight: '100%', paddingBottom: isHomePage ? 0 : 16 }}
           >
-            {!isServicesPage && (
-              <div className="w-100 border-bottom">
-                <div className="container" align="center">
-                  <img
-                    src={popcomBanner}
-                    alt="Commission on Population and Development (POPCOM) banner"
-                    className="img-fluid w-100"
-                    style={{ maxHeight: 200, objectFit: 'contain', padding: '0.5rem 0' }}
-                  />
-                </div>
-              </div>
-            )}
-            {isHomePage || isAdminPage ? (
-              children
-            ) : (
-              <div className="container">
-                {children}
-              </div>
-            )}
+            <main id="main-content" tabIndex={-1}>
+              {children}
+            </main>
           </div>
-        </AppShell.Main> 
+        </AppShell.Main>
 
-        {/* FOOTER SECTION: Non-sticky, but always at bottom */}
-        <footer className="w-100 mt-auto">
-          <div className="bg-primary text-white py-5">
-            <div className="container">
-              <div className="row g-4">
-                <div className="col-12 col-md-4">
-                  <h6 className="text-uppercase fw-bold mb-3">About Us</h6>
-                  <p className="mb-1 small">Municipal Hall, Kadiwa Building, San Fabian, Pangasinan</p>
-                  <p className="mb-1 small">Contact Number: 0915-811-2320</p>
-                  <p className="mb-0 small">Email: sanfabian.munpopcom@gmail.com</p>
-                </div>
-                <div className="col-12 col-md-4">
-                  <h6 className="text-uppercase fw-bold mb-3">Connect With Us</h6>
-                  <div className="d-flex align-items-center gap-2">
-                    <a className="btn btn-sm btn-outline-light" href="https://www.facebook.com/profile.php?id=100087014496500" aria-label="Facebook"> Facebook </a>
-                    {/*<a className="btn btn-sm btn-outline-light" href="#" aria-label="Instagram"> Instagram </a>*/}
-                    {/*<a className="btn btn-sm btn-outline-light" href="#" aria-label="YouTube"> YouTube </a>*/}
-                  </div>
-                </div>
-                <div className="col-12 col-md-4">
-                  <h6 className="text-uppercase fw-bold mb-3">Sitemap</h6>
-                  <ul className="list-unstyled small mb-0 row row-cols-2 g-1">
-                    <li className="col"><Link className="text-white text-decoration-none" to="/">Home</Link></li>
-                    <li className="col"><Link className="text-white text-decoration-none" to="/services">Services</Link></li>
-                    <li className="col"><Link className="text-white text-decoration-none" to="/calendar">Schedule of Activities</Link></li>
-                    <li className="col"><Link className="text-white text-decoration-none" to="/education">Education Corner</Link></li>
-                    <li className="col"><Link className="text-white text-decoration-none" to="/faqs">FAQ</Link></li>
-                    <li className="col"><Link className="text-white text-decoration-none" to="/contact">About Us</Link></li>
-                  </ul>
-                </div>
+        <footer className="sf-footer mt-auto">
+          <div className="sf-footer__inner">
+            <div>
+              <img className="sf-footer__logo" src={popcomLogo} alt="Commission on Population and Development logo" width="44" height="44" />
+              <h2 className="sf-footer__title">Municipal Office of Population</h2>
+              <p className="sf-footer__text">San Fabian Population Office</p>
+              <p className="sf-footer__text">91 Municipal Hall, Kadiwa Building, San Fabian, Pangasinan</p>
+              <p className="sf-footer__text">Contact Number: 0915-811-2320</p>
+              <p className="sf-footer__text">Email: sanfabian.munpopcom@gmail.com</p>
+              <div className="sf-footer__banner">
+                <img
+                  className="sf-footer__banner-img"
+                  src={popcomBanner}
+                  alt="Commission on Population and Development banner"
+                />
               </div>
             </div>
+
+            <div className="sf-footer__col--aux">
+              <h2 className="sf-footer__title">Quick Links</h2>
+              <ul className="sf-footer__list">
+                <li><Link className="sf-footer__link" to="/services">Services</Link></li>
+                <li><Link className="sf-footer__link" to="/calendar">Schedule of Activities</Link></li>
+                <li><Link className="sf-footer__link" to="/education">Education Corner</Link></li>
+                <li><Link className="sf-footer__link" to="/faqs">FAQ</Link></li>
+                <li><Link className="sf-footer__link" to="/contact">About Us</Link></li>
+                <li>
+                  <button type="button" className="sf-footer__link" onClick={() => setLoginModalOpened(true)}>
+                    Login
+                  </button>
+                </li>
+                <li>
+                  <Link className="sf-footer__link" to="/data-privacy">Data Privacy</Link>
+                </li>
+                <li>
+                  <button type="button" className="sf-footer__link" onClick={openDataPrivacySettings}>
+                    Privacy settings
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div className="sf-footer__col--aux">
+              <h2 className="sf-footer__title">Connect With Us</h2>
+              <p className="sf-footer__text">
+                <a className="sf-footer__link" href="https://www.facebook.com/profile.php?id=100087014496500" rel="noopener noreferrer" target="_blank">
+                  Facebook
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <div className="sf-footer__bottom">
+            <span>&copy; {new Date().getFullYear()} San Fabian Municipal Office of Population. All rights reserved.</span>
+            <span>Republic of the Philippines &middot; Commission on Population and Development</span>
           </div>
         </footer>
       </div>
 
-      {/* Global floating help button (hidden while brochure viewer or profile modal is open) */}
+      {/* Floating help button (hidden while brochure viewer or profile modal is open) */}
       {!brochureViewerOpen && !profileModalOpened && (
         <button
           type="button"
           onClick={() => { setHelpSlide(0); setHelpModalOpened(true); }}
-          className="btn btn-primary rounded-circle shadow sf-fab-help"
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '20px',
-            width: '44px',
-            height: '44px',
-            zIndex: 2000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            fontSize: '22px',
-          }}
+          className="sf-fab sf-fab--help"
           aria-label="Open system manual"
         >
           ?
         </button>
       )}
 
-      {/* Global floating "Go to Top" button (always visible) */}
+      {/* Floating "Go to Top" button (always visible) */}
       <button
         type="button"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="btn btn-primary rounded-circle shadow sf-fab-top"
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          width: '44px',
-          height: '44px',
-          zIndex: 1900,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 700,
-          fontSize: '18px',
-        }}
-        aria-label="Go to top"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="sf-fab sf-fab--top"
+        aria-label="Back to top"
       >
-        ↑
+        &#8593;
       </button>
 
       {/* MODALS */}
@@ -742,5 +744,6 @@ export function AppShellLayout({ children }) {
         closeOnClickOutside={false}
       />
     </AppShell>
+    </>
   );
 }

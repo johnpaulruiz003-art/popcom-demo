@@ -338,23 +338,24 @@ export function PmoAppointments() {
       `}</style>
       <Group justify="space-between" align="center" mb="xs">
         <div>
-          <Title order={2}>PMO - Appointments</Title>
-          <Text c="dimmed">Manage PMO appointments linked to schedules and couples.</Text>
+          <h1 className="adm-head__title">PMO - Appointments</h1>
+          <Text c="dimmed">
+      <p className="adm-head__desc">Manage PMO appointments linked to schedules and couples.</p></Text>
         </div>
         <Group gap="xs">
-          <Button size="xs" variant="outline" onClick={() => setSummaryOpen(true)} disabled={rows.length === 0}>
+          <Button size="xs" onClick={() => setSummaryOpen(true)} disabled={rows.length === 0} className="adm-btn adm-btn--secondary adm-btn--sm">
             Summary
           </Button>
           <Button
-            size="xs"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
-            onClick={() => {
-              setShowArchived((prev) => !prev);
-              setPage(1);
-            }}
-            disabled={rows.length === 0}
-          >
+ size="xs"
+ variant={showArchived ? 'filled' : 'outline'}
+ color={showArchived ? 'gray' : 'dark'}
+ onClick={() => {
+ setShowArchived((prev) => !prev);
+ setPage(1);
+ }}
+ disabled={rows.length === 0}
+  className="adm-btn adm-btn--primary adm-btn--sm">
             Archived
           </Button>
         </Group>
@@ -368,7 +369,7 @@ export function PmoAppointments() {
         <Text size="sm" c="dimmed">No bookings found.</Text>
       ) : (
         <>
-          <Table striped withTableBorder withColumnBorders highlightOnHover>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>
@@ -425,43 +426,40 @@ export function PmoAppointments() {
                       {/* First row: always show View + Print MEIF, then Accept/Unarchive as the third button */}
                       <Group gap="xs" wrap="nowrap">
                         <Button
-                          size="xs"
-                          variant="light"
-                          style={{ minWidth: 80 }}
-                          onClick={() => openView(row)}
-                          disabled={isRowBusy}
-                        >
+ size="xs"
+ style={{ minWidth: 80 }}
+ onClick={() => openView(row)}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                           View
                         </Button>
                         <Button
-                          size="xs"
-                          variant="light"
-                          style={{ minWidth: 80 }}
-                          onClick={() => navigate(`/admin/pmo/appointments/${row.appointmentID}/meif`)}
-                          disabled={isRowBusy}
-                        >
+ size="xs"
+ style={{ minWidth: 80 }}
+ onClick={() => navigate(`/admin/pmo/appointments/${row.appointmentID}/meif`)}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                           Print MEIF
                         </Button>
                         {!isArchived && (
                           <Button
-                            size="xs"
-                            style={{ minWidth: 80 }}
-                            onClick={() => handleAccept(row)}
-                            loading={isRowBusy}
-                            disabled={isRowBusy || isApproved || isRejected || isCancelled}
-                          >
+ size="xs"
+ style={{ minWidth: 80 }}
+ onClick={() => handleAccept(row)}
+ loading={isRowBusy}
+ disabled={isRowBusy || isApproved || isRejected || isCancelled}
+  className="adm-btn adm-btn--primary adm-btn--sm">
                             Accept
                           </Button>
                         )}
                         {isArchived && (
                           <Button
-                            size="xs"
-                            color="green"
-                            variant="light"
-                            style={{ minWidth: 80 }}
-                            onClick={() => { if (!isRowBusy) handleUnarchive(row); }}
-                            disabled={isRowBusy}
-                          >
+ size="xs"
+ color="green"
+ style={{ minWidth: 80 }}
+ onClick={() => { if (!isRowBusy) handleUnarchive(row); }}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                             Unarchive
                           </Button>
                         )}
@@ -471,33 +469,30 @@ export function PmoAppointments() {
                       {!isArchived && (
                         <Group gap="xs" wrap="nowrap">
                           <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            style={{ minWidth: 80 }}
-                            onClick={() => { if (!isRowBusy) openReject(row); }}
-                            disabled={isRowBusy || isRejected || isCancelled}
-                          >
+ size="xs"
+ color="red"
+ style={{ minWidth: 80 }}
+ onClick={() => { if (!isRowBusy) openReject(row); }}
+ disabled={isRowBusy || isRejected || isCancelled}
+  className="adm-btn-secondary">
                             Reject
                           </Button>
                           <Button
-                            size="xs"
-                            color="gray"
-                            variant="light"
-                            style={{ minWidth: 80 }}
-                            onClick={() => { if (!isRowBusy) handleCancel(row); }}
-                            disabled={isRowBusy || isCancelled}
-                          >
+ size="xs"
+ color="gray"
+ style={{ minWidth: 80 }}
+ onClick={() => { if (!isRowBusy) handleCancel(row); }}
+ disabled={isRowBusy || isCancelled}
+  className="adm-btn-secondary">
                             Cancel
                           </Button>
                           <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            style={{ minWidth: 80 }}
-                            onClick={() => { if (!isRowBusy) handleArchive(row); }}
-                            disabled={isRowBusy}
-                          >
+ size="xs"
+ color="red"
+ style={{ minWidth: 80 }}
+ onClick={() => { if (!isRowBusy) handleArchive(row); }}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                             Archive
                           </Button>
                         </Group>
@@ -556,19 +551,15 @@ export function PmoAppointments() {
 
           <div className="d-flex flex-column gap-2 mt-2">
             <Button
-              color="red"
-              fullWidth
-              onClick={handleConfirmCancel}
-              loading={cancelLoading}
-              disabled={cancelLoading}
-            >
+ onClick={handleConfirmCancel}
+ loading={cancelLoading}
+ disabled={cancelLoading}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
               Cancel appointment
             </Button>
             <Button
-              color="gray"
-              fullWidth
-              onClick={() => { if (!cancelLoading) { setCancelId(null); setCancelReason(''); } }}
-            >
+ onClick={() => { if (!cancelLoading) { setCancelId(null); setCancelReason(''); } }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
               Back
             </Button>
           </div>
@@ -878,7 +869,7 @@ export function PmoAppointments() {
             <Text size="sm"><b>Total appointments:</b> {filteredSummaryRows.length}</Text>
           </Stack>
 
-          <Table striped highlightOnHover withTableBorder withColumnBorders>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>
@@ -988,21 +979,17 @@ export function PmoAppointments() {
 
           <div className="d-flex flex-column gap-2 mt-2">
             <Button
-              color="red"
-              fullWidth
-              onClick={handleReject}
-              loading={actionLoadingId === activeRow?.appointmentID}
-            >
+ onClick={handleReject}
+ loading={actionLoadingId === activeRow?.appointmentID}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
               Reject appointment
             </Button>
             <Button
-              variant="default"
-              fullWidth
-              onClick={() => {
-                setRejectOpened(false);
-                setActiveRow(null);
-              }}
-            >
+ onClick={() => {
+ setRejectOpened(false);
+ setActiveRow(null);
+ }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
               Cancel
             </Button>
           </div>

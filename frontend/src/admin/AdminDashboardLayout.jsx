@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+﻿import React, { useEffect, useRef, useState } from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { IconNews, IconCalendarEvent, IconMessageDots, IconHeartHandshake, IconUsers, IconHeart, IconClipboardList, IconListDetails, IconUserCheck, IconMail } from '@tabler/icons-react';
-import { Burger, Drawer, ScrollArea } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { IconNews, IconCalendarEvent, IconMessageDots, IconHeartHandshake, IconUsers, IconHeart, IconClipboardList, IconListDetails, IconUserCheck, IconMail, IconChartBar, IconMenu2 } from '@tabler/icons-react';
+import { Drawer, ScrollArea } from '@mantine/core';
 import { useAuth } from '../context/AuthContext.jsx';
 import { ProfileModal } from '../components/profile/ProfileModal.jsx';
 import { getFamilyPlanningBookings } from '../api/familyPlanning.js';
@@ -11,18 +10,16 @@ import { getPmoAdminAppointments, getPmoSmsFailedCount } from '../api/pmoAdmin.j
 import { getCalendarEvents } from '../api/calendar.js';
 import { socket } from '../socket.js';
 import './adminScrollbar.css';
+import '../styles/admin.css';
 
 function AdminDashboardLayout() {
   const { user, isAdmin } = useAuth();
-  const location = useLocation();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [fpPending, setFpPending] = useState(0);
   const [apptPending, setApptPending] = useState(0);
   const [reqPending, setReqPending] = useState(0);
   const [smsFailed, setSmsFailed] = useState(0);
   const pendingRefreshTimeoutRef = useRef(null);
-
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const analyticsPath = '/admin/analytics';
@@ -172,171 +169,122 @@ function AdminDashboardLayout() {
 
     return () => clearInterval(interval);
   }, []);
-  const renderSidebar = () => (
-    <aside
-      className="bg-white shadow-sm rounded-4 d-flex flex-column p-3 no-scrollbar"
-      style={{ position: 'sticky', top: '1rem', maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto' }}
+  const initials = (user?.fullName || 'Admin')
+    .split(' ')
+    .filter(Boolean)
+    .map((p) => p.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  // The four sidebar badges are all action-needed counts, so they use the navy
+  // treatment whenever nonzero and a neutral gray at zero.
+  const renderCountBadge = (count) => (
+    <span
+      className={`adm-badge-count${count > 0 ? '' : ' adm-badge-count--zero'}`}
+      aria-label={count > 0 ? `${count.toLocaleString('en-PH')} needing action` : 'None needing action'}
     >
-            <div className="mb-3 d-flex align-items-center justify-content-between">
-              <div>
-                <div className="text-uppercase text-muted small fw-semibold">Admin Dashboard</div>
-              </div>
-            </div>
+      {count.toLocaleString('en-PH')}
+    </span>
+  );
 
-            <div className="mb-3">
-              <button
-                type="button"
-                className="w-100 d-flex align-items-center gap-2 rounded-4 px-3 py-2 text-start border-0 bg-light"
-                onClick={() => setProfileModalOpen(true)}
-              >
-                <span
-                  className="d-inline-flex align-items-center justify-content-center rounded-5 bg-primary text-white fw-semibold"
-                  style={{ width: 32, height: 32 }}
-                >
-                  {(user?.fullName || 'Admin')
-                    .split(' ')
-                    .map((p) => p.charAt(0))
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </span>
-                <span className="d-flex flex-column">
-                  <span className="small fw-semibold">{user?.fullName || 'Admin'}</span>
-                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>Admin profile</span>
-                </span>
-              </button>
-            </div>
+  const pendingCountFor = (to) => {
+    if (to === '/admin/general/family-planning') return fpPending;
+    if (to === '/admin/pmo/appointments') return apptPending;
+    if (to === '/admin/usapan/requests') return reqPending;
+    if (to === '/admin/pmo/sms-logs') return smsFailed;
+    return null;
+  };
 
-            {/* Primary dashboard pill */}
-            <div className="mb-3">
-              {(() => {
-                const active = location.pathname.startsWith(analyticsPath);
-                const baseClasses =
-                  'd-flex align-items-center gap-2 rounded-4 px-3 py-2 text-decoration-none small shadow-sm admin-sidebar-link';
-                const activeClasses = active
-                  ? 'bg-warning text-white'
-                  : 'bg-light text-dark';
+  // Rendered once and reused by both the desktop sidebar and the mobile
+  // Drawer so the two copies can never drift apart.
+  const sidebarContent = (
+    <div className="adm-side__inner">
+      <div className="adm-side__head">
+        <h2 className="adm-side__title">Admin Dashboard</h2>
+        <button
+          type="button"
+          className="adm-profile"
+          onClick={() => {
+            setProfileModalOpen(true);
+            setMobileSidebarOpen(false);
+          }}
+        >
+          <span className="adm-profile__avatar" aria-hidden="true">{initials}</span>
+          <span className="adm-profile__text">
+            <span className="adm-profile__name">{user?.fullName || 'Admin'}</span>
+            <span className="adm-profile__role">Admin profile</span>
+          </span>
+        </button>
+      </div>
+
+      {/* Data Analytics - a nav row like the rest, not a highlighted pill. */}
+      <div className="adm-side__block">
+        <NavLink to={analyticsPath} className="adm-navlink">
+          <IconChartBar className="adm-navlink__icon" size={18} stroke={1.8} aria-hidden="true" />
+          <span className="adm-navlink__label">Data Analytics</span>
+        </NavLink>
+      </div>
+
+      <nav aria-label="Admin sections">
+        {sections.map((section) => (
+          <div key={section.key} className="adm-side__group">
+            <h3 className="adm-side__section">{section.label}</h3>
+            <ul className="adm-side__list">
+              {section.items.map((item) => {
+                const pendingCount = pendingCountFor(item.to);
                 return (
-                  <NavLink
-                    to={analyticsPath}
-                    className={baseClasses + ' ' + activeClasses}
-                  >
-                    <span className="d-inline-flex align-items-center justify-content-center rounded-3 bg-white bg-opacity-25 me-1" style={{ width: 24, height: 24 }}>
-                      <span className="fw-bold" style={{ fontSize: '0.75rem' }}>DA</span>
-                    </span>
-                    <span className="fw-semibold">Data Analytics</span>
-                  </NavLink>
+                  <li key={item.to}>
+                    <NavLink to={item.to} className="adm-navlink">
+                      {item.icon ? (
+                        <item.icon className="adm-navlink__icon" size={18} stroke={1.8} aria-hidden="true" />
+                      ) : null}
+                      <span className="adm-navlink__label">{item.label}</span>
+                      {pendingCount !== null ? renderCountBadge(pendingCount) : null}
+                    </NavLink>
+                  </li>
                 );
-              })()}
-            </div>
-              
-            {/* Section groups */}
-            <div className="flex-grow-1 overflow-auto no-scrollbar">
-              {sections.map((section) => (
-                <div key={section.key} className="mb-3">
-                  <div className="text-uppercase text-muted small fw-semibold mb-1">
-                    {section.label}
-                  </div>
-                  <div className="d-flex flex-column gap-1">
-                    {section.items.map((item) => {
-                      let pendingCount = 0;
-                      if (item.to === '/admin/general/family-planning') pendingCount = fpPending;
-                      if (item.to === '/admin/pmo/appointments') pendingCount = apptPending;
-                      if (item.to === '/admin/usapan/requests') pendingCount = reqPending;
-                      if (item.to === '/admin/pmo/sms-logs') pendingCount = smsFailed;
-
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          className={({ isActive }) => {
-                            const base =
-                              'd-flex align-items-center rounded-3 px-3 py-2 text-decoration-none small admin-sidebar-link';
-                            const state = isActive
-                              ? ' bg-primary text-white shadow-sm'
-                              : ' bg-light text-dark';
-                            return base + state;
-                          }}
-                        >
-                          <span className="d-inline-flex align-items-center justify-content-center rounded-2 bg-white bg-opacity-50 me-2" style={{ width: 22, height: 22 }}>
-                            {item.icon ? (
-                              React.createElement(item.icon, { size: 16, stroke: 1.8 })
-                            ) : (
-                              <span style={{ fontSize: '0.7rem' }}>•</span>
-                            )}
-                          </span>
-                          <span className="d-flex w-100 justify-content-between align-items-center">
-                            <span>{item.label}</span>
-                            {(item.to === '/admin/general/family-planning' || item.to === '/admin/pmo/appointments' || item.to === '/admin/usapan/requests' || item.to === '/admin/pmo/sms-logs') && (
-                              <span
-                                style={{
-                                  backgroundColor: pendingCount > 0 ? '#2563eb' : '#e5e7eb',
-                                  color: pendingCount > 0 ? 'white' : '#6b7280',
-                                  borderRadius: 999,
-                                  padding: '0 6px',
-                                  fontSize: '0.7rem',
-                                  lineHeight: '16px',
-                                  minWidth: 18,
-                                  textAlign: 'center',
-                                  marginLeft: 8,
-                                }}
-                              >
-                                {pendingCount}
-                              </span>
-                            )}
-                          </span>
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </div>
   );
 
   return (
-    <div className="container-fluid py-3">
-      {isMobile && (
-        <Drawer
-          opened={mobileSidebarOpen}
-          onClose={() => setMobileSidebarOpen(false)}
-          position="left"
-          size="75%"
-          padding="md"
-          title="Admin Menu"
-        >
-          <ScrollArea style={{ height: '100%' }}>
-            {renderSidebar()}
-          </ScrollArea>
-        </Drawer>
-      )}
+    <div className="adm-shell admin-root">
+      <aside className="adm-side d-none d-lg-block">{sidebarContent}</aside>
 
-      <div className="row g-3" style={{ minHeight: '70vh' }}>
-        <div className="col-12 col-md-3 col-lg-2 d-none d-md-block">
-          {renderSidebar()}
-        </div>
+      <Drawer
+        opened={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+        position="left"
+        size={300}
+        padding="md"
+        title="Admin menu"
+        hiddenFrom="lg"
+        zIndex={300}
+      >
+        <ScrollArea.Autosize mah="calc(100dvh - 96px)" type="never">
+          {sidebarContent}
+        </ScrollArea.Autosize>
+      </Drawer>
 
-        <div className="col-12 col-md-9 col-lg-10">
-          <div
-            className="bg-white shadow-sm rounded-4 h-100 p-3 admin-main-panel"
-            style={{ maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+      <div className="adm-content">
+        <div className="d-lg-none mb-3">
+          <button
+            type="button"
+            className="adm-drawer-trigger"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-expanded={mobileSidebarOpen}
           >
-            {isMobile && (
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <Burger
-                  opened={mobileSidebarOpen}
-                  onClick={() => setMobileSidebarOpen((o) => !o)}
-                  size="sm"
-                  aria-label="Toggle admin menu"
-                />
-                <div className="small text-muted">Admin Dashboard</div>
-              </div>
-            )}
-
-            <Outlet context={{ setFpPending, setApptPending, setReqPending, setSmsFailed }} />
-          </div>
+            <IconMenu2 size={18} stroke={1.8} aria-hidden="true" />
+            Admin menu
+          </button>
         </div>
+
+        <Outlet context={{ setFpPending, setApptPending, setReqPending, setSmsFailed }} />
       </div>
 
       <ProfileModal opened={profileModalOpen} onClose={() => setProfileModalOpen(false)} />

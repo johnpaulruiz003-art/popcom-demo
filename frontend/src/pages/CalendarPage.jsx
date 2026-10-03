@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Title,
   Stack,
@@ -16,12 +16,10 @@ import {
   Select,
   TextInput,
   Textarea,
-  SimpleGrid,
   ThemeIcon,
   Pagination
 } from '@mantine/core';
-import { IconCalendar, IconClock, IconMapPin, IconUser, IconInfoCircle, IconChevronLeft, IconX } from '@tabler/icons-react';
-import { useMediaQuery } from '@mantine/hooks';
+import { IconCalendar, IconClock, IconMapPin, IconUser, IconInfoCircle, IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { DatePickerInput, DatePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -33,10 +31,20 @@ import { getActiveCounselors } from '../api/counselors.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { HOURS_12, MINUTES_COMMON, MERIDIEMS, to24hTime, compareTimes24 } from '../utils/time.js';
 import { DeleteConfirmModal } from '../components/common/DeleteConfirmModal.jsx';
-
-// Approximate footer height (navbar + footer spacing) used to keep list area tall enough
-// so that pagination sits just above the footer in a stable position.
-const LAYOUT_FOOTER_HEIGHT = 260;
+import {
+  getEventKey,
+  getEventTypeToken,
+  getDayTokenForEvents,
+  getDistinctEventTypesForEvents,
+  getSwatchFill,
+  getStatusToken,
+  getScheduleStateToken,
+  getTypeInitials,
+  EVENT_TYPE_LEGEND,
+  CALENDAR_TYPE_LEGEND,
+  STATUS_LEGEND,
+} from '../utils/eventColors.js';
+import '../styles/calendarPage.css';
 
 const SAN_FABIAN_BARANGAYS = [
   'Alacan','Ambalangan-Dalin','Angio','Anonang','Aramal','Bigbiga','Binday','Bolaoen','Bolasi','Cabaruan','Cayanga','Colisao','Gomot','Inmalog','Inmalog Norte','Lekep-Butao','Lipit-Tomeeng','Longos','Longos Proper','Longos-Amangonan-Parac-Parac (Fabrica)','Mabilao','Nibaliw Central','Nibaliw East','Nibaliw Magliba','Nibaliw Narvarte (Nibaliw West Compound)','Nibaliw Vidal (Nibaliw West Proper)','Palapad','Poblacion','Rabon','Sagud-Bahley','Sobol','Tempra-Guilig','Tiblong','Tocok'
@@ -80,28 +88,12 @@ export function getEventStatus(event, now = new Date()) {
   return 'FINISHED';
 }
 
-function getEventTypeNormalized(ev) {
-  const t = ev?.type || ev?.category || ev?.kind || '';
-  return String(t).toUpperCase();
-}
-
-function getEventColor(ev, now = new Date()) {
-  const type = getEventTypeNormalized(ev);
-  // Event type colors (used across calendar and legends):
-  // Pre-Marriage Orientation -> purple (Mantine 'grape')
-  // Usapan-Series           -> orange
-  // Event/Activity          -> yellow
-  if (type === 'PRE-MARRIAGE ORIENTATION') return 'grape';
-  if (type === 'USAPAN-SERIES') return 'orange';
-  return 'yellow';
-}
-
-function getDayColor({ date, events, now = new Date() }) {
-  const types = events.map(getEventTypeNormalized);
-  if (types.includes('PRE-MARRIAGE ORIENTATION')) return 'grape';
-  if (types.includes('USAPAN-SERIES')) return 'orange';
-  return 'yellow';
-}
+// Event type and status colours are the shared tokens from
+// utils/eventColors.js - the hex values live in styles/eventColors.css and are
+// never hardcoded in this file. The aliases below keep the existing call
+// sites (getEventColor / getDayColor) working unchanged.
+const getEventColor = getEventTypeToken;
+const getDayColor = ({ events }) => getDayTokenForEvents(events);
 
 function sortEventsUpcomingFirst(items, now = new Date()) {
   const today = normalizeDay(now);
@@ -131,13 +123,16 @@ function sortEventsUpcomingFirst(items, now = new Date()) {
 
 function getCalendarGridDays(targetMonth) {
   const monthStart = dayjs(targetMonth).startOf('month');
-  // Ensure the grid always starts on Sunday to match the Sun–Sat headers,
+  // Ensure the grid always starts on Sunday to match the Sunâ€“Sat headers,
   // regardless of locale start-of-week settings.
   const weekday = monthStart.day(); // 0 = Sunday, 1 = Monday, ...
   const gridStart = monthStart.subtract(weekday, 'day');
 
   const days = [];
-  for (let i = 0; i < 42; i += 1) {
+  // Only emit the weeks the month actually spans. A fixed 42-cell grid always
+  // rendered a phantom trailing week (an empty 6th row) for five-week months.
+  const totalCells = Math.ceil((weekday + monthStart.daysInMonth()) / 7) * 7;
+  for (let i = 0; i < totalCells; i += 1) {
     days.push(gridStart.add(i, 'day').toDate());
   }
   return days;
@@ -173,9 +168,6 @@ export function CalendarPage() {
   const auth = useAuth() || {};
   const { isAdmin } = auth;
   const theme = useMantineTheme();
-  const smBreakpoint = theme.breakpoints.sm;
-  const smMaxWidth = typeof smBreakpoint === 'number' ? `${smBreakpoint}px` : smBreakpoint;
-  const isMobile = useMediaQuery(`(max-width: ${smMaxWidth})`);
   const [month, setMonth] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -183,6 +175,9 @@ export function CalendarPage() {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [addModalOpened, setAddModalOpened] = useState(false);
+  // Scrolling body of the Add Schedule modal. Used to bring the first invalid
+  // field into view on a failed submit.
+  const addBodyRef = useRef(null);
   const [editModalOpened, setEditModalOpened] = useState(false);
   const [activeCounselors, setActiveCounselors] = useState([]);
   const [keyword, setKeyword] = useState('');
@@ -201,7 +196,6 @@ export function CalendarPage() {
   const [sidebarDate, setSidebarDate] = useState(null); // still used to filter main list
   const [sidebarPickerOpened, setSidebarPickerOpened] = useState(false);
   const [sidebarPopupDate, setSidebarPopupDate] = useState(null); // selection inside popup calendar
-  const [sidebarHoverDate, setSidebarHoverDate] = useState(null); // hover state for popup tiles
   const [sidebarHoverEventId, setSidebarHoverEventId] = useState(null); // hover state for popup event cards
 
   const addForm = useForm({
@@ -293,6 +287,38 @@ export function CalendarPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editForm.values.type]);
+
+  /**
+   * Bring the first field that currently shows an error into view and focus
+   * it. This only reacts to errors the form already produces - it does not add,
+   * remove or reorder any validation rule.
+   */
+  const focusFirstAddError = () => {
+    const body = addBodyRef.current;
+    if (!body) return;
+    const firstError = body.querySelector('.mantine-InputWrapper-error');
+    if (!firstError) return;
+    const wrapper = firstError.closest('.mantine-InputWrapper');
+    if (wrapper) wrapper.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const control = wrapper && wrapper.querySelector('input, textarea, button');
+    if (control && typeof control.focus === 'function') {
+      control.focus({ preventScroll: true });
+    }
+  };
+
+  // Signature of the visible errors, so this runs when they change rather than
+  // on every keystroke. Covers both rule-based errors and the ones the submit
+  // handler sets imperatively (past date, end-time ordering).
+  const addErrorSignature = Object.entries(addForm.errors)
+    .filter(([, message]) => message)
+    .map(([field, message]) => `${field}:${message}`)
+    .join('|');
+
+  useEffect(() => {
+    if (!addModalOpened) return;
+    if (!addErrorSignature) return;
+    focusFirstAddError();
+  }, [addErrorSignature, addModalOpened]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -497,14 +523,18 @@ export function CalendarPage() {
     });
   }, [visibleEvents, month]);
 
+  // Selection is tracked by the type-qualified event key, not the raw id.
+  // The API returns each source table's own primary key as `id`, so a PMO
+  // schedule and an announcement can share the same id; comparing bare ids
+  // resolved to the wrong event and left the details modal empty.
   const selectedEvent = useMemo(() => {
     if (!selectedEventId) return null;
-    return selectedEvents.find((ev) => String(ev.id) === String(selectedEventId)) || null;
+    return selectedEvents.find((ev) => getEventKey(ev) === selectedEventId) || null;
   }, [selectedEventId, selectedEvents]);
 
   const selectedEventForList = useMemo(() => {
     if (!selectedEventId) return null;
-    return sortedEventsForList.find((ev) => String(ev.id) === String(selectedEventId)) || null;
+    return sortedEventsForList.find((ev) => getEventKey(ev) === selectedEventId) || null;
   }, [selectedEventId, sortedEventsForList]);
 
   const sidebarEvents = useMemo(() => {
@@ -520,24 +550,19 @@ export function CalendarPage() {
     return weeks;
   }, [gridDays]);
 
-  const hasEventActivity = useMemo(
-    () => (visibleEvents || []).some((ev) => ev && ev.type === 'Event/Activity'),
-    [visibleEvents]
-  );
-
   const handleDayClick = (date) => {
     const dayEvents = eventsByDate[toDayKey(date)] || [];
     if (dayEvents.length === 0) {
       return;
     }
     setSelectedDate(date);
-    setSelectedEventId(dayEvents.length === 1 ? dayEvents[0].id : null);
+    setSelectedEventId(dayEvents.length === 1 ? getEventKey(dayEvents[0]) : null);
     setModalOpened(true);
   };
 
   const handleEventClick = (ev) => {
     setSelectedDate(null);
-    setSelectedEventId(ev.id);
+    setSelectedEventId(getEventKey(ev));
     setModalOpened(true);
   };
 
@@ -566,401 +591,250 @@ export function CalendarPage() {
     setEditModalOpened(true);
   };
 
-  const renderDay = (date) => {
-    const key = toDayKey(date);
-    const dayEvents = eventsByDate[key] || [];
-    const hasEvents = dayEvents.length > 0;
-    const dayColor = hasEvents ? getDayColor({ date, events: dayEvents, now: new Date() }) : null;
-    const count = dayEvents.length;
-
-    const isCurrentMonth = dayjs(date).isSame(dayjs(month), 'month');
-    const isToday = dayjs(date).isSame(dayjs(), 'day');
-
-    const bgColor =
-      dayColor === 'green'
-        ? theme.colors.green[2]
-        : dayColor === 'gray'
-          ? theme.colors.gray[2]
-          : dayColor === 'red'
-            ? theme.colors.red[2]
-            : dayColor === 'orange'
-              ? theme.colors.orange[2]
-              : theme.colors.blue[2];
-
-    const borderColor = isToday ? theme.colors.blue[6] : theme.colors.gray[3];
-
-    return (
-      <Box
-        role={hasEvents ? 'button' : undefined}
-        tabIndex={hasEvents ? 0 : -1}
-        onClick={() => handleDayClick(date)}
-        onKeyDown={(e) => {
-          if (!hasEvents) return;
-          if (e.key === 'Enter' || e.key === ' ') handleDayClick(date);
-        }}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          borderRadius: 10,
-          border: `1px solid ${borderColor}`,
-          background: hasEvents ? bgColor : theme.white,
-          opacity: isCurrentMonth ? 1 : 0.5,
-          cursor: hasEvents ? 'pointer' : 'default',
-          padding: 8,
-          overflow: 'hidden'
-        }}
-      >
-
-        <Group justify="space-between" align="flex-start" wrap="nowrap" gap="xs">
-          <Text size="sm" fw={isToday ? 700 : 500} c={isToday ? 'blue.7' : 'dark'}>
-            {date.getDate()}
-          </Text>
-          {hasEvents && (
-            <Badge size="xs" variant="filled" color={dayColor}>
-              {count}
-            </Badge>
-          )}
-        </Group>
-      </Box>
-    );
-  };
-
   return (
-    <Stack spacing="lg" px="lg" className="calendar-page-stack">
-    <Title order={1} className="hover-underline">Schedule of Activities</Title>
-      {/* Mobile month controls */}
-      {isMobile && (
-        <Stack gap="xs">
-          <Group gap="xs" wrap="wrap">
-            <ActionIcon variant="default" onClick={() => setMonth(dayjs(month).subtract(1, 'month').toDate())}>
-              {'<'}
-            </ActionIcon>
-            <Text fw={600}>{dayjs(month).format('MMMM YYYY')}</Text>
-            <ActionIcon variant="default" onClick={() => setMonth(dayjs(month).add(1, 'month').toDate())}>
-              {'>'}
-            </ActionIcon>
-            <Button size="xs" variant="light" onClick={() => setMonth(new Date())}>
-              Today
-            </Button>
-            {isAdmin && (
-              <Button size="xs" onClick={() => setAddModalOpened(true)}>
-                Add Schedule
-              </Button>
-            )}
-          </Group>
-        </Stack>
-      )}
-
-      {/* Mobile Calendar View card (above filters) */}
-      {isMobile && (
-        <div>
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title h6 mb-2">Event Type Legends</h5>
-              <div className="d-flex flex-wrap gap-2">
-                <span className="badge" style={{ backgroundColor: '#6f42c1', color: '#fff' }}>Pre-Marriage Orientation</span>
-                <span className="badge" style={{ backgroundColor: '#fd7e14', color: '#fff' }}>Usapan-Series</span>
-                <span className="badge text-bg-warning">Event/Activity</span>
+    <div className="sf-page sf-cal">
+      <div className="sf-cal__container">
+        <div className="sf-cal__grid">
+          <div className="sf-cal__main">
+            <header className="sf-cal__head">
+              <div className="sf-cal__headrow">
+                <h1 className="sf-cal__title">Schedule of Activities</h1>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="btn-primary sf-btn--sm sf-cal__add"
+                    onClick={() => setAddModalOpened(true)}
+                  >
+                    Add Schedule
+                  </button>
+                )}
               </div>
-            </div>
-            <div className="card-body">
-              <h5 className="card-title h6 mb-2">Status Legends</h5>
-              <div className="d-flex flex-wrap gap-2">
-                <span className="badge text-bg-primary">ONGOING</span>
-                <span className="badge text-bg-secondary">UPCOMING</span>
-                <span className="badge text-bg-success">FINISHED</span>
-                <span className="badge text-bg-danger">CANCELLED</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              <hr className="sf-cal__rule" />
+              <p className="sf-cal__lede">
+                Upcoming programs, orientations and community activities of the Municipal Office of Population.
+              </p>
+            </header>
 
-      {/* Filters + desktop month controls */}
-      <Divider />
-      <Stack gap="xs">
-        <Group wrap="wrap" justify="space-between" align="center" gap="xs">
-          <Group wrap="wrap" gap="xs" align="stretch" style={{ width: '100%' }}>
-            <Select
-              placeholder="Location"
-              data={locationOptions}
-              value={locationQuery || null}
-              onChange={(v) => setLocationQuery(v || '')}
-              searchable
-              clearable
-              nothingFoundMessage="No locations"
-              style={{ minWidth: isMobile ? '100%' : 180, flex: isMobile ? '1 1 100%' : undefined }}
-            />
-            <Select
-              placeholder="Select Event Type"
-              data={typeOptions}
-              value={typeFilter}
-              onChange={setTypeFilter}
-              searchable
-              clearable
-              style={{ minWidth: isMobile ? '100%' : 200, flex: isMobile ? '1 1 100%' : undefined }}
-            />
-            <Select
-              placeholder="Status"
-              data={statusOptions}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              clearable
-              style={{ minWidth: isMobile ? '100%' : 160, flex: isMobile ? '1 1 100%' : undefined }}
-            />
-          </Group>
-
-          {!isMobile && (
-            <Group gap="xs" wrap="nowrap">
-              <ActionIcon variant="default" onClick={() => setMonth(dayjs(month).subtract(1, 'month').toDate())}>
-                {'<'}
-              </ActionIcon>
-              <Text fw={600}>{dayjs(month).format('MMMM YYYY')}</Text>
-              <ActionIcon variant="default" onClick={() => setMonth(dayjs(month).add(1, 'month').toDate())}>
-                {'>'}
-              </ActionIcon>
-              <Button size="xs" variant="light" onClick={() => setMonth(new Date())}>
-                Today
-              </Button>
-              {isAdmin && (
-                <Button size="xs" onClick={() => setAddModalOpened(true)}>
-                  Add Schedule
-                </Button>
-              )}
-            </Group>
-          )}
-        </Group>
-        <Text size="sm" c="dimmed">Total Events: {filteredEvents.length}</Text>
-      </Stack>
-      {loading && (
-        <Center>
-          <Loader size="sm" />
-        </Center>
-      )}
-
-      <Group align="flex-start" wrap={isMobile ? 'wrap' : 'nowrap'}>
-        {/* List */}
-        <Stack style={{ flex: 1, minWidth: 0, width: isMobile ? '100%' : undefined }} gap="sm">
-          {/* Make the list area fill the viewport minus the footer height so pagination stays just above footer */}
-          <Box style={{ minHeight: `calc(100vh - ${LAYOUT_FOOTER_HEIGHT}px)` }}>
-            <Stack gap="sm">
-              {filteredEvents.length === 0 ? (
-                <Text c="dimmed" size="sm">No events found.</Text>
-              ) : (
-                pagedEvents.map((ev) => {
-                const status = getEventStatus(ev, new Date());
-                const typeColor = getEventColor(ev, new Date());
-                const statusColor =
-                  status === 'ONGOING'
-                    ? 'blue'
-                    : status === 'UPCOMING'
-                      ? 'gray'
-                      : status === 'FINISHED'
-                        ? 'green'
-                        : 'red';
-                const start = dayjs(ev.startDate);
-                const end = ev.endDate ? dayjs(ev.endDate) : null;
-                const dateLabel = !end || end.isSame(start, 'day')
-                  ? start.format('MMM D, YYYY')
-                  : `${start.format('MMM D, YYYY')} - ${end.format('MMM D, YYYY')}`;
-                const type = ev.type || 'Event/Activity';
-                const isUsapanSeries = String(type).toUpperCase() === 'USAPAN-SERIES';
-                const timeLabel = isUsapanSeries
-                  ? start.format('h:mm A')
-                  : (!end
-                      ? start.format('h:mm A')
-                      : `${start.format('h:mm A')} - ${end.format('h:mm A')}`);
-                const initials = type.split(/\s|\//).filter(Boolean).map(s => s[0]).slice(0,2).join('').toUpperCase();
-
-                return (
-                  <Button
-                  key={ev.id}
-                  variant="subtle"
-                  color="dark"
-                  onClick={() => handleEventClick(ev)}
-                  styles={{ root: { padding: 0, height: 'auto', justifyContent: 'stretch' }, inner: { width: '100%' }, label: { width: '100%' } }}
+            <div className="sf-cal__controls">
+              <div className="sf-cal__monthbar">
+                <button
+                  type="button"
+                  className="btn-secondary sf-btn--sm"
+                  onClick={() => setMonth(new Date())}
                 >
-                  <Box style={{ width: '100%', border: `1px solid ${theme.colors.gray[3]}`, borderRadius: 10, padding: 12, background: theme.white }}>
-                    <Group justify="space-between" align={isMobile ? 'flex-start' : 'center'} wrap={isMobile ? 'wrap' : 'nowrap'} gap="sm">
-                      <Group gap="md" wrap="wrap" align="center" style={{ minWidth: 0, flex: 1 }}>
-                        <Box style={{ width: 48, height: 48, borderRadius: 999, background: theme.colors[typeColor][1], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                          {initials}
-                        </Box>
-                        <Box style={{ minWidth: 0 }}>
-                          <Text fw={700} lineClamp={1} style={{ textAlign: 'left' }}>
-                            {type}
-                          </Text>
-                          <Group gap="md" c="dimmed" wrap="wrap">
-                            <Group gap={4} wrap="nowrap">
-                              <IconMapPin size={16} />
-                              <Text size="sm" lineClamp={1}>{ev.location || ev.barangay || '—'}</Text>
-                            </Group>
-                            <Group gap={4} wrap="nowrap">
-                              <IconCalendar size={16} />
-                              <Text size="sm">{dateLabel}</Text>
-                            </Group>
-                            <Group gap={4} wrap="nowrap">
-                              <IconClock size={16} />
-                              <Text size="sm">{timeLabel}</Text>
-                            </Group>
-                          </Group>
-                        </Box>
-                      </Group>
-                      <Badge
-                        color={statusColor}
-                        variant="light"
-                        tt="none"
-                        styles={{ root: { flexShrink: 0, paddingInline: 12 } }}
-                      >
-                        {status}
-                      </Badge>
-                    </Group>
-                  </Box>
-                  </Button>
-                );
-              })
-              )}
-            </Stack>
-          </Box>
-
-          {filteredEvents.length > pageSize ? (
-            <Group justify="center" mt="xs">
-              <Pagination
-                total={totalPages}
-                value={page}
-                onChange={(value) => {
-                  setPage(value);
-                  // Smoothly scroll back to top of the page after changing page
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            </Group>
-          ) : null}
-        </Stack>
-
-        {/* Right sidebar (desktop) */}
-        <div
-          className="d-none d-lg-block"
-          style={{ width: 340, flex: '0 0 340px' }}
-        >
-          <div className="vstack gap-3">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2 hover-underline">Calendar View</h5>
-                <Button
-                  variant="outline"
-                  leftSection={<IconCalendar size={16} />}
-                  fullWidth
-                  onClick={() => setSidebarPickerOpened(true)}
+                  Today
+                </button>
+                <button
+                  type="button"
+                  className="sf-cal__nav"
+                  aria-label="Previous month"
+                  onClick={() => setMonth(dayjs(month).subtract(1, 'month').toDate())}
                 >
-                  {sidebarDate
-                    ? dayjs(sidebarDate).format('MMMM D, YYYY')
-                    : 'Open calendar'}
-                </Button>
+                  <IconChevronLeft width={18} height={18} aria-hidden="true" />
+                </button>
+                <span className="sf-cal__month">{dayjs(month).format('MMMM YYYY')}</span>
+                <button
+                  type="button"
+                  className="sf-cal__nav"
+                  aria-label="Next month"
+                  onClick={() => setMonth(dayjs(month).add(1, 'month').toDate())}
+                >
+                  <IconChevronRight width={18} height={18} aria-hidden="true" />
+                </button>
               </div>
-            </div>
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2">Event Type Legends</h5>
-                <div className="d-flex flex-wrap gap-2">
-                  <span className="badge" style={{ backgroundColor: '#6f42c1', color: '#fff' }}>Pre-Marriage Orientation</span>
-                  <span className="badge" style={{ backgroundColor: '#fd7e14', color: '#fff' }}>Usapan-Series</span>
-                  <span className="badge text-bg-warning">Event/Activity</span>
-                </div>
-              </div>
-            </div>
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2">Status Legends</h5>
-                <div className="d-flex flex-wrap gap-2">
-                  <span className="badge text-bg-primary">ONGOING</span>
-                  <span className="badge text-bg-secondary">UPCOMING</span>
-                  <span className="badge text-bg-success">FINISHED</span>
-                  <span className="badge text-bg-danger">CANCELLED</span>
-                </div>
-              </div>
-            </div>
 
-            <div className="card shadow-sm">
-              <div className="card-header py-2 px-3 bg-light">
-                <h5 className="card-title h6 mb-0">Services</h5>
-              </div>
-              <div className="card-body">
-                <ul className="small mb-0">
-                  <li><a href="/services/pre-marriage-orientation" className="text-decoration-none">Pre-Marriage Orientation (PMOC)</a></li>
-                  <li><a href="/services/usapan-series" className="text-decoration-none">Usapan Series</a></li>
-                  <li><a href="/services/rpfp" className="text-decoration-none">Responsible Parenthood &amp; Family Development (RPFP)</a></li>
-                  <li><a href="/services/ahdp" className="text-decoration-none">Adolescent Health and Development Program (AHDP)</a></li>
-                  <li><a href="/services/iec" className="text-decoration-none">Population Awareness &amp; IEC Activities</a></li>
-                  <li><a href="/services/population-profiling" className="text-decoration-none">Demographic Data Collection &amp; Population Profiling</a></li>
-                  <li><a href="/services/community-events" className="text-decoration-none">Support During Community Events</a></li>
-                  <li><a href="/services/other-assistance" className="text-decoration-none">Other Assistance</a></li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="card shadow-sm">
-              <div className="card-header py-2 px-3 bg-light">
-                <h5 className="card-title h6 mb-0">Population Office Location</h5>
-              </div>
-              <div className="card-body">
-                <div className="ratio ratio-4x3 rounded overflow-hidden">
-                  <iframe
-                    title="San Fabian Population Office Location"
-                    src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Group>
-
-      {/* Sidebar content for mobile (shown below the list, minus Calendar View which is above filters) */}
-      {isMobile && (
-        <Stack gap="md" mt="md">
-          <div className="card shadow-sm">
-            <div className="card-header py-2 px-3 bg-light">
-              <h5 className="card-title h6 mb-0">Quick Links</h5>
-            </div>
-            <div className="card-body">
-              <ul className="small mb-0">
-                <li><a href="/services/pre-marriage-orientation" className="text-decoration-none">Pre-Marriage Orientation (PMOC)</a></li>
-                <li><a href="/services/usapan-series" className="text-decoration-none">Usapan Series</a></li>
-                <li><a href="/services/rpfp" className="text-decoration-none">Responsible Parenthood &amp; Family Development (RPFP)</a></li>
-                <li><a href="/services/ahdp" className="text-decoration-none">Adolescent Health and Development Program (AHDP)</a></li>
-                <li><a href="/services/iec" className="text-decoration-none">Population Awareness &amp; IEC Activities</a></li>
-                <li><a href="/services/population-profiling" className="text-decoration-none">Demographic Data Collection &amp; Population Profiling</a></li>
-                <li><a href="/services/community-events" className="text-decoration-none">Support During Community Events</a></li>
-                <li><a href="/services/other-assistance" className="text-decoration-none">Other Assistance</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="card shadow-sm">
-            <div className="card-header py-2 px-3 bg-light">
-              <h5 className="card-title h6 mb-0">Location Map</h5>
-            </div>
-            <div className="card-body">
-              <div className="ratio ratio-4x3 rounded overflow-hidden">
-                <iframe
-                  title="San Fabian Population Office Location"
-                  src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+              <div className="sf-cal__filters">
+                <Select
+                  className="sf-cal__select"
+                  placeholder="Location"
+                  data={locationOptions}
+                  value={locationQuery || null}
+                  onChange={(v) => setLocationQuery(v || '')}
+                  searchable
+                  clearable
+                  nothingFoundMessage="No locations"
+                />
+                <Select
+                  className="sf-cal__select"
+                  placeholder="Select Event Type"
+                  data={typeOptions}
+                  value={typeFilter}
+                  onChange={setTypeFilter}
+                  searchable
+                  clearable
+                />
+                <Select
+                  className="sf-cal__select"
+                  placeholder="Status"
+                  data={statusOptions}
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  clearable
                 />
               </div>
             </div>
+
+            <p className="sf-cal__total">Total Events: {filteredEvents.length}</p>
+            {loading ? (
+              <Center>
+                <Loader size="sm" />
+              </Center>
+            ) : filteredEvents.length === 0 ? (
+              <div className="sf-cal__empty">No activities found for the selected filters.</div>
+            ) : (
+              <div className="sf-cal__list">
+                {pagedEvents.map((ev) => {
+                  const statusToken = getStatusToken(getEventStatus(ev, new Date()));
+                  const typeToken = getEventTypeToken(ev);
+                  const start = dayjs(ev.startDate);
+                  const end = ev.endDate ? dayjs(ev.endDate) : null;
+                  const dateLabel = !end || end.isSame(start, 'day')
+                    ? start.format('MMM D, YYYY')
+                    : `${start.format('MMM D, YYYY')} - ${end.format('MMM D, YYYY')}`;
+                  const type = ev.type || 'Event/Activity';
+                  const isUsapanSeries = String(type).toUpperCase() === 'USAPAN-SERIES';
+                  const timeLabel = isUsapanSeries
+                    ? start.format('h:mm A')
+                    : (!end
+                        ? start.format('h:mm A')
+                        : `${start.format('h:mm A')} - ${end.format('h:mm A')}`);
+
+                  return (
+                    <button
+                      key={getEventKey(ev)}
+                      type="button"
+                      className="sf-cal-event"
+                      onClick={() => handleEventClick(ev)}
+                    >
+                      <span
+                        className="sf-cal-event__avatar"
+                        style={{ background: typeToken.bg, color: typeToken.fg }}
+                      >
+                        {getTypeInitials(type)}
+                      </span>
+                      <span className="sf-cal-event__body">
+                        <span className="sf-cal-event__title">{ev.title || type}</span>
+                        <span className="sf-cal-event__meta">
+                          <span className="sf-cal-event__meta-item">
+                            <IconMapPin width={16} height={16} aria-hidden="true" />
+                            {ev.location || ev.barangay || '—'}
+                          </span>
+                          <span className="sf-cal-event__meta-item">
+                            <IconCalendar width={16} height={16} aria-hidden="true" />
+                            {dateLabel}
+                          </span>
+                          <span className="sf-cal-event__meta-item">
+                            <IconClock width={16} height={16} aria-hidden="true" />
+                            {timeLabel}
+                          </span>
+                        </span>
+                      </span>
+                      <span
+                        className="sf-cal-status"
+                        style={{ background: statusToken.bg, color: statusToken.fg }}
+                      >
+                        <span
+                          className="sf-cal-status__dot"
+                          style={{ background: statusToken.dot }}
+                        />
+                        {statusToken.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {!loading && filteredEvents.length > pageSize ? (
+              <Group justify="center" mt="lg">
+                <Pagination
+                  total={totalPages}
+                  value={page}
+                  onChange={(value) => {
+                    setPage(value);
+                    // Smoothly scroll back to top of the page after changing page
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </Group>
+            ) : null}
           </div>
-        </Stack>
-      )}
+
+          <aside className="sf-cal__aside" aria-label="Schedule filters and legends">
+            <div className="sf-cal-card">
+              <h2 className="sf-cal-card__title">Calendar View</h2>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  // Re-opening starts from a clean slate unless a day is already
+                  // pinned, so the button label always matches what is applied.
+                  if (sidebarDate) setSidebarPopupDate(sidebarDate);
+                  setSidebarPickerOpened(true);
+                }}
+              >
+                <IconCalendar width={16} height={16} aria-hidden="true" />
+                {sidebarDate ? dayjs(sidebarDate).format('MMMM D, YYYY') : 'Open calendar'}
+              </button>
+              {sidebarDate && (
+                <button
+                  type="button"
+                  className="sf-cal__cleardate"
+                  onClick={() => {
+                    setSidebarDate(null);
+                    setSidebarPopupDate(null);
+                  }}
+                >
+                  Clear selected date
+                </button>
+              )}
+            </div>
+
+            <div className="sf-cal-card">
+              <h2 className="sf-cal-card__title">Event Type Legends</h2>
+              <ul className="sf-cal-typelist">
+                {EVENT_TYPE_LEGEND.map((token) => (
+                  <li key={token.key}>
+                    <span
+                      className="sf-cal-typelist__dot"
+                      style={{
+                        background: getSwatchFill(token),
+                        borderColor: token.fg,
+                      }}
+                    />
+                    <span className="sf-cal-typelist__label">{token.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="sf-cal-card">
+              <h2 className="sf-cal-card__title">Status Legends</h2>
+              <ul className="sf-cal-statuslist">
+                {STATUS_LEGEND.map((token) => (
+                  <li key={token.key}>
+                    <span className="sf-cal-status" style={{ background: token.bg, color: token.fg }}>
+                      <span className="sf-cal-status__dot" style={{ background: token.dot }} />
+                      {token.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="sf-cal-card">
+              <h2 className="sf-cal-card__title">Population Office Location</h2>
+              <iframe
+                className="sf-cal__map"
+                title="Map showing the San Fabian Population Office location"
+                src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </aside>
+        </div>
+      </div>
       
       <Modal
         opened={modalOpened}
@@ -977,6 +851,7 @@ export function CalendarPage() {
         centered
         size="md"
         radius="md"
+        classNames={{ content: 'sf-cal-modal' }}
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
       >
         <Stack gap="md">
@@ -984,17 +859,20 @@ export function CalendarPage() {
             <Stack gap="sm">
               <Text size="sm" c="dimmed">Multiple activities scheduled for this day:</Text>
               {selectedEvents.map((ev) => (
-                <Button
-                  key={ev.id}
-                  variant="light"
-                  color={getEventColor(ev)}
-                  fullWidth
-                  justify="flex-start"
-                  onClick={() => setSelectedEventId(ev.id)}
-                  leftSection={<IconInfoCircle size={16} />}
+                <button
+                  key={getEventKey(ev)}
+                  type="button"
+                  className="sf-cal-card"
+                  style={{
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    borderLeft: `3px solid ${getEventTypeToken(ev).dot}`,
+                  }}
+                  onClick={() => setSelectedEventId(getEventKey(ev))}
                 >
+                  <IconInfoCircle width={16} height={16} aria-hidden="true" />
                   {ev.title || ev.type}
-                </Button>
+                </button>
               ))}
             </Stack>
           ) : (
@@ -1003,7 +881,8 @@ export function CalendarPage() {
               if (!ev) return <Text size="sm" c="dimmed" ta="center">No details found.</Text>;
 
               const status = getEventStatus(ev);
-              const color = getEventColor(ev);
+              const statusToken = getStatusToken(status);
+              const typeToken = getEventTypeToken(ev);
               const start = dayjs(ev.startDate);
               const rawEnd = ev.endDate ? dayjs(ev.endDate) : null;
               const end = !rawEnd || rawEnd.isSame(start) ? start.add(1, 'hour') : rawEnd;
@@ -1027,12 +906,19 @@ export function CalendarPage() {
                       </Button>
                     )}
                     <Group justify="space-between" align="flex-start">
-                      <Title order={3} style={{ lineHeight: 1.2 }}>
+                      <Title order={3} style={{ lineHeight: 1.2, color: typeToken.fg }}>
                         {ev.type}
                       </Title>
-                      <Badge size="lg" variant="filled" color={color} radius="sm">
-                        {status}
-                      </Badge>
+                      <span
+                        className="sf-cal-status"
+                        style={{ background: statusToken.bg, color: statusToken.fg }}
+                      >
+                        <span
+                          className="sf-cal-status__dot"
+                          style={{ background: statusToken.dot }}
+                        />
+                        {statusToken.label}
+                      </span>
                     </Group>
                   </Box>
 
@@ -1047,7 +933,7 @@ export function CalendarPage() {
                         <Text size="xs" c="dimmed" fw={500}>DATE</Text>
                         <Text size="sm" fw={600}>
                           {start.format('MMMM D, YYYY')}
-                          {end && !end.isSame(start, 'day') ? ` — ${end.format('MMMM D, YYYY')}` : ''}
+                          {end && !end.isSame(start, 'day') ? ` â€” ${end.format('MMMM D, YYYY')}` : ''}
                         </Text>
                       </Box>
                     </Group>
@@ -1118,6 +1004,7 @@ export function CalendarPage() {
                   {isPmo && (
                     <Group justify="flex-end" mt="sm">
                       <Button
+                        className="sf-btn-navy"
                         component="a"
                         href={canBookPmo ? '/services?book=pmo' : undefined}
                         target="_self"
@@ -1146,24 +1033,26 @@ export function CalendarPage() {
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
       >
         <Stack gap="sm">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div className="d-flex align-items-center gap-2">
-              <Button
-                variant="subtle"
-                size="compact-sm"
-                onClick={() => setSidebarMonth(dayjs(sidebarMonth).subtract(1, 'month').toDate())}
-              >
-                &lt;
-              </Button>
-              <Text fw={600}>{dayjs(sidebarMonth).format('MMMM YYYY')}</Text>
-              <Button
-                variant="subtle"
-                size="compact-sm"
-                onClick={() => setSidebarMonth(dayjs(sidebarMonth).add(1, 'month').toDate())}
-              >
-                &gt;
-              </Button>
-            </div>
+          <div className="sf-cal-mini__bar">
+            <button
+              type="button"
+              className="sf-cal__nav"
+              aria-label="Previous month"
+              onClick={() => setSidebarMonth(dayjs(sidebarMonth).subtract(1, 'month').toDate())}
+            >
+              <IconChevronLeft width={18} height={18} aria-hidden="true" />
+            </button>
+            <span className="sf-cal-mini__month" aria-live="polite">
+              {dayjs(sidebarMonth).format('MMMM YYYY')}
+            </span>
+            <button
+              type="button"
+              className="sf-cal__nav"
+              aria-label="Next month"
+              onClick={() => setSidebarMonth(dayjs(sidebarMonth).add(1, 'month').toDate())}
+            >
+              <IconChevronRight width={18} height={18} aria-hidden="true" />
+            </button>
 
             <ActionIcon
               variant="subtle"
@@ -1175,117 +1064,98 @@ export function CalendarPage() {
             </ActionIcon>
           </div>
 
-          <div className="text-center small text-muted mb-1">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => (
-                <div key={label}>{label}</div>
-              ))}
-            </div>
+          <div className="sf-cal-mini__dows" aria-hidden="true">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => (
+              <span key={label}>{label}</span>
+            ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '6px' }}>
+          <div className="sf-cal-mini__grid" role="grid">
             {gridDays.map((date) => {
               const d = dayjs(date);
               const isCurrentMonth = d.isSame(dayjs(sidebarMonth), 'month');
-              const isSelected = sidebarPopupDate && d.isSame(dayjs(sidebarPopupDate), 'day');
-              const isHovered = sidebarHoverDate && d.isSame(dayjs(sidebarHoverDate), 'day');
+              const isSelected = !!sidebarPopupDate && d.isSame(dayjs(sidebarPopupDate), 'day');
+              const isToday = d.isSame(dayjs(), 'day');
               const key = toDayKey(date);
               const dayEvents = eventsByDate[key] || [];
               const hasEvents = dayEvents.length > 0;
-              const dayColor = hasEvents ? getDayColor({ date, events: dayEvents, now: new Date() }) : null;
-              const uniqueTypes = hasEvents
-                ? Array.from(new Set(dayEvents.map((ev) => getEventTypeNormalized(ev))))
-                : [];
-              const hasMultipleTypes = uniqueTypes.length > 1;
 
-              const tileClasses = ['w-100', 'rounded-3', 'text-center', 'py-2'];
-              let bg = '#f8f9fa';
-              let color = '#212529';
+              // One swatch drives the whole tile, straight from the shared
+              // tokens: a single type paints its soft background, a mix of
+              // types paints the shared gradient, and an empty day stays plain.
+              const dayToken = getDayColor({ events: dayEvents });
+              const typeTokens = getDistinctEventTypesForEvents(dayEvents);
 
-              if (!isCurrentMonth) {
-                // For days outside the active month, render an empty, non-interactive cell
-                return (
-                  <div key={key} style={{ minWidth: 0 }}>
-                    <div className={tileClasses.join(' ')} style={{ background: '#f8f9fa', color: '#adb5bd' }} />
-                  </div>
-                );
-              }
-              // Base event color backgrounds
-              const eventBg =
-                dayColor === 'grape'
-                  ? '#f4e5ff'
-                  : dayColor === 'orange'
-                    ? '#ffe5d0'
-                    : dayColor === 'yellow'
-                      ? '#fff4cc'
-                      : '#f8f9fa';
-
-              if (hasEvents) {
-                // If this day has multiple different event types, use a soft gradient background
-                // matching the legend (purple -> yellow -> orange). Otherwise, use the
-                // single-type tinted background.
-                bg = hasMultipleTypes
-                  ? 'linear-gradient(135deg, rgba(111, 66, 193, 0.225), rgba(255, 193, 7, 0.225), rgba(253, 126, 20, 0.225))'
-                  : eventBg;
-              }
-
-              if (isSelected) {
-                bg = '#2051d8ff';
-                color = '#ffffff';
-              }
+              const classNames = [
+                'sf-cal-mini__day',
+                !isCurrentMonth && 'sf-cal-mini__day--outside',
+                hasEvents && 'sf-cal-mini__day--has-events',
+                isToday && 'sf-cal-mini__day--today',
+                isSelected && 'sf-cal-mini__day--selected',
+              ]
+                .filter(Boolean)
+                .join(' ');
 
               return (
-                <div key={key} style={{ minWidth: 0 }}>
-                  <button
-                    type="button"
-                    className="border-0 p-0 bg-transparent w-100"
-                    onClick={() => {
-                      setSidebarPopupDate(date);
-                      setSidebarHoverDate(null);
-                    }}
-                    onMouseEnter={() => setSidebarHoverDate(date)}
-                    onMouseLeave={() => setSidebarHoverDate(null)}
-                  >
-                    <div
-                      className={tileClasses.join(' ')}
-                      style={{
-                        background: bg,
-                        color,
-                        boxShadow: isSelected
-                          ? '0 4px 12px rgba(0,0,0,0.18)'
-                          : isHovered
-                            ? '0 2px 8px rgba(0,0,0,0.12)'
-                            : 'none',
-                        transform: isHovered && !isSelected ? 'translateY(-1px)' : 'none',
-                        transition: 'box-shadow 120ms ease, transform 120ms ease',
-                      }}
-                    >
-                      <div className="fw-semibold small">{d.date()}</div>
-                    </div>
-                  </button>
-                </div>
+                <button
+                  key={key}
+                  type="button"
+                  role="gridcell"
+                  className={classNames}
+                  aria-label={`${d.format('MMMM D, YYYY')}${hasEvents ? `, ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}` : ', no events'}`}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setSidebarPopupDate(date);
+                    // Selecting a day is what the "Calendar View" button
+                    // reports and what filters the list below it.
+                    setSidebarDate(date);
+                  }}
+                  style={{
+                    background: getSwatchFill(dayToken) || 'transparent',
+                    color: dayToken ? dayToken.fg : 'var(--sf-slate)',
+                    // Same hairline as the legend swatch, so a tinted day and
+                    // its legend entry read as the same colour chip.
+                    borderColor: dayToken ? dayToken.fg : 'transparent',
+                  }}
+                >
+                  <span className="sf-cal-mini__daynum">{d.date()}</span>
+                  {typeTokens.length > 0 && (
+                    <span className="sf-cal-mini__dots">
+                      {typeTokens.map((token) => (
+                        <span
+                          key={token.key}
+                          className="sf-cal-mini__dot"
+                          style={{ background: token.dot }}
+                        />
+                      ))}
+                    </span>
+                  )}
+                </button>
               );
             })}
           </div>
 
           <Divider my="xs" />
 
-          {sidebarPopupDate && sidebarEvents.length > 1 && (
-            <Group justify="flex-start" gap="xs" mb={4}>
-              <Box
-                style={{
-                  width: 32,
-                  height: 12,
-                  borderRadius: 999,
-                  background:
-                    'linear-gradient(90deg, rgba(111, 66, 193, 0.5), rgba(255, 193, 7, 0.5), rgba(253, 126, 20, 0.5))',
-                }}
-              />
-              <Text size="xs" c="dimmed">
-                Multiple event types on this date
-              </Text>
-            </Group>
-          )}
+          {/* Always-on legend: the tile colours above are only meaningful if
+              the swatches that produced them are visible, so this is shown for
+              every month rather than only when a mixed-type day is selected. */}
+          <ul className="sf-cal-mini__legend">
+            {CALENDAR_TYPE_LEGEND.map((token) => (
+              <li key={token.key}>
+                <span
+                  className="sf-cal-typelist__dot"
+                  style={{
+                    background: getSwatchFill(token),
+                    borderColor: token.fg,
+                  }}
+                />
+                <span>{token.label}</span>
+              </li>
+            ))}
+          </ul>
+
+          <Divider my="xs" />
 
           <Box style={{ maxHeight: 260, overflowY: 'auto', paddingRight: 4 }}>
             {sidebarPopupDate && sidebarEvents.length > 0 ? (
@@ -1305,20 +1175,20 @@ export function CalendarPage() {
                     : (!end
                         ? start.format('h:mm A')
                         : `${start.format('h:mm A')} - ${end.format('h:mm A')}`);
-                  const location = ev.location || ev.barangay || '—';
+                  const location = ev.location || ev.barangay || 'â€”';
 
-                  const isHovered = sidebarHoverEventId === ev.id;
+                  const isHovered = sidebarHoverEventId === getEventKey(ev);
 
                   return (
                     <button
-                      key={ev.id}
+                      key={getEventKey(ev)}
                       type="button"
                       className="border-0 bg-transparent w-100 text-start p-0"
                       onClick={() => {
                         setSidebarPickerOpened(false);
                         handleEventClick(ev);
                       }}
-                      onMouseEnter={() => setSidebarHoverEventId(ev.id)}
+                      onMouseEnter={() => setSidebarHoverEventId(getEventKey(ev))}
                       onMouseLeave={() => setSidebarHoverEventId(null)}
                       style={{ cursor: 'pointer' }}
                     >
@@ -1338,14 +1208,8 @@ export function CalendarPage() {
                         <Group justify="space-between" gap="xs" align="center">
                           <Group gap={6} align="center">
                             <span
-                              style={{
-                                display: 'inline-block',
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor:
-                                  theme.colors[typeColor]?.[6] || theme.colors.blue[6],
-                              }}
+                              className="sf-cal-status__dot"
+                              style={{ background: typeColor.dot }}
                             />
                             <Text size="xs" c="dimmed" lineClamp={1}>
                               {location}
@@ -1379,11 +1243,18 @@ export function CalendarPage() {
         withCloseButton={false}
         centered
         size="xl"
+        radius="md"
+        classNames={{ content: 'sf-cal-modal' }}
+        overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
       >
         <form
           onSubmit={editForm.onSubmit(async (values) => {
             if (!selectedEventId) return;
             if (!values.date) return;
+            // selectedEventId is the type-qualified key, but the API routes by
+            // the source table's own primary key, so send the raw id.
+            const targetId = selectedEvent?.id;
+            if (targetId == null) return;
 
             const today = dayjs();
             const dateStr = dayjs(values.date).format('YYYY-MM-DD');
@@ -1417,7 +1288,7 @@ export function CalendarPage() {
             };
 
             try {
-              await updateCalendarEvent(selectedEventId, payload);
+              await updateCalendarEvent(targetId, payload);
               showNotification({ title: 'Saved', message: 'Event updated successfully', color: 'green' });
               setEditModalOpened(false);
               await fetchEvents(month);
@@ -1428,43 +1299,76 @@ export function CalendarPage() {
             }
           })}
         >
-          <div className="row g-0 align-items-stretch">
-            <div
-              className="col-md-5 d-none d-md-block bg-light"
-              style={{ borderRight: '1px solid #e5e7eb' }}
-            >
-              <div className="h-100 w-100 p-4 d-flex flex-column justify-content-center" align="left">
-                <div className="mb-3 small text-muted">Schedule Preview</div>
-                <Stack gap="xs">
-                  <Text fw={600}>
-                    {editForm.values.date ? dayjs(editForm.values.date).format('MMMM D, YYYY') : ''}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Type: {editForm.values.type}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Time: {editForm.values.startHour}:{editForm.values.startMinute} {editForm.values.startMeridiem}
+          <div className="sf-cal-form">
+            <div className="sf-cal-form__aside">
+              <p className="sf-cal-form__eyebrow">Schedule Preview</p>
+              <Stack gap="sm">
+                <div className="sf-cal-form__preview-date">
+                  {editForm.values.date ? dayjs(editForm.values.date).format('MMMM D, YYYY') : ''}
+                </div>
+
+                <dl className="sf-cal-form__preview-row">
+                  <dt>Type</dt>
+                  <dd>{editForm.values.type}</dd>
+                </dl>
+
+                <dl className="sf-cal-form__preview-row">
+                  <dt>Time</dt>
+                  <dd>
+                    {editForm.values.startHour}:{editForm.values.startMinute}{' '}
+                    {editForm.values.startMeridiem}
                     {editForm.values.type !== 'Usapan-Series' && editForm.values.endHour && editForm.values.endMinute
-                      ? ` - ${editForm.values.endHour}:${editForm.values.endMinute} ${editForm.values.endMeridiem}`
+                      ? ` – ${editForm.values.endHour}:${editForm.values.endMinute} ${editForm.values.endMeridiem}`
                       : ''}
-                  </Text>
-                  <Badge mt="sm" variant="filled">{editForm.values.status}</Badge>
-                </Stack>
-              </div>
+                  </dd>
+                </dl>
+
+                {editForm.values.type === 'Usapan-Series' && editForm.values.barangay ? (
+                  <dl className="sf-cal-form__preview-row">
+                    <dt>Barangay</dt>
+                    <dd>{editForm.values.barangay}</dd>
+                  </dl>
+                ) : null}
+
+                {editForm.values.type === 'Pre-Marriage Orientation' && editForm.values.location ? (
+                  <dl className="sf-cal-form__preview-row">
+                    <dt>Location</dt>
+                    <dd>{editForm.values.location}</dd>
+                  </dl>
+                ) : null}
+
+                <div>
+                  <Badge
+                    className="sf-cal-status"
+                    style={{
+                      background: getScheduleStateToken(editForm.values.status).bg,
+                      color: getScheduleStateToken(editForm.values.status).fg,
+                    }}
+                  >
+                    <span
+                      className="sf-cal-status__dot"
+                      style={{ background: getScheduleStateToken(editForm.values.status).dot }}
+                    />
+                    {editForm.values.status}
+                  </Badge>
+                </div>
+              </Stack>
             </div>
 
-            <div className="col-12 col-md-7 p-4">
-              <div className="d-flex justify-content-between align-items-start mb-3">
+            <div className="sf-cal-form__main">
+              <div className="sf-cal-form__head">
                 <div>
-                  <div className="text-uppercase small text-muted mb-1">Calendar Schedule</div>
-                  <h2 className="h5 mb-0">Edit Schedule</h2>
+                  <p className="sf-cal-form__eyebrow">Calendar Schedule</p>
+                  <h2 className="sf-cal-form__title">Edit Schedule</h2>
                 </div>
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Close"
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  aria-label="Close edit schedule dialog"
                   onClick={() => setEditModalOpened(false)}
-                />
+                >
+                  <IconX size={18} />
+                </ActionIcon>
               </div>
 
               <Stack>
@@ -1504,19 +1408,30 @@ export function CalendarPage() {
                   firstDayOfWeek={0}
                 />
 
-                <SimpleGrid cols={3} spacing="sm">
-                  <Select label="Start" data={HOURS_12} value={editForm.values.startHour} onChange={(v) => editForm.setFieldValue('startHour', v)} />
-                  <Select label=" " data={MINUTES_COMMON} value={editForm.values.startMinute} onChange={(v) => editForm.setFieldValue('startMinute', v)} />
-                  <Select label=" " data={MERIDIEMS} value={editForm.values.startMeridiem} onChange={(v) => editForm.setFieldValue('startMeridiem', v)} />
-                </SimpleGrid>
+                <Stack gap={10}>
+                  <Stack gap={6}>
+                    <Text className="sf-cal-form__label">Start time</Text>
+                    <div className="sf-cal-form__time">
+                      <Select aria-label="Start hour" data={HOURS_12} value={editForm.values.startHour} onChange={(v) => editForm.setFieldValue('startHour', v)} />
+                      <span className="sf-cal-form__time-sep" aria-hidden="true">:</span>
+                      <Select aria-label="Start minute" data={MINUTES_COMMON} value={editForm.values.startMinute} onChange={(v) => editForm.setFieldValue('startMinute', v)} />
+                      <Select aria-label="Start AM/PM" data={MERIDIEMS} value={editForm.values.startMeridiem} onChange={(v) => editForm.setFieldValue('startMeridiem', v)} />
+                    </div>
+                  </Stack>
 
-                {editForm.values.type !== 'Usapan-Series' ? (
-                  <SimpleGrid cols={3} spacing="sm">
-                    <Select label="End Time" data={HOURS_12} value={editForm.values.endHour} onChange={(v) => editForm.setFieldValue('endHour', v)} />
-                    <Select label=" " data={MINUTES_COMMON} value={editForm.values.endMinute} onChange={(v) => editForm.setFieldValue('endMinute', v)} />
-                    <Select label=" " data={MERIDIEMS} value={editForm.values.endMeridiem} onChange={(v) => editForm.setFieldValue('endMeridiem', v)} onChangeCapture={() => {}} />
-                  </SimpleGrid>
-                ) : null}
+                  {editForm.values.type !== 'Usapan-Series' ? (
+                    <Stack gap={6}>
+                      <Text className="sf-cal-form__label">End time</Text>
+                      <div className="sf-cal-form__time">
+                        <Select aria-label="End hour" data={HOURS_12} value={editForm.values.endHour} onChange={(v) => editForm.setFieldValue('endHour', v)} />
+                        <span className="sf-cal-form__time-sep" aria-hidden="true">:</span>
+                        <Select aria-label="End minute" data={MINUTES_COMMON} value={editForm.values.endMinute} onChange={(v) => editForm.setFieldValue('endMinute', v)} />
+                        <Select aria-label="End AM/PM" data={MERIDIEMS} value={editForm.values.endMeridiem} onChange={(v) => editForm.setFieldValue('endMeridiem', v)} />
+                      </div>
+                      {editForm.errors.endHour && <p className="sf-cal-form__error">{editForm.errors.endHour}</p>}
+                    </Stack>
+                  ) : null}
+                </Stack>
 
                 {editForm.values.type === 'Pre-Marriage Orientation' ? (
                   <Select
@@ -1549,11 +1464,11 @@ export function CalendarPage() {
                   disabled
                 />
 
-                <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
+                <div className="sf-cal-form__actions">
                   <Button variant="default" type="button" onClick={() => setEditModalOpened(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Save</Button>
+                  <Button className="sf-btn-navy" type="submit">Save Changes</Button>
                 </div>
               </Stack>
             </div>
@@ -1567,6 +1482,13 @@ export function CalendarPage() {
         withCloseButton={false}
         centered
         size="xl"
+        padding={0}
+        zIndex={1000}
+        classNames={{ content: 'sf-calsched' }}
+        overlayProps={{ backgroundOpacity: 0.5, blur: 0, transitionProps: { duration: 150 } }}
+        transitionProps={{ transition: 'fade', duration: 150 }}
+        /* Esc to close, focus trap and focus return are Mantine defaults
+           (closeOnEscape / trapFocus / returnFocus all true), left as-is. */
       >
         <form
           onSubmit={addForm.onSubmit(async (values) => {
@@ -1657,58 +1579,84 @@ export function CalendarPage() {
             }
           })}
         >
-          <div className="row g-0 align-items-stretch">
-            <div
-              className="col-md-4 d-none d-md-block bg-light"
-              style={{ borderRight: '1px solid #e5e7eb' }}
-            >
-              <div className="h-100 w-100 p-4 d-flex flex-column justify-content-center" align="left">
-                <div className="mb-3 small text-muted">Schedule Preview</div>
-                <Stack gap="xs">
-                  <Text fw={600}>
-                    {addForm.values.date ? dayjs(addForm.values.date).format('MMMM D, YYYY') : ''}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Type: {addForm.values.type}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Time: {addForm.values.startHour}:{addForm.values.startMinute} {addForm.values.startMeridiem}
-                    {addForm.values.endHour && addForm.values.endMinute
-                      ? ` - ${addForm.values.endHour}:${addForm.values.endMinute} ${addForm.values.endMeridiem}`
-                      : ''}
-                  </Text>
-                  <Badge mt="sm" variant="filled">{addForm.values.status}</Badge>
-                </Stack>
-              </div>
+          <div className="sf-calsched__shell">
+            <div className="sf-calsched__preview">
+              <p className="sf-calsched__preview-eyebrow">Schedule Preview</p>
+              <p
+                className={[
+                  'sf-calsched__preview-date',
+                  !addForm.values.date && 'sf-calsched__preview-date--empty',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {addForm.values.date
+                  ? dayjs(addForm.values.date).format('MMMM D, YYYY')
+                  : 'No date selected'}
+              </p>
+
+              <dl className="sf-calsched__preview-list">
+                <dt>Type</dt>
+                <dd>{addForm.values.type}</dd>
+                <dt>Time</dt>
+                <dd>
+                  {addForm.values.startHour}:{addForm.values.startMinute}{' '}
+                  {addForm.values.startMeridiem}
+                  {addForm.values.endHour && addForm.values.endMinute
+                    ? ` – ${addForm.values.endHour}:${addForm.values.endMinute} ${addForm.values.endMeridiem}`
+                    : ''}
+                </dd>
+              </dl>
+
+              <span
+                className="sf-cal-status"
+                style={{
+                  background: getScheduleStateToken(addForm.values.status).bg,
+                  color: getScheduleStateToken(addForm.values.status).fg,
+                }}
+              >
+                <span
+                  className="sf-cal-status__dot"
+                  style={{ background: getScheduleStateToken(addForm.values.status).dot }}
+                />
+                {addForm.values.status}
+              </span>
             </div>
 
-            <div className="col-12 col-md-8 p-4">
-              <div className="d-flex justify-content-between align-items-start mb-3">
+            <div className="sf-calsched__form">
+              <div className="sf-calsched__header">
                 <div>
-                  <div className="text-uppercase small text-muted mb-1">Calendar Schedule</div>
-                  <h2 className="h5 mb-0">Add Schedule</h2>
+                  <p className="sf-calsched__eyebrow">Calendar Schedule</p>
+                  <h2 className="sf-calsched__title">Add Schedule</h2>
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="sf-calsched__close"
                   aria-label="Close"
                   onClick={() => setAddModalOpened(false)}
-                />
+                >
+                  <IconX size={20} />
+                </button>
               </div>
 
-              <Stack>
-                <Select
-                  label="Type"
-                  data={[
-                    { value: 'Pre-Marriage Orientation', label: 'Pre-Marriage Orientation' },
-                    { value: 'Usapan-Series', label: 'Usapan-Series' },
-                    { value: 'Event/Activity', label: 'Event/Activity' },
-                  ]}
-                  value={addForm.values.type}
-                  onChange={(v) => addForm.setFieldValue('type', v)}
-                />
+              <div className="sf-calsched__body" ref={addBodyRef}>
+                <div className="sf-calsched__grid">
+                  <Select
+                    className="sf-calsched__span-2"
+                    label="Type"
+                    data={[
+                      { value: 'Pre-Marriage Orientation', label: 'Pre-Marriage Orientation' },
+                      { value: 'Usapan-Series', label: 'Usapan-Series' },
+                      { value: 'Event/Activity', label: 'Event/Activity' },
+                    ]}
+                    value={addForm.values.type}
+                    onChange={(v) => addForm.setFieldValue('type', v)}
+                    withinPortal
+                    comboboxProps={{ withinPortal: true, zIndex: 1200 }}
+                  />
                 {addForm.values.type === 'Usapan-Series' && (
                   <Select
+                    className="sf-calsched__span-2"
                     label="Barangay"
                     placeholder="Select barangay"
                     data={SAN_FABIAN_BARANGAYS.map((b) => ({ value: b, label: b }))}
@@ -1717,17 +1665,21 @@ export function CalendarPage() {
                     searchable
                     nothingFoundMessage="No barangays"
                     error={addForm.errors.barangay}
+                    withinPortal
+                    comboboxProps={{ withinPortal: true, zIndex: 1200 }}
                   />
                 )}
                 {addForm.values.type === 'Pre-Marriage Orientation' && (
                   <>
                     <TextInput
+                      className="sf-calsched__span-2"
                       label="Title"
                       placeholder="Automatically set to empty"
                       disabled
                       {...addForm.getInputProps('title')}
                     />
                     <TextInput
+                      className="sf-calsched__span-2"
                       label="Location"
                       placeholder="Enter specific venue or room"
                       {...addForm.getInputProps('location')}
@@ -1737,6 +1689,7 @@ export function CalendarPage() {
                 {addForm.values.type === 'Event/Activity' && (
                   <>
                     <TextInput
+                      className="sf-calsched__span-2"
                       label="Title"
                       placeholder="Enter title"
                       required
@@ -1744,10 +1697,12 @@ export function CalendarPage() {
                       error={addForm.errors.title}
                     />
                     <Textarea
+                      className="sf-calsched__span-2"
                       label="Description"
                       placeholder="Enter description"
                       autosize
-                      minRows={2}
+                      minRows={3}
+                      maxRows={6}
                       {...addForm.getInputProps('description')}
                     />
                     <TextInput
@@ -1763,6 +1718,7 @@ export function CalendarPage() {
                   </>
                 )}
                 <DatePickerInput
+                  className="sf-calsched__span-2"
                   label="Date"
                   placeholder="Select date"
                   value={addForm.values.date}
@@ -1770,32 +1726,34 @@ export function CalendarPage() {
                   firstDayOfWeek={0}
                   error={addForm.errors.date}
                   minDate={new Date()}
+                  popoverProps={{ withinPortal: true, zIndex: 1200 }}
                 />
 
-                <Stack gap={10}>
-                  <Stack gap={6}>
-                    <Text size="sm" fw={500}>Start time</Text>
-                    <Group gap={6} wrap="nowrap">
-                      <Select w={110} data={HOURS_12} value={addForm.values.startHour} onChange={(v)=>addForm.setFieldValue('startHour', v)} />
-                      <Text>:</Text>
-                      <Select w={110} data={MINUTES_COMMON} value={addForm.values.startMinute} onChange={(v)=>addForm.setFieldValue('startMinute', v)} />
-                      <Select w={110} data={MERIDIEMS} value={addForm.values.startMeridiem} onChange={(v)=>addForm.setFieldValue('startMeridiem', v)} />
-                    </Group>
+                <Stack className="sf-calsched__times" gap={10}>
+                  <Stack className="sf-calsched__time-group" gap={6}>
+                    <Text className="sf-calsched__label">Start time</Text>
+                    <div className="sf-calsched__time">
+                      <Select className="sf-calsched__time-part" aria-label="Start hour" data={HOURS_12} value={addForm.values.startHour} onChange={(v)=>addForm.setFieldValue('startHour', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                      <span className="sf-calsched__time-sep" aria-hidden="true">:</span>
+                      <Select className="sf-calsched__time-part" aria-label="Start minute" data={MINUTES_COMMON} value={addForm.values.startMinute} onChange={(v)=>addForm.setFieldValue('startMinute', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                      <Select className="sf-calsched__time-part" aria-label="Start AM/PM" data={MERIDIEMS} value={addForm.values.startMeridiem} onChange={(v)=>addForm.setFieldValue('startMeridiem', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                    </div>
                   </Stack>
-                  <Stack gap={6}>
-                    <Text size="sm" fw={500}>End time</Text>
-                    <Group gap={6} wrap="nowrap">
-                      <Select w={110} data={HOURS_12} value={addForm.values.endHour} onChange={(v)=>addForm.setFieldValue('endHour', v)} />
-                      <Text>:</Text>
-                      <Select w={110} data={MINUTES_COMMON} value={addForm.values.endMinute} onChange={(v)=>addForm.setFieldValue('endMinute', v)} />
-                      <Select w={110} data={MERIDIEMS} value={addForm.values.endMeridiem} onChange={(v)=>addForm.setFieldValue('endMeridiem', v)} />
-                    </Group>
-                    {addForm.errors.endHour && (<Text size="xs" c="red">{addForm.errors.endHour}</Text>)}
+                  <Stack className="sf-calsched__time-group" gap={6}>
+                    <Text className="sf-calsched__label">End time</Text>
+                    <div className="sf-calsched__time">
+                      <Select className="sf-calsched__time-part" aria-label="End hour" data={HOURS_12} value={addForm.values.endHour} onChange={(v)=>addForm.setFieldValue('endHour', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                      <span className="sf-calsched__time-sep" aria-hidden="true">:</span>
+                      <Select className="sf-calsched__time-part" aria-label="End minute" data={MINUTES_COMMON} value={addForm.values.endMinute} onChange={(v)=>addForm.setFieldValue('endMinute', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                      <Select className="sf-calsched__time-part" aria-label="End AM/PM" data={MERIDIEMS} value={addForm.values.endMeridiem} onChange={(v)=>addForm.setFieldValue('endMeridiem', v)} withinPortal comboboxProps={{ withinPortal: true, zIndex: 1200 }} />
+                    </div>
+                    {addForm.errors.endHour && <p className="sf-calsched__error">{addForm.errors.endHour}</p>}
                   </Stack>
                 </Stack>
 
                 {addForm.values.type === 'Pre-Marriage Orientation' ? (
                   <Select
+                    className="sf-calsched__span-2"
                     label="Counselor"
                     placeholder="Select counselor"
                     required
@@ -1803,21 +1761,34 @@ export function CalendarPage() {
                     value={addForm.values.counselorID ? String(addForm.values.counselorID) : null}
                     onChange={(v) => addForm.setFieldValue('counselorID', v ? Number(v) : null)}
                     error={addForm.errors.counselorID}
+                    withinPortal
+                    comboboxProps={{ withinPortal: true, zIndex: 1200 }}
                   />
                 ) : null}
                 <Select
+                  className="sf-calsched__span-2"
                   label="Status"
                   data={['Scheduled', 'Ongoing', 'Finished', 'Cancelled']}
                   value={addForm.values.status}
                   disabled
+                  withinPortal
+                  comboboxProps={{ withinPortal: true, zIndex: 1200 }}
                 />
-                <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button variant="default" type="button" onClick={() => setAddModalOpened(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Submit</Button>
                 </div>
-              </Stack>
+              </div>
+
+              <div className="sf-calsched__footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setAddModalOpened(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Add Schedule
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -1869,6 +1840,6 @@ export function CalendarPage() {
         message="Are you sure you want to cancel this schedule? Existing bookings may be affected."
         loading={cancelLoading}
       />
-    </Stack>
+      </div>
   );
 }

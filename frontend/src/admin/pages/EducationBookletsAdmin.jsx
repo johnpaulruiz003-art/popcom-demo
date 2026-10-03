@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Title, Stack, Group, Button, Table, Modal, TextInput, NumberInput, Checkbox, Loader, Center, Badge, Select, FileInput, Pagination } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
+import { IconArchive, IconEye, IconPlus } from '@tabler/icons-react';
 import {
   listBooklets,
   createBooklet,
@@ -411,20 +412,24 @@ export function EducationBookletsAdmin() {
   return (
     <Stack>
       <Group justify="space-between" mb="sm">
-        <Title order={2}>Education Booklets</Title>
+        <h1 className="adm-head__title">Education Booklets</h1>
+      <p className="adm-head__desc">Manage Education Corner booklets.</p>
         <Group gap="xs">
           <Button
-            variant={showArchived ? 'default' : 'filled'}
+            leftSection={<IconPlus size={16} />}
             onClick={openCreate}
+            className="adm-btn adm-btn--primary adm-btn--icon-mobile"
+            aria-label="Add booklet"
           >
-            Add booklet
+            <span className="adm-btn__label">Add booklet</span>
           </Button>
           <Button
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
+            leftSection={showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}
             onClick={() => setShowArchived((v) => !v)}
+            className="adm-btn adm-btn--secondary adm-btn--icon-mobile"
+            aria-label={showArchived ? 'Show active booklets' : 'Show archived booklets'}
           >
-            Archived
+            <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Archived'}</span>
           </Button>
         </Group>
       </Group>
@@ -432,7 +437,7 @@ export function EducationBookletsAdmin() {
       {loading ? (
         <Center py="lg"><Loader /></Center>
       ) : (
-        <Table striped withTableBorder withColumnBorders highlightOnHover>
+        <Table highlightOnHover className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Title</Table.Th>
@@ -462,25 +467,23 @@ export function EducationBookletsAdmin() {
                 </Table.Td>
                 <Table.Td style={{ textAlign: 'center' }}>
                   <Group justify="center" gap="xs">
-                    <Button size="xs" variant="light" onClick={() => openEdit(b)}>
+                    <Button size="xs" onClick={() => openEdit(b)} className="adm-btn adm-btn--secondary">
                       Edit
                     </Button>
                     {isPublishedItem(b) ? (
                       <Button
-                        size="xs"
-                        color="red"
-                        variant="light"
-                        onClick={() => handleArchive(b.id)}
-                      >
+ size="xs"
+ color="red"
+ onClick={() => handleArchive(b.id)}
+  className="adm-btn adm-btn--secondary">
                         Archive
                       </Button>
                     ) : (
                       <Button
-                        size="xs"
-                        color="green"
-                        variant="light"
-                        onClick={() => handleUnarchive(b)}
-                      >
+ size="xs"
+ color="green"
+ onClick={() => handleUnarchive(b)}
+  className="adm-btn adm-btn--secondary">
                         Unarchive
                       </Button>
                     )}
@@ -601,7 +604,7 @@ export function EducationBookletsAdmin() {
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="adm-iconbtn adm-iconbtn--neutral"
                   aria-label="Close"
                   onClick={() => setModalOpened(false)}
                 />
@@ -656,50 +659,47 @@ export function EducationBookletsAdmin() {
                         }}
                       />
                       <Button
-                        type="button"
-                        color="red"
-                        variant="subtle"
-                        onClick={() => {
-                          setPageInputs((prev) => {
-                            const filtered = prev.filter((_, i) => i !== idx);
-                            const base =
-                              filtered.length > 0
-                                ? filtered
-                                : [{ id: null, pageNumber: 1, imageUrl: '', imageFile: null }];
-                            return base.map((item, i2) => ({ ...item, pageNumber: i2 + 1 }));
-                          });
-                        }}
-                      >
+ type="button"
+ onClick={() => {
+ setPageInputs((prev) => {
+ const filtered = prev.filter((_, i) => i !== idx);
+ const base =
+ filtered.length > 0
+ ? filtered
+ : [{ id: null, pageNumber: 1, imageUrl: '', imageFile: null }];
+ return base.map((item, i2) => ({ ...item, pageNumber: i2 + 1 }));
+ });
+ }}
+  className="adm-btn adm-btn--danger-outline">
                         Remove
                       </Button>
                     </Group>
                   ))}
 
                   <Button
-                    type="button"
-                    variant="light"
-                    onClick={() => {
-                      setPageInputs((prev) => {
-                        const next = [...prev];
-                        const nextIndex = next.length;
-                        next.push({
-                          id: null,
-                          pageNumber: nextIndex + 1,
-                          imageUrl: '',
-                          imageFile: null,
-                        });
-                        return next;
-                      });
-                    }}
-                  >
+ type="button"
+ onClick={() => {
+ setPageInputs((prev) => {
+ const next = [...prev];
+ const nextIndex = next.length;
+ next.push({
+ id: null,
+ pageNumber: nextIndex + 1,
+ imageUrl: '',
+ imageFile: null,
+ });
+ return next;
+ });
+ }}
+  className="adm-btn adm-btn--secondary">
                     Add image
                   </Button>
 
                   <Group justify="flex-end" mt="md">
-                    <Button variant="default" type="button" onClick={() => setModalOpened(false)}>
+                    <Button type="button" onClick={() => setModalOpened(false)} className="adm-btn adm-btn--neutral">
                       Cancel
                     </Button>
-                    <Button type="submit" loading={saving}>
+                    <Button type="submit" loading={saving} className="adm-btn adm-btn--primary">
                       Save
                     </Button>
                   </Group>
@@ -722,7 +722,7 @@ export function EducationBookletsAdmin() {
           <Center py="lg"><Loader /></Center>
         ) : (
           <Stack>
-            <Table striped withTableBorder withColumnBorders highlightOnHover>
+            <Table highlightOnHover className="adm-table">
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Page #</Table.Th>
@@ -737,10 +737,10 @@ export function EducationBookletsAdmin() {
                     <Table.Td>{p.image_url}</Table.Td>
                     <Table.Td>
                       <Group justify="flex-end" gap="xs">
-                        <Button size="xs" variant="light" type="button" onClick={() => openPageEdit(p)}>
+                        <Button size="xs" type="button" onClick={() => openPageEdit(p)} className="adm-btn adm-btn--secondary">
                           Edit
                         </Button>
-                        <Button size="xs" color="red" variant="light" type="button" onClick={() => handleDeletePage(p.id)}>
+                        <Button size="xs" color="red" type="button" onClick={() => handleDeletePage(p.id)} className="adm-btn adm-btn--secondary">
                           Remove
                         </Button>
                       </Group>
@@ -768,7 +768,7 @@ export function EducationBookletsAdmin() {
                   />
                 </Group>
                 <Group justify="flex-end">
-                  <Button type="submit" size="sm">
+                  <Button type="submit" size="sm" className="adm-btn adm-btn--primary adm-btn--sm">
                     {pageForm.values.id ? 'Update page' : 'Add page'}
                   </Button>
                 </Group>

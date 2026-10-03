@@ -1,0 +1,1610 @@
+/* ==================================================================
+   San Fabian Population Office - landing page design system
+   Formal, calm, trustworthy. Solid colours only. Motion limited to
+   150-200ms colour / shadow / border transitions on hover and focus,
+   all disabled under prefers-reduced-motion.
+   ================================================================== */
+
+/* ---------- Design tokens ---------- */
+:root {
+  --sf-navy: #0b2a6f;
+  --sf-navy-dark: #08205a;
+  --sf-navy-deep: #061743;
+  --sf-blue: #1d4ed8;
+  --sf-blue-dark: #1739a8;
+  --sf-orange: #e8712b;
+  --sf-orange-dark: #c85a1c;
+  --sf-white: #ffffff;
+  --sf-gray-50: #f5f7fa;
+  --sf-gray-100: #eef1f6;
+  --sf-gray-200: #dde3ec;
+  --sf-gray-300: #c3ccdb;
+  --sf-slate: #1f2937;
+  --sf-slate-soft: #3f4a5a;
+  --sf-slate-muted: #55606f;
+  --sf-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sf-radius-sm: 4px;
+  --sf-radius: 6px;
+  --sf-radius-lg: 8px;
+  --sf-border: 1px solid var(--sf-gray-200);
+  --sf-border-strong: 1px solid var(--sf-gray-300);
+  --sf-shadow-sm: 0 1px 2px rgba(11, 42, 111, 0.06);
+  --sf-shadow-md: 0 2px 6px rgba(11, 42, 111, 0.08);
+  --sf-maxw: 1180px;
+  --sf-transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* ---------- Base reset (Bootstrap reboot no longer applies here) ---------- */
+.sf-page,
+.sf-page *,
+.sf-page *::before,
+.sf-page *::after,
+.sf-topbar,
+.sf-topbar *,
+.sf-navbar,
+.sf-navbar *,
+.sf-mobilenav,
+.sf-mobilenav *,
+.sf-footer,
+.sf-footer *,
+.sf-fab {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.sf-page img,
+.sf-page svg,
+.sf-page video,
+.sf-footer img,
+.sf-footer svg,
+.sf-navbar img,
+.sf-navbar svg,
+.sf-mobilenav img,
+.sf-mobilenav svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.sf-page svg,
+.sf-footer svg,
+.sf-navbar svg,
+.sf-mobilenav svg {
+  flex-shrink: 0;
+}
+
+.sf-page :where(button, input, select, textarea),
+.sf-footer :where(button, input, select, textarea),
+.sf-navbar :where(button, input, select, textarea),
+.sf-mobilenav :where(button, input, select, textarea) {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.sf-page :where(a),
+.sf-footer :where(a),
+.sf-navbar :where(a),
+.sf-mobilenav :where(a) {
+  color: var(--sf-blue);
+  text-decoration: none;
+}
+.sf-page :where(a):hover,
+.sf-page :where(a):focus-visible,
+.sf-footer :where(a):hover,
+.sf-footer :where(a):focus-visible,
+.sf-navbar :where(a):hover,
+.sf-mobilenav :where(a):hover {
+  text-decoration: underline;
+}
+
+.sf-navbar ul,
+.sf-mobilenav ul,
+.sf-footer ul,
+.sf-page ul.sf-newslist,
+.sf-page ul.sf-activities {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+/* ---------- Utilities ---------- */
+.sf-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 3000;
+  background: var(--sf-navy);
+  color: var(--sf-white);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom-right-radius: var(--sf-radius);
+}
+.sf-skip-link:focus {
+  left: 0;
+  color: var(--sf-white);
+  outline: 3px solid var(--sf-orange);
+  outline-offset: -3px;
+}
+.sf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Keyboard focus (visible on every interactive element) ---------- */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.sf-page :where(button, a, input, select, textarea):focus-visible,
+.sf-footer :where(button, a):focus-visible,
+.sf-navbar :where(button, a):focus-visible,
+.sf-mobilenav :where(button, a):focus-visible,
+.sf-fab:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+}
+/* A white focus ring reads best on the navy navbar / mobile panel */
+.sf-navbar a:focus-visible,
+.sf-navbar button:focus-visible,
+.sf-mobilenav a:focus-visible,
+.sf-mobilenav button:focus-visible {
+  outline: 2px solid var(--sf-white);
+  outline-offset: 2px;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 10px 20px;
+  background: var(--sf-navy);
+  color: var(--sf-white);
+  border: 1px solid var(--sf-navy);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+  transition: var(--sf-transition);
+}
+.btn-primary:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+  color: var(--sf-white);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 10px 20px;
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+  transition: var(--sf-transition);
+}
+.btn-secondary:hover {
+  background: var(--sf-gray-50);
+  border-color: var(--sf-blue);
+  color: var(--sf-blue);
+}
+
+/* Two global rules fight the flat design system on every button:
+   1. global.css adds a blue glow + a 1px lift to any hovered button.
+   2. Bootstrap underlines links on hover (a:hover, 0-1-1), which outranks
+      the text-decoration: none set on .btn-primary / .btn-secondary.
+   Both are undone here so buttons stay still and never gain an underline. */
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: none;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+/* Opt-in navy theme for Mantine <Button>. Mantine resolves its colours from
+   CSS variables on .mantine-Button-root[data-variant], so the properties
+   themselves are overridden here. */
+.sf-btn-navy.mantine-Button-root {
+  background-color: var(--sf-navy) !important;
+  border-color: var(--sf-navy) !important;
+  color: var(--sf-white) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.sf-btn-navy.mantine-Button-root:hover {
+  background-color: var(--sf-blue) !important;
+  border-color: var(--sf-blue) !important;
+  color: var(--sf-white) !important;
+}
+
+.sf-btn--sm {
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.875rem;
+}
+.sf-btn--block {
+  width: 100%;
+}
+.sf-btn[disabled],
+.sf-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Link-style buttons (Learn more / Read more) */
+.sf-btn--link,
+.sf-card__link,
+button.sf-btn--link,
+button.sf-card__link {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--sf-blue);
+  text-decoration: none;
+  cursor: pointer;
+  appearance: none;
+  transition: var(--sf-transition);
+}
+.sf-btn--link:hover,
+.sf-card__link:hover {
+  color: var(--sf-navy);
+  /* Underline on hover — never a background. global.css gives every
+     "button:hover" a blue glow (box-shadow) plus a 1px lift, which made these
+     text links look like they were getting a filled background behind them. */
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  transform: none;
+  box-shadow: none;
+}
+.sf-card__link {
+  /* Right edge of the card — .sf-card is a flex column. */
+  align-self: flex-end;
+  border-bottom: 1px solid transparent;
+  margin-bottom: 0.25rem;
+}
+/* Keep the card's orange accent, but as a real underline instead of the old
+   1px border line (the underline itself comes from the rule above). */
+.sf-card__link:hover {
+  text-decoration-color: var(--sf-orange);
+  text-decoration-thickness: 2px;
+}
+/* ---------- Top strip (white bar; content spans the navbar container) ---------- */
+.sf-topbar {
+  background: #ffffff;
+}
+.sf-topbar__inner {
+  /* Same container as .sf-navbar__inner (identical max-width + 1.25rem side
+     padding) so the wordmark's left edge lines up with the navbar seal below it
+     and the Bagong Pilipinas logo's right edge lines up with the Login button. */
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 8px 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+/* Both marks keep their natural aspect ratio; never stretched or cropped. */
+.sf-topbar__wordmark {
+  display: block;
+  height: 34px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.sf-topbar__bp {
+  display: block;
+  height: 48px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .sf-topbar__inner {
+    gap: 0.5rem;
+  }
+  .sf-topbar__wordmark {
+    height: 22px;
+    max-width: calc(100% - 50px);
+  }
+  .sf-topbar__bp {
+    height: 36px;
+  }
+}
+
+/* ---------- Navbar ---------- */
+.sf-navbar {
+  background: var(--sf-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: sticky;
+  top: 0;
+  /* Header stack. Mantine uses 200 for modals, 300 for popovers and 400 for
+     tooltips, so everything chrome-related stays well below those - modals
+     must always cover the header. See .sf-mobilenav / .sf-fab below. */
+  z-index: 100;
+}
+.sf-navbar__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 64px;
+}
+.sf-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  color: var(--sf-white);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  border-radius: var(--sf-radius-sm);
+}
+.sf-navbar__brand:hover {
+  color: var(--sf-white);
+  text-decoration: none;
+  opacity: 0.9;
+}
+/* The seal file has a white background, so it sits on a small white circle;
+   a transparent/white version would not need this chip. */
+.sf-navbar img.sf-navbar__brand-logo {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: var(--sf-white);
+  border-radius: 50%;
+  padding: 3px;
+}
+.sf-navbar__brand-text {
+  display: flex;
+  flex-direction: column;
+}
+.sf-navbar__brand-sub {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sf-navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-navbar__link {
+  display: inline-block;
+  padding: 0.5rem 0.7rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--sf-white);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--sf-transition);
+}
+.sf-navbar__link:hover {
+  color: var(--sf-white);
+  background: rgba(255, 255, 255, 0.10);
+  text-decoration: none;
+}
+.sf-navbar__link.is-active {
+  color: var(--sf-white);
+  font-weight: 600;
+  border-bottom-color: var(--sf-orange);
+}
+.sf-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+/* On the navy bar the Login button is inverted (solid white, navy text) so it
+   stays the most prominent item; secondary actions become ghost buttons. */
+.sf-navbar .btn-primary {
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  border-color: var(--sf-white);
+}
+.sf-navbar .btn-primary:hover {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: var(--sf-navy);
+}
+.sf-navbar .btn-secondary {
+  background: transparent;
+  color: var(--sf-white);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.sf-navbar .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: var(--sf-white);
+  color: var(--sf-white);
+}
+
+/* Services dropdown toggle reset: must read as a link, not a control */
+button.sf-navbar__link,
+button.sf-mobilenav__link {
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--sf-white);
+  cursor: pointer;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.sf-navbar__link:hover,
+button.sf-mobilenav__link:hover {
+  color: var(--sf-white);
+  background: rgba(255, 255, 255, 0.10);
+  text-decoration: none;
+}
+
+.sf-dropdown {
+  position: relative;
+}
+.sf-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 288px;
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  box-shadow: 0 2px 6px rgba(11, 42, 111, 0.08);
+  border-radius: var(--sf-radius);
+  padding: 0.375rem;
+  margin: 0;
+  list-style: none;
+  /* Above the sticky navbar, still below Mantine modals (200). */
+  z-index: 120;
+}
+.sf-dropdown__menu[hidden] {
+  display: none;
+}
+.sf-dropdown__link {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--sf-slate);
+  text-decoration: none;
+  border-radius: var(--sf-radius-sm);
+  transition: var(--sf-transition);
+}
+.sf-dropdown__link:hover {
+  background: var(--sf-gray-50);
+  color: var(--sf-blue);
+  text-decoration: none;
+}
+.sf-dropdown__sep {
+  height: 1px;
+  background: var(--sf-gray-200);
+  margin: 0.375rem 0.25rem;
+  border: 0;
+}
+.sf-dropdown__caret {
+  display: inline-block;
+  margin-left: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--sf-white);
+  transition: transform 180ms ease;
+}
+.sf-navbar__link[aria-expanded='true'] .sf-dropdown__caret {
+  transform: rotate(180deg);
+}
+
+/* ---------- Mobile nav ---------- */
+.sf-burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--sf-radius);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.sf-burger:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+.sf-burger__bars,
+.sf-burger__bars::before,
+.sf-burger__bars::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--sf-white);
+  border-radius: 2px;
+}
+.sf-burger__bars {
+  position: relative;
+}
+.sf-burger__bars::before,
+.sf-burger__bars::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+.sf-burger__bars::before { top: -6px; }
+.sf-burger__bars::after { top: 6px; }
+
+.sf-mobilenav {
+  position: relative;
+  /* Sits above the sticky navbar and the floating buttons, but still below
+     Mantine modals (200) so an open popup is never hidden by the header. */
+  z-index: 105;
+  background: var(--sf-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--sf-shadow-md);
+}
+.sf-mobilenav[hidden] {
+  display: none;
+}
+.sf-mobilenav__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem 1.25rem;
+}
+.sf-mobilenav__list {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+.sf-mobilenav__list li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.sf-mobilenav__link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--sf-white);
+  background: none;
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: var(--sf-transition);
+}
+.sf-mobilenav__link:hover {
+  color: var(--sf-white);
+  background: rgba(255, 255, 255, 0.10);
+}
+.sf-mobilenav__link.is-active {
+  color: var(--sf-white);
+  font-weight: 600;
+}
+.sf-mobilenav__sublist {
+  margin: 0 0 0.5rem;
+  padding: 0 0 0.5rem 1rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.25);
+  list-style: none;
+}
+.sf-mobilenav__sublist .sf-mobilenav__link {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px 16px;
+}
+.sf-mobilenav__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+/* Inverted buttons inside the navy mobile panel */
+.sf-mobilenav .btn-primary {
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  border-color: var(--sf-white);
+}
+.sf-mobilenav .btn-primary:hover {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: var(--sf-navy);
+}
+.sf-mobilenav .btn-secondary {
+  background: transparent;
+  color: var(--sf-white);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.sf-mobilenav .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: var(--sf-white);
+  color: var(--sf-white);
+}
+
+/* ---------- Mobile navigation breakpoint ----------
+   Mobile view applies at 1200px and below; the inline nav + actions are
+   swapped for the burger from that width down. Desktop starts at 1201px. */
+@media (max-width: 1200px) {
+  .sf-navbar__links,
+  .sf-navbar__actions {
+    display: none;
+  }
+  .sf-burger {
+    display: inline-flex;
+  }
+}
+@media (min-width: 1201px) {
+  .sf-mobilenav {
+    display: none;
+  }
+}
+/* ---------- Hero ---------- */
+.sf-hero {
+  background: var(--sf-gray-50);
+  border-bottom: var(--sf-border);
+  /* Taller hero (was 3.5rem). */
+  padding: 5rem 0;
+}
+.sf-hero__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+.sf-hero__eyebrow {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-blue);
+  margin: 0 0 0.75rem;
+}
+.sf-hero__title {
+  font-size: clamp(2rem, 5vw, 2.875rem);
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--sf-navy);
+  margin: 0 0 1rem;
+  letter-spacing: -0.015em;
+}
+.sf-hero__text {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--sf-slate-soft);
+  max-width: 56ch;
+  margin: 0 0 1.75rem;
+}
+.sf-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.sf-hero__figure {
+  margin: 0;
+}
+.sf-hero__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center top;
+  border: var(--sf-border);
+  border-radius: var(--sf-radius-lg);
+  background: var(--sf-gray-100);
+}
+.sf-hero__caption {
+  margin: 0.625rem 0 0;
+  font-size: 0.875rem;
+  color: var(--sf-slate-muted);
+  line-height: 1.5;
+}
+
+/* ---------- Hero image carousel (manual, no autoplay) ---------- */
+.sf-carousel {
+  width: 100%;
+}
+.sf-carousel:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 3px;
+  border-radius: var(--sf-radius-lg);
+}
+.sf-carousel__viewport {
+  position: relative;
+  width: 100%;
+  /* 16:9 matches the source photos exactly, so the program titles baked into
+     each image are never cropped. Change back to 4 / 3 to restore the old,
+     more square hero crop. */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--sf-border);
+  border-radius: var(--sf-radius-lg);
+  background: var(--sf-gray-100);
+  /* Let the page scroll vertically while we capture horizontal swipes. */
+  touch-action: pan-y;
+}
+.sf-carousel__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.sf-carousel__slide.is-active {
+  opacity: 1;
+}
+/* Higher specificity than the base ".sf-page img" reset so height:100% wins. */
+.sf-carousel__slide .sf-carousel__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+/* 40px circular prev/next buttons, vertically centred inside the image.
+   NOTE: the centring uses top/bottom + auto margins instead of
+   "transform: translateY(-50%)" because global.css applies
+   "transform: translateY(-1px)" to every "button:hover". That would replace the
+   centring transform and make these buttons jump out of place on hover. */
+.sf-carousel__nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin-block: auto;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--sf-shadow-sm);
+  transition: var(--sf-transition);
+}
+.sf-carousel__nav:hover {
+  background: var(--sf-gray-100);
+  color: var(--sf-navy);
+  /* Ignore the site-wide button hover lift and blue glow so the arrows stay
+     perfectly still while the pointer is over them. */
+  transform: none;
+  box-shadow: var(--sf-shadow-sm);
+}
+.sf-carousel__nav--prev { left: 8px; }
+.sf-carousel__nav--next { right: 8px; }
+/* Keep the circle shape when focused (the global focus rule applies a 4px radius). */
+.sf-carousel__nav:focus-visible { border-radius: 50%; }
+/* Dots: 10px circles with a >=24px tap target. */
+.sf-carousel__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 0.5rem;
+}
+.sf-carousel__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.sf-carousel__dot::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sf-gray-300);
+  transition: background-color 180ms ease;
+}
+.sf-carousel__dot.is-active::before {
+  background: var(--sf-navy);
+}
+.sf-carousel__dot:hover::before {
+  background: var(--sf-slate-muted);
+}
+/* Same reasoning as the arrows: no lift or glow, only the dot colour changes. */
+.sf-carousel__dot:hover {
+  transform: none;
+  box-shadow: none;
+}
+.sf-carousel__dot:focus-visible { border-radius: 50%; }
+.sf-carousel__counter {
+  color: var(--sf-slate-muted);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-carousel__slide,
+  .sf-carousel__dot::before {
+    transition: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .sf-hero__inner {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 3.5rem;
+  }
+}
+@media (max-width: 480px) {
+  .sf-hero {
+    padding: 3rem 0;
+  }
+  .sf-hero__actions .btn-primary,
+  .sf-hero__actions .btn-secondary {
+    width: 100%;
+  }
+}
+
+/* ---------- Quick info bar ---------- */
+.sf-quickinfo {
+  background: var(--sf-navy);
+  color: var(--sf-white);
+  padding: 1.75rem 0;
+}
+.sf-quickinfo__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+.sf-quickinfo__item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.sf-quickinfo__icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--sf-orange);
+  flex-shrink: 0;
+}
+.sf-quickinfo__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b9c8e6;
+  margin: 0 0 0.25rem;
+}
+.sf-quickinfo__value {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--sf-white);
+  margin: 0;
+}
+.sf-quickinfo__value a {
+  color: var(--sf-white);
+}
+.sf-quickinfo__value a:hover {
+  text-decoration: underline;
+}
+.sf-quickinfo__todo {
+  color: #ffd9c2;
+  font-style: italic;
+}
+@media (min-width: 700px) {
+  .sf-quickinfo__inner {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* ---------- Generic section shell ---------- */
+.sf-section {
+  padding: 3.5rem 0;
+}
+.sf-section--tint {
+  background: var(--sf-gray-50);
+  border-top: var(--sf-border);
+  border-bottom: var(--sf-border);
+}
+.sf-section__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.sf-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.sf-section__title {
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--sf-navy);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.sf-section__sub {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--sf-slate-muted);
+  max-width: 68ch;
+}
+.sf-section__rule {
+  width: 56px;
+  height: 3px;
+  background: var(--sf-orange);
+  border: 0;
+  margin: 0.75rem 0 0;
+}
+
+/* ---------- Service cards ---------- */
+.sf-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .sf-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 992px) {
+  .sf-cards { grid-template-columns: repeat(3, 1fr); }
+}
+.sf-card {
+  background: var(--sf-white);
+  border: var(--sf-border);
+  border-radius: var(--sf-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sf-shadow-sm);
+  transition: var(--sf-transition);
+}
+.sf-card:hover {
+  border-color: var(--sf-gray-300);
+  box-shadow: var(--sf-shadow-md);
+}
+.sf-card__icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin: 0 0 1rem;
+  flex-shrink: 0;
+}
+.sf-card__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--sf-navy);
+  margin: 0 0 0.5rem;
+}
+.sf-card__text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-muted);
+  margin: 0 0 1.25rem;
+  flex-grow: 1;
+}
+
+/* ---------- Mission / Vision / Beliefs ---------- */
+.sf-pillars {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .sf-pillars { grid-template-columns: repeat(3, 1fr); }
+}
+.sf-pillar {
+  background: var(--sf-white);
+  border: var(--sf-border);
+  border-left: 3px solid var(--sf-navy);
+  border-radius: var(--sf-radius);
+  padding: 1.5rem;
+  box-shadow: var(--sf-shadow-sm);
+}
+.sf-pillar__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sf-navy);
+  margin: 0 0 0.75rem;
+}
+.sf-pillar__text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-soft);
+  margin: 0;
+}
+.sf-pillar__list {
+  margin: 0;
+  padding-left: 1.125rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-soft);
+}
+.sf-pillar__list li { margin-bottom: 0.375rem; }
+.sf-pillar__list li:last-child { margin-bottom: 0; }
+/* ---------- News list ---------- */
+.sf-newslist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--sf-border);
+}
+.sf-newsitem {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  border-bottom: var(--sf-border);
+}
+/* Thumbnails share one fixed box so every image renders at the same size.
+   A fixed aspect-ratio + object-fit: 'cover' normalizes mixed portrait,
+   square and 16:10 uploads, which previously each kept their own natural
+   height and left the rows visibly ragged. Phones get the full-width banner at
+   16:9; from 640px up it becomes the fixed 260px / 16:10 column box. */
+.sf-newsitem__thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  border: var(--sf-border);
+  border-radius: var(--sf-radius);
+  background: var(--sf-gray-100);
+  flex-shrink: 0;
+}
+/* The text column stacks date, headline, excerpt and the "Read more" CTA.
+   min-width: 0 lets it shrink (and wrap) instead of widening the row, and
+   margin-top: auto pins the CTA to the bottom of the row so every "Read more"
+   sits on the same line. */
+.sf-newsitem__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* "Read more" sits at the right edge, on the row's bottom line. */
+.sf-newsitem__body > .sf-btn--link {
+  align-self: flex-end;
+  margin-top: auto;
+}
+.sf-newsitem__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: var(--sf-slate-muted);
+  margin: 0 0 0.375rem;
+}
+/* Headline is clamped to two lines so a long title cannot make one row taller
+   than the next; the excerpt then starts directly under it. */
+.sf-newsitem__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 0.5rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.sf-newsitem__link {
+  color: var(--sf-navy);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: var(--sf-transition);
+}
+.sf-newsitem__link:hover {
+  color: var(--sf-blue);
+  border-bottom-color: var(--sf-orange);
+  text-decoration: none;
+}
+/* Preview text is cut by CSS, never by JavaScript: exactly two lines on wide
+   screens (three on phones, see the media query below) so every item shows the
+   same amount of text, the browser draws the trailing "…" itself, and the text
+   runs the full width of the column so it wraps level with "Read more". */
+.sf-newsitem__excerpt {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-muted);
+  margin: 0 0 0.75rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  /* Wrap long unbroken strings (URLs, reference codes) instead of letting them
+     spill out of the row, and break only at word boundaries when possible. */
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+/* Phones: thumbnail on top (see the base rules above), then date, headline,
+   excerpt and the "Read more" link stacked in the text column. Three lines of
+   title / preview keeps the narrower column readable. */
+@media (max-width: 639.98px) {
+  .sf-newsitem__title,
+  .sf-newsitem__excerpt {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+}
+@media (min-width: 640px) {
+  .sf-newsitem { flex-direction: row; gap: 1.5rem; }
+  /* Fixed thumbnail column. Its height (260px at 16:10) is what gives every row
+     the same height, since the clamped text column never grows past it. */
+  .sf-newsitem__thumb {
+    width: 260px;
+    aspect-ratio: 16 / 10;
+  }
+  /* The body fills the rest of the row so the right-aligned "Read more" hugs
+     the right edge of the item instead of stopping at the end of the text. */
+  .sf-newsitem__body { flex: 1 1 auto; }
+}
+
+/* ---------- Pagination ---------- */
+.sf-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  font-size: 0.9375rem;
+  color: var(--sf-slate-muted);
+}
+.sf-pagination__page {
+  min-width: 2.25rem;
+  padding: 0.3125rem 0.5rem;
+  border: 1px solid var(--sf-gray-300);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-white);
+  color: var(--sf-navy);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: var(--sf-transition);
+}
+.sf-pagination__page:hover:not(:disabled) {
+  border-color: var(--sf-blue);
+  background: var(--sf-gray-100);
+  color: var(--sf-blue);
+}
+.sf-pagination__page[aria-current='page'] {
+  border-color: var(--sf-navy);
+  background: var(--sf-navy);
+  color: var(--sf-white);
+}
+.sf-pagination__page:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+}
+.sf-pagination__gap {
+  padding: 0 0.25rem;
+  color: var(--sf-slate-muted);
+}
+.sf-pagination__status {
+  margin-left: 0.5rem;
+}
+
+/* ---------- Alerts / empty states ---------- */
+.sf-alert {
+  border: var(--sf-border);
+  border-left: 3px solid var(--sf-orange);
+  border-radius: var(--sf-radius);
+  background: var(--sf-white);
+  padding: 1rem 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-soft);
+}
+.sf-alert--error {
+  border-left-color: #b42318;
+  color: #7a271a;
+}
+.sf-empty {
+  border: 1px dashed var(--sf-gray-300);
+  border-radius: var(--sf-radius);
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--sf-slate-muted);
+  background: var(--sf-white);
+}
+
+/* ---------- Upcoming activities ---------- */
+/* Card grid at every width. min() keeps the track from overflowing on very
+   narrow screens; auto-fill keeps card widths consistent when there are
+   fewer cards than the column count. */
+.sf-activities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-activity {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 20px;
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-top: 3px solid var(--sf-blue);
+  border-radius: var(--sf-radius-lg);
+  box-shadow: var(--sf-shadow-sm);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.sf-activity--pmo { border-top-color: var(--sf-orange); }
+.sf-activity--usapan { border-top-color: var(--sf-navy); }
+.sf-activity:hover {
+  border-color: var(--sf-navy);
+  border-top-color: var(--sf-navy);
+  box-shadow: var(--sf-shadow-md);
+}
+.sf-activity__date {
+  width: 68px;
+  flex: 0 0 68px;
+  text-align: center;
+  border: var(--sf-border);
+  border-radius: var(--sf-radius);
+  background: var(--sf-white);
+  padding: 0.5rem 0.25rem;
+}
+.sf-activity__month {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-orange-dark);
+}
+.sf-activity__day {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--sf-navy);
+}
+/* Card header: date badge left, category label right */
+.sf-activity__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.sf-activity__type {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-orange-dark);
+  margin: 0;
+  text-align: right;
+  min-width: 0;
+}
+.sf-activity__title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0.5rem 0 0.25rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.sf-activity__time {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--sf-slate-muted);
+  margin: 0;
+}
+.sf-activity__clock {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+/* Only rendered when the activity actually has one (PMO/Usapan have none),
+   so there is no empty gap on those cards. */
+.sf-activity__desc {
+  display: -webkit-box;
+  margin: 0.5rem 0 0;
+  color: var(--sf-slate-muted);
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+/* Whole card is clickable via the single title button */
+.sf-activity__title .sf-btn--link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.sf-activity__title .sf-btn--link:focus-visible {
+  outline: none;
+}
+.sf-activity:has(.sf-btn--link:focus-visible) {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+}
+/* Reduced motion: drop the card hover transition */
+@media (prefers-reduced-motion: reduce) {
+  .sf-activity {
+    transition: none;
+  }
+}
+/* ---------- Footer ---------- */
+.sf-footer {
+  background: var(--sf-navy-deep);
+  color: #d5deef;
+  padding: 3rem 0 1.5rem;
+  /* Extra room at the bottom so the two fixed .sf-fab buttons (help at
+     bottom-left, back-to-top at bottom-right) never sit over the last
+     line of the bottom bar. */
+  padding-bottom: 80px;
+  margin-top: auto;
+}
+.sf-footer__inner {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+/* On phones the Quick Links and Connect With Us columns are hidden to keep
+   the footer short. They come back at the 700px breakpoint. */
+@media (max-width: 699.98px) {
+  .sf-footer__col--aux { display: none; }
+}
+@media (min-width: 700px) {
+  .sf-footer__inner { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 992px) {
+  .sf-footer__inner { grid-template-columns: 1.4fr 1fr 1fr; gap: 3rem; }
+}
+.sf-footer__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sf-white);
+  margin: 0 0 1rem;
+}
+.sf-footer__text {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #c3d0e6;
+  margin: 0 0 0.5rem;
+}
+.sf-footer__list { margin: 0; padding: 0; list-style: none; }
+.sf-footer__list li { margin-bottom: 0.5rem; }
+.sf-footer__link {
+  font-size: 0.9375rem;
+  color: #c3d0e6;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--sf-transition);
+}
+.sf-footer__link:hover {
+  color: var(--sf-white);
+  text-decoration: underline;
+}
+.sf-footer img.sf-footer__logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  margin: 0 0 1rem;
+  background: var(--sf-white);
+  border-radius: var(--sf-radius-sm);
+  padding: 0.25rem;
+  flex-shrink: 0;
+}
+/* Wide CPD banner, kept in the brand column on a white rounded plate because
+   the source image has a white background. */
+.sf-footer__banner {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0.5rem 0 0;
+  background: var(--sf-white);
+  border-radius: 8px;
+  padding: 8px;
+}
+.sf-footer__banner-img {
+  display: block;
+  max-height: 56px;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.sf-footer__bottom {
+  max-width: var(--sf-maxw);
+  margin: 2.5rem auto 0;
+  /* 72px of side padding clears both fixed floating buttons (44px wide,
+     16px from each edge) so the copyright line and the right-hand text can
+     never end up underneath them. */
+  padding: 16px 72px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: #a9b8d4;
+}
+/* On narrow screens the 72px gutters would waste too much width, so drop
+   them and let the two texts stack on their own lines instead. */
+@media (max-width: 575.98px) {
+  .sf-footer__bottom {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* ---------- Floating buttons (static, non-animated) ---------- */
+.sf-fab {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sf-navy);
+  color: var(--sf-white);
+  border: 1px solid var(--sf-navy);
+  border-radius: 50%;
+  font-family: inherit;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  /* Above page content only - a modal must be able to cover these. */
+  z-index: 110;
+  box-shadow: var(--sf-shadow-md);
+  transition: var(--sf-transition);
+}
+.sf-fab:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+}
+.sf-fab--help { left: 16px; bottom: 16px; }
+.sf-fab--top { right: 16px; bottom: 16px; }
+@media (max-width: 575.98px) {
+  .sf-fab { width: 40px; height: 40px; font-size: 1rem; }
+  .sf-fab--help { left: 12px; bottom: 12px; }
+  .sf-fab--top { right: 12px; bottom: 12px; }
+}
+
+/* ---------- Page shell ---------- */
+.sf-page {
+  background: var(--sf-gray-50);
+  color: var(--sf-slate);
+  font-size: 1rem;
+  line-height: 1.6;
+  /* Fill the area between the sticky navbar and the footer so a short page
+     never leaves a white band above the footer (64px header + 52px footer).
+     The background paints over the whole box, so this alone is enough - no
+     flex needed, which keeps every existing page's layout untouched. */
+  min-height: calc(100vh - 116px);
+}
+.sf-page :where(h1, h2, h3, h4) {
+  color: var(--sf-navy);
+  line-height: 1.25;
+  font-weight: 700;
+}
+.sf-page :where(p) { line-height: 1.6; }
+
+/* ---------- Reduced motion: disable all transitions ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sf-page *,
+  .sf-page *::before,
+  .sf-page *::after,
+  .sf-topbar *,
+  .sf-topbar *::before,
+  .sf-topbar *::after,
+  .sf-navbar *,
+  .sf-navbar *::before,
+  .sf-navbar *::after,
+  .sf-footer *,
+  .sf-footer *::before,
+  .sf-footer *::after,
+  .sf-fab,
+  .sf-fab * {
+    transition-duration: 0.01ms !important;
+    transition-property: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,144 @@
+/* ==================================================================
+   Services page - visual restyle to match the redesigned landing page.
+   Reuses the design tokens and shared classes defined in home.css
+   (navy / blue / orange accent, .btn-primary, .sf-section__* headings).
+   Only presentational rules live here; no page logic is affected.
+   ================================================================== */
+
+/* ---------- Page shell ----------
+   Same soft background / base text styling as the rest of the site.
+   48px top / 64px bottom padding - the bottom space also keeps the floating
+   help / back-to-top buttons clear of the last row of cards. */
+.sf-page.sf-services {
+  min-height: calc(100vh - 116px); /* viewport minus the 64px header + 52px footer */
+  padding: 48px 0 64px;
+}
+
+/* ---------- Headers ----------
+   Reuses .sf-section__head / .sf-section__title / .sf-section__rule /
+   .sf-section__sub from home.css. Only the gap between the two sections
+   needs tuning here (larger margin, no hard divider line). */
+.sf-services .sf-services__section {
+  margin-top: 56px;
+}
+
+/* ---------- Card grid ----------
+   3 columns >= 1024px, 2 columns 640-1023px, 1 column below 640px. */
+.sf-services .sf-services__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .sf-services .sf-services__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .sf-services .sf-services__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---------- Service card ---------- */
+.sf-services .sf-service-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--sf-white);
+  border: var(--sf-border);
+  border-radius: var(--sf-radius-lg); /* 8px */
+  overflow: hidden; /* clips the image to the rounded top corners */
+  box-shadow: var(--sf-shadow-sm);
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.sf-services .sf-service-card:hover {
+  border-color: var(--sf-blue);
+  box-shadow: var(--sf-shadow-md); /* slightly stronger than the resting shadow */
+}
+
+/* Image: fixed 16:10 frame, flush with the card edge (no inner padding), cover
+   crop so there are no letterbox bars above / below. */
+.sf-services .sf-service-card__media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center;
+  background: var(--sf-gray-100);
+  border-top-left-radius: var(--sf-radius-lg);
+  border-top-right-radius: var(--sf-radius-lg);
+}
+
+/* Body: the flex column lets the button sit at the bottom so buttons in a row
+   line up even when titles / descriptions wrap to different heights. */
+.sf-services .sf-service-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 20px;
+}
+
+.sf-services .sf-service-card__title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--sf-navy);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sf-services .sf-service-card__text {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151; /* dark slate, >= 4.5:1 on white */
+  /* Wrap on word boundaries and break long unbroken strings instead of
+     clipping them. Each description is pre-trimmed to a uniform length (with a
+     trailing ellipsis) in ServicesPage.jsx, so no line-clamp is needed here. */
+  overflow-wrap: break-word;
+  /* Stretch every line to the full column width (only the final line stays
+     left-aligned), and let long words hyphenate so the justification doesn't
+     leave gaping holes between short descriptions. */
+  text-align: justify;
+  hyphens: auto;
+}
+.sf-services .sf-service-card__text:last-child {
+  margin-bottom: 0;
+}
+
+/* Button pinned to the bottom of the card */
+.sf-services .sf-service-card__action {
+  margin-top: auto;
+}
+
+/* Primary buttons reuse the site .btn-primary (navy) but darken to the darker
+   navy on hover instead of the shared bright blue. Scoped to this page so the
+   rest of the site keeps the shared behaviour. */
+.sf-services .btn-primary {
+  width: 100%;
+}
+.sf-services .btn-primary:hover {
+  background: var(--sf-navy-dark);
+  border-color: var(--sf-navy-dark);
+  color: var(--sf-white);
+  /* Neutralise the site-wide holographic button glow so the card buttons keep
+     the clean landing-page look described for this page. */
+  transform: none;
+  box-shadow: none;
+}
+.sf-services .btn-primary[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sf-services .btn-primary[disabled]:hover {
+  background: var(--sf-navy);
+  border-color: var(--sf-navy);
+}

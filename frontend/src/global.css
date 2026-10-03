@@ -1,14 +1,35 @@
+:root {
+  --sf-bg: #f5f7fa;
+}
+
 /* ------------------------------------------------------------------ */
 /* Responsive base: mobile-first layout helpers                       */
 /* ------------------------------------------------------------------ */
 
 html {
   overflow-x: clip;
+  background-color: var(--sf-bg, #f5f7fa);
 }
 
 body {
   overflow-x: clip;
   max-width: 100%;
+  background-color: var(--sf-bg, #f5f7fa);
+}
+
+html,
+body,
+#root,
+body .mantine-AppShell-root,
+body .mantine-AppShell-main,
+body .sf-shell-main,
+body .sf-shell-content {
+  background-color: var(--sf-bg, #f5f7fa);
+}
+
+.sf-shell-main {
+  min-height: var(--sf-shell-main-min-height-fallback, calc(100vh - 116px));
+  min-height: var(--sf-shell-main-min-height, calc(100dvh - 116px));
 }
 
 img,

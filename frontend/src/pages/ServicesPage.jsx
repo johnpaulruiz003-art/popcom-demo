@@ -1,24 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Title,
   Text,
   Stack,
-  Group,
   Card,
   Button,
   Modal,
   Textarea,
   Loader,
   Center,
-  SimpleGrid,
-  Image,
-  Badge,
   TextInput,
   Select
 } from '@mantine/core';
-import { AspectRatio, useMantineTheme } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
@@ -41,6 +34,7 @@ import imgDemographicHome from '../content/Home Images/DemographicHomePage.jpg';
 import imgCommunityEventsHome from '../content/Home Images/CommunityEventsHomePage.jpg';
 import imgSupportHome from '../content/Home Images/SupportHomePage.jpg';
 import dayjs from 'dayjs';
+import '../styles/servicesPage.css';
 
 const OFFICIAL_SERVICES = [
   {
@@ -104,12 +98,27 @@ const OFFICIAL_SERVICES = [
   },
 ];
 
+// Every service-card description is trimmed to one shared length so the cards
+// look uniform. Longer text is cut at the last whole word and marked with an
+// ellipsis; the line wrapping itself is handled by CSS.
+const SERVICE_DESCRIPTION_MAX_LENGTH = 100;
+
+function truncateDescription(text, maxLength = SERVICE_DESCRIPTION_MAX_LENGTH) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (value.length <= maxLength) return value;
+
+  const clipped = value.slice(0, maxLength);
+  const lastSpace = clipped.lastIndexOf(' ');
+  const head = lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped;
+
+  // Drop any dangling punctuation so the ellipsis reads cleanly.
+  return `${head.replace(/[\s.,;:!?]+$/, '')}…`;
+}
+
 export function ServicesPage() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [hoveredServiceKey, setHoveredServiceKey] = useState(null);
 
   const [serviceDetailsOpened, setServiceDetailsOpened] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -140,10 +149,6 @@ export function ServicesPage() {
   const { updateDraft } = usePmoBooking();
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useMantineTheme();
-  const smBreakpoint = theme.breakpoints.sm;
-  const smMaxWidth = typeof smBreakpoint === 'number' ? `${smBreakpoint}px` : smBreakpoint;
-  const isMobile = useMediaQuery(`(max-width: ${smMaxWidth})`);
 
   const formatTime12Hour = (timeStr) => {
     if (!timeStr) return '';
@@ -504,161 +509,113 @@ export function ServicesPage() {
     return 'Open';
   };
 
-  const serviceActionButtonProps = {
-    fullWidth: true,
-    color: 'blue',
-    variant: 'filled',
-    radius: 'md',
-    size: 'md',
-    styles: {
-      label: {
-        fontWeight: 600,
-        whiteSpace: 'normal',
-        textAlign: 'center',
-      },
-    },
-  };
-
   return (
-    <Stack spacing="lg" px="lg" py="lg">
-      {loading ? (
-        <Center py="lg">
-          <Loader />
-        </Center>
-      ) : error ? (
-        <Text color="red">{error}</Text>
-      ) : (
-        <Stack spacing="xl">
-          <Stack spacing="xs">
-            <Title order={1} className="hover-underline">Services</Title>
-          </Stack>
-          <SimpleGrid cols={isMobile ? 2 : 3} spacing="md">
-            {servicesWithAction.map((service) => {
-              const showAction = service.kind === 'requestable';
-              const isDisabled = showAction && !service.isActive;
+    <div className="sf-page sf-services">
+      <div className="sf-section__inner">
+        {loading ? (
+          <Center py="lg">
+            <Loader />
+          </Center>
+        ) : error ? (
+          <Text color="red">{error}</Text>
+        ) : (
+          <>
+            <header className="sf-section__head">
+              <div>
+                <h1 className="sf-section__title" id="sf-services-title">
+                  Services
+                </h1>
+                <hr className="sf-section__rule" />
+                <p className="sf-section__sub">
+                  Programs and services offered by the Municipal Office of Population for residents of San
+                  Fabian.
+                </p>
+              </div>
+            </header>
 
-              return (
-                <Card
-                  key={service.key}
-                  withBorder
-                  radius="md"
-                  shadow="sm"
-                  className="holographic-card"
-                  style={{
-                    height: '100%',
-                    minHeight: 340,
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    transition: 'transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease',
-                  }}
-                  onClick={() => handleServiceCardClick(service)}
-                  onMouseEnter={() => setHoveredServiceKey(service.key)}
-                  onMouseLeave={() => setHoveredServiceKey(null)}
-                >
-                  <Stack style={{ height: '100%' }} spacing="sm">
-                  <AspectRatio ratio={4 / 4} style={{ background: 'var(--mantine-color-gray-1)', borderRadius: 'var(--mantine-radius-sm)' }}>
-                    <Image
-                      src={service.imageUrl || undefined}
-                      alt={service.title}
-                      fit="contain"
-                      styles={{ image: { objectFit: 'contain' } }}
-                    />
-                  </AspectRatio>
+            <ul className="sf-services__grid">
+              {servicesWithAction.map((service) => {
+                const showAction = service.kind === 'requestable';
+                const isDisabled = showAction && !service.isActive;
 
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Text fw={700} lineClamp={2}>
-                      {service.title}
-                    </Text>
-                  </Group>
-
-                  <Text
-                    size="sm"
-                    c="dimmed"
-                    style={{ flex: 1 }}
-                    lineClamp={4}
-                  >
-                    {service.description}
-                  </Text>
-
-                  {showAction ? (
-                    <Button
-                      {...serviceActionButtonProps}
-                      disabled={isDisabled}
-                      color={serviceActionButtonProps.color}
-                      variant={serviceActionButtonProps.variant}
-                      styles={serviceActionButtonProps.styles}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleServiceAction(service);
-                      }}
+                return (
+                  <li key={service.key}>
+                    <article
+                      className="sf-service-card"
+                      onClick={() => handleServiceCardClick(service)}
                     >
-                      {getServiceActionLabel(service)}
-                    </Button>
-                  ) : null}
-                </Stack>
-              </Card>
-            );
-          })}
-          </SimpleGrid>
-      <hr />
-          <Stack spacing="xs">
-            <Title order={1} className="hover-underline">Other Municipal Services</Title>
-          </Stack>
-          <SimpleGrid cols={isMobile ? 2 : 3} spacing="md">
-            {servicesWithoutAction.map((service) => {
-              const showAction = service.kind === 'requestable';
-              const isDisabled = showAction && !service.isActive;
-
-              return (
-                <Card
-                  key={service.key}
-                  withBorder
-                  radius="md"
-                  shadow="sm"
-                  className="holographic-card"
-                  style={{
-                    height: '100%',
-                    minHeight: 340,
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    transition: 'transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease',
-                  }}
-                  onClick={() => handleServiceCardClick(service)}
-                  onMouseEnter={() => setHoveredServiceKey(service.key)}
-                  onMouseLeave={() => setHoveredServiceKey(null)}
-                >
-                  <Stack style={{ height: '100%' }} spacing="sm">
-                    <AspectRatio ratio={4 / 4} style={{ background: 'var(--mantine-color-gray-1)', borderRadius: 'var(--mantine-radius-sm)' }}>
-                      <Image
+                      <img
+                        className="sf-service-card__media"
                         src={service.imageUrl || undefined}
-                        alt={service.title}
-                        fit="contain"
-                        styles={{ image: { objectFit: 'contain' } }}
+                        alt={`${service.title} — programs and services at the Municipal Office of Population, San Fabian`}
+                        loading="lazy"
                       />
-                    </AspectRatio>
 
-                    <Group justify="space-between" align="flex-start" wrap="nowrap">
-                      <Text fw={700} lineClamp={2}>
-                        {service.title}
-                      </Text>
-                    </Group>
+                      <div className="sf-service-card__body">
+                        <h3 className="sf-service-card__title">{service.title}</h3>
 
-                    <Text
-                      size="sm"
-                      c="dimmed"
-                      style={{ flex: 1 }}
-                      lineClamp={4}
+                        <p className="sf-service-card__text">
+                          {truncateDescription(service.description)}
+                        </p>
+
+                        {showAction ? (
+                          <button
+                            type="button"
+                            className="btn-primary sf-btn--block sf-service-card__action"
+                            disabled={isDisabled}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleServiceAction(service);
+                            }}
+                          >
+                            {getServiceActionLabel(service)}
+                          </button>
+                        ) : null}
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
+            </ul>
+            <section className="sf-services__section" aria-labelledby="sf-other-services-title">
+              <header className="sf-section__head">
+                <div>
+                  <h2 className="sf-section__title" id="sf-other-services-title">
+                    Other Municipal Services
+                  </h2>
+                  <hr className="sf-section__rule" />
+                </div>
+              </header>
+
+              <ul className="sf-services__grid">
+                {servicesWithoutAction.map((service) => (
+                  <li key={service.key}>
+                    <article
+                      className="sf-service-card"
+                      onClick={() => handleServiceCardClick(service)}
                     >
-                      {service.description}
-                    </Text>
-                  </Stack>
-                </Card>
-              );
-            })}
-          </SimpleGrid>
-        </Stack>
-      )}
-      <hr />
+                      <img
+                        className="sf-service-card__media"
+                        src={service.imageUrl || undefined}
+                        alt={`${service.title} — programs and services at the Municipal Office of Population, San Fabian`}
+                        loading="lazy"
+                      />
+
+                      <div className="sf-service-card__body">
+                        <h3 className="sf-service-card__title">{service.title}</h3>
+
+                        <p className="sf-service-card__text">
+                          {truncateDescription(service.description)}
+                        </p>
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
+      </div>
 
       <Modal opened={pmoInfoOpened} onClose={() => setPmoInfoOpened(false)} centered size="lg" withCloseButton={false}>
         <div className="bg-white">
@@ -1150,6 +1107,6 @@ export function ServicesPage() {
       />
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} />
-    </Stack>
+    </div>
   );
 }

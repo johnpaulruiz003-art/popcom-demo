@@ -265,23 +265,24 @@ export function PmoSchedules() {
     <Stack>
       <Group justify="space-between" align="center" mb="xs">
         <div>
-          <Title order={2}>PMO - Schedules</Title>
-          <Text c="dimmed">Manage available PMO schedules.</Text>
+          <h1 className="adm-head__title">PMO - Schedules</h1>
+          <Text c="dimmed">
+      <p className="adm-head__desc">Manage available PMO schedules.</p></Text>
         </div>
         <Group gap="xs">
-          <Button size="xs" variant="outline" onClick={() => setSummaryOpen(true)} disabled={rows.length === 0}>
+          <Button size="xs" onClick={() => setSummaryOpen(true)} disabled={rows.length === 0} className="adm-btn adm-btn--secondary adm-btn--sm">
             Summary
           </Button>
           <Button
-            size="xs"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
-            onClick={() => {
-              setShowArchived((prev) => !prev);
-              setPage(1);
-            }}
-            disabled={rows.length === 0}
-          >
+ size="xs"
+ variant={showArchived ? 'filled' : 'outline'}
+ color={showArchived ? 'gray' : 'dark'}
+ onClick={() => {
+ setShowArchived((prev) => !prev);
+ setPage(1);
+ }}
+ disabled={rows.length === 0}
+  className="adm-btn adm-btn--primary adm-btn--sm">
             Archived
           </Button>
         </Group>
@@ -295,7 +296,7 @@ export function PmoSchedules() {
         <Text size="sm" c="dimmed">No schedules found.</Text>
       ) : (
         <>
-          <Table striped withTableBorder withColumnBorders highlightOnHover>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>
@@ -326,35 +327,32 @@ export function PmoSchedules() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="flex-start">
-                      <Button size="xs" variant="light" onClick={() => openEdit(s)}>Edit</Button>
+                      <Button size="xs" onClick={() => openEdit(s)} className="adm-btn-secondary">Edit</Button>
                       {!isArchived && (
                         <Button
-                          size="xs"
-                          variant="light"
-                          color="yellow"
-                          disabled={s.status === 'Cancelled' || s.status === 'Completed'}
-                          onClick={() => setCancelId(s.id)}
-                        >
+ size="xs"
+ color="yellow"
+ disabled={s.status === 'Cancelled' || s.status === 'Completed'}
+ onClick={() => setCancelId(s.id)}
+  className="adm-btn-secondary">
                           Cancel
                         </Button>
                       )}
                       {!isArchived && (
                         <Button
-                          size="xs"
-                          color="red"
-                          variant="light"
-                          onClick={() => handleArchive(s.id)}
-                        >
+ size="xs"
+ color="red"
+ onClick={() => handleArchive(s.id)}
+  className="adm-btn-secondary">
                           Archive
                         </Button>
                       )}
                       {isArchived && (
                         <Button
-                          size="xs"
-                          color="green"
-                          variant="light"
-                          onClick={() => handleUnarchive(s.id)}
-                        >
+ size="xs"
+ color="green"
+ onClick={() => handleUnarchive(s.id)}
+  className="adm-btn-secondary">
                           Unarchive
                         </Button>
                       )}
@@ -378,7 +376,7 @@ export function PmoSchedules() {
         </>
       )}
 
-      <DeleteConfirmModal
+      <DeleteConfirmModal admin
         opened={cancelId != null}
         onCancel={() => { if (!cancelLoading) setCancelId(null); }}
         onConfirm={async () => {
@@ -446,7 +444,7 @@ export function PmoSchedules() {
               </div>
               <button
                 type="button"
-                className="btn-close"
+                className="adm-iconbtn adm-iconbtn--neutral"
                 aria-label="Close"
                 onClick={() => { setEditOpen(false); setEditing(null); }}
               />
@@ -504,10 +502,10 @@ export function PmoSchedules() {
                 />
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button variant="default" type="button" onClick={() => { setEditOpen(false); setEditing(null); }}>
+                  <Button type="button" onClick={() => { setEditOpen(false); setEditing(null); }} className="adm-btn adm-btn--neutral">
                     Cancel
                   </Button>
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="adm-btn adm-btn--primary">Save changes</Button>
                 </div>
               </Stack>
             </form>
@@ -648,7 +646,7 @@ export function PmoSchedules() {
             <Text size="sm"><b>Total schedules:</b> {filteredSummaryRows.length}</Text>
           </Stack>
 
-          <Table striped highlightOnHover withTableBorder withColumnBorders>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>

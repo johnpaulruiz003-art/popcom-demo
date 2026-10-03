@@ -1,0 +1,1894 @@
+/* ==================================================================
+   Admin Dashboard - shared styles for every /admin route
+
+   Imported ONCE by src/admin/AdminDashboardLayout.jsx, which wraps every
+   admin page, so no page can end up without these rules.
+
+   Two layers:
+     .admin-root  -> an opt-in Mantine theme scope (see below) that recolours
+                     stock Mantine controls (Button, Pagination, Checkbox,
+                     Switch, Tabs...) navy without editing every call site.
+     .adm-*       -> the explicit admin component classes.
+
+   Everything is scoped to .admin-root / .adm-*. No global Mantine variable
+   is overridden, so public pages are unaffected. Mantine modals portal to
+   <body>, so anything rendered inside a dialog opts in with the
+   `adm-modal` class rather than relying on the ancestor.
+
+   MAINTENANCE WARNING (learned the hard way three times in this project):
+   an unterminated rule makes the CSS minifier merge the following selectors
+   into an ":is(...)" group scoped to whatever was left open, silently
+   disabling every rule after it. Always keep braces balanced, and re-check
+   the compiled bundle after editing.
+   ================================================================== */
+
+/* ---------- Mantine theme scope ----------
+   These are *local* custom properties on the admin root. Mantine components
+   read them, so Pagination / Checkbox / Switch / Tabs / a default <Button>
+   all turn navy inside the admin with no per-instance edits.
+   Deliberately does NOT set --mantine-color-body or any other global. */
+.admin-root {
+  --mantine-primary-color-filled: #0b2a6f;
+  --mantine-primary-color-filled-hover: #082055;
+  --mantine-primary-color-light: #eef3ff;
+  --mantine-primary-color-light-hover: #e0eaff;
+  --mantine-primary-color-light-color: #0b2a6f;
+  --mantine-color-blue-filled: #0b2a6f;
+  --mantine-color-blue-filled-hover: #082055;
+  --mantine-color-blue-light: #eef3ff;
+  --mantine-color-blue-light-hover: #e0eaff;
+  --mantine-color-blue-light-color: #0b2a6f;
+  --mantine-color-blue-outline: #0b2a6f;
+  --mantine-color-blue-outline-hover: #1d4ed8;
+  background: #f5f7fa;
+  color: #1f2937;
+}
+
+/* ==================================================================
+   BUTTON SYSTEM
+   One base, eight variants. Every admin button maps to exactly one.
+   ================================================================== */
+.adm-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  /* Colour transitions only. */
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+/* Row-action size. Previously these buttons carried size="xs", but the legacy
+   .adm-btn-secondary.mantine-Button-root rule pinned height to 40px and
+   overrode it, so dense action rows rendered oversized. */
+.adm-btn--xs {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  gap: 4px;
+}
+.adm-btn--xs svg {
+  width: 14px;
+  height: 14px;
+}
+.adm-btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.adm-btn:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-btn[disabled],
+.adm-btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.adm-btn[disabled]:hover,
+.adm-btn[aria-disabled='true']:hover {
+  background: inherit;
+  border-color: inherit;
+  color: inherit;
+}
+
+/* PRIMARY - the main action of a page or dialog. */
+.adm-btn--primary {
+  background: #0b2a6f;
+  border-color: #0b2a6f;
+  color: #fff;
+}
+.adm-btn--primary:hover {
+  background: #082055;
+  border-color: #082055;
+  color: #fff;
+}
+.adm-btn--primary:active {
+  background: #061a44;
+  border-color: #061a44;
+}
+
+/* SECONDARY - Summary, Archived, Edit, View, Cancel, filters. */
+.adm-btn--secondary {
+  background: #fff;
+  border-color: #0b2a6f;
+  color: #0b2a6f;
+}
+.adm-btn--secondary:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #0b2a6f;
+}
+
+/* NEUTRAL - low emphasis: Close, Back, Reset. */
+.adm-btn--neutral {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+.adm-btn--neutral:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+/* DANGER OUTLINE - row level Delete / Reject / Remove. */
+.adm-btn--danger-outline {
+  background: #fff;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+.adm-btn--danger-outline:hover {
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+/* DANGER SOLID - only the final confirm in a delete dialog. */
+.adm-btn--danger-solid {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+}
+.adm-btn--danger-solid:hover {
+  background: #991b1b;
+  border-color: #991b1b;
+  color: #fff;
+}
+
+/* SUCCESS - Approve, Confirm attendance. */
+.adm-btn--success {
+  background: #15803d;
+  border-color: #15803d;
+  color: #fff;
+}
+.adm-btn--success:hover {
+  background: #166534;
+  border-color: #166534;
+  color: #fff;
+}
+
+/* AMBER OUTLINE - Archive. Restore is SECONDARY. */
+.adm-btn--amber-outline {
+  background: #fff;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.adm-btn--amber-outline:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* LINK - inline text actions. */
+.adm-btn--link {
+  height: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.adm-btn--link:hover {
+  background: none;
+  color: #1a3fb0;
+  text-decoration: underline;
+}
+
+/* ICON BUTTON - 36px square (32px in compact tables). */
+.adm-iconbtn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-iconbtn--sm {
+  width: 32px;
+  height: 32px;
+}
+.adm-iconbtn svg {
+  width: 18px;
+  height: 18px;
+}
+.adm-iconbtn:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-iconbtn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.adm-iconbtn--secondary {
+  background: #fff;
+  border-color: #0b2a6f;
+  color: #0b2a6f;
+}
+.adm-iconbtn--secondary:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #0b2a6f;
+}
+.adm-iconbtn--danger-outline {
+  background: #fff;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+.adm-iconbtn--danger-outline:hover {
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+.adm-iconbtn--amber-outline {
+  background: #fff;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.adm-iconbtn--amber-outline:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* TOGGLE - Archived / Summary view / filters. The dot means the state is
+   never conveyed by colour alone. */
+.adm-btn[aria-pressed='true'] {
+  background: #eef3ff;
+  border-color: #0b2a6f;
+  color: #0b2a6f;
+}
+.adm-btn__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* Loading - keeps the width so the row does not jump. */
+.adm-btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* Touch targets: primary actions get 44px on small screens. */
+@media (max-width: 639.98px) {
+  .adm-btn--primary {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-btn,
+  .adm-iconbtn {
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.adm-btn--icon-mobile {
+  min-width: 40px;
+  width: auto;
+  padding-inline: 10px;
+}
+.adm-btn--icon-mobile .mantine-Button-label,
+.adm-btn--icon-mobile .adm-btn__label {
+  display: none;
+}
+.adm-btn--icon-mobile .mantine-Button-section,
+.adm-btn--icon-mobile .adm-btn__icon {
+  margin-right: 0;
+}
+@media (max-width: 767px) {
+  .adm-btn--icon-mobile {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+  }
+  .adm-btn--icon-mobile .mantine-Button-label,
+  .adm-btn--icon-mobile .adm-btn__label {
+    display: none;
+  }
+  .adm-btn--icon-mobile .mantine-Button-section,
+  .adm-btn--icon-mobile .adm-btn__icon {
+    margin-right: 0;
+  }
+}
+
+.adm-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 24px 96px;
+  background: #f5f7fa;
+  color: #1f2937;
+}
+@media (min-width: 1024px) {
+  .adm-shell {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+}
+.adm-content {
+  min-width: 0;
+}
+
+/* ---------- Sidebar ---------- */
+.adm-side__inner {
+  display: flex;
+  flex-direction: column;
+}
+.adm-side__head {
+  margin-bottom: 12px;
+}
+.adm-side__group {
+  margin-top: 20px;
+}
+.adm-side__block {
+  margin-top: 12px;
+}
+.adm-side {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  /* The admin shell has no sticky navbar, so the old `top: 80px` (a 64px
+     navbar + 16px) reserved a blank band above the sidebar while scrolling.
+     --adm-sticky-top / --adm-sticky-vh let a genuinely sticky bar still
+     reserve its real height, and collapse to 16px when there is none. */
+  position: sticky;
+  top: var(--adm-sticky-top, 16px);
+  max-height: calc(100vh - var(--adm-sticky-vh, 32px));
+  max-height: calc(100dvh - var(--adm-sticky-vh, 32px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.adm-side::-webkit-scrollbar {
+  width: 6px;
+}
+.adm-side::-webkit-scrollbar-thumb {
+  background: #dde3ec;
+  border-radius: 999px;
+}
+.adm-side__title {
+  margin: 0 0 12px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.adm-side__section {
+  margin: 24px 0 6px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.adm-side__section:first-of-type {
+  margin-top: 0;
+}
+.adm-side__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Flat nav rows: no gray box backgrounds. */
+.adm-navlink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.adm-navlink:hover {
+  background: #f3f4f6;
+  color: #0b2a6f;
+}
+.adm-navlink:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-navlink[aria-current='page'] {
+  background: #eef3ff;
+  border-left-color: #0b2a6f;
+  color: #0b2a6f;
+  font-weight: 600;
+}
+.adm-navlink__icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #4b5563;
+}
+.adm-navlink[aria-current='page'] .adm-navlink__icon {
+  color: #0b2a6f;
+}
+.adm-navlink__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Count badge. Action-needed counts are navy/white; zero or totals are
+   neutral. The variant is chosen by the caller via the modifier class. */
+.adm-badge-count {
+  flex: none;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #0b2a6f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+.adm-badge-count--zero {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Profile chip */
+.adm-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.adm-profile:hover {
+  background: #f3f4f6;
+}
+.adm-profile:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-profile__avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0b2a6f;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+.adm-profile__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.adm-profile__name {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.adm-profile__role {
+  color: #4b5563;
+  font-size: 13px;
+}
+
+/* ---------- Admin page header ---------- */
+.adm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 20px;
+}
+.adm-head__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.adm-head__desc {
+  margin: 6px 0 0;
+  max-width: 72ch;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.adm-head__rule {
+  width: 56px;
+  height: 3px;
+  margin: 0.75rem 0 0;
+  background: #e8712b;
+  border: 0;
+  opacity: 1;
+}
+.adm-head__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 639.98px) {
+  .adm-head__toolbar {
+    width: 100%;
+  }
+}
+
+/* ---------- Toolbar controls ---------- */
+.adm-search {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+.adm-search .mantine-TextInput-input {
+  height: 40px;
+  min-height: 40px;
+  padding-left: 38px;
+  padding-right: 36px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 15px;
+}
+.adm-search .mantine-TextInput-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.adm-search .mantine-TextInput-input:focus,
+.adm-search .mantine-TextInput-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.adm-search .mantine-TextInput-section {
+  color: #4b5563;
+}
+.adm-search .mantine-TextInput-section svg {
+  width: 18px;
+  height: 18px;
+}
+.adm-search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: #4b5563;
+  cursor: pointer;
+}
+.adm-search__clear:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+/* Secondary / toggle buttons: white fill, navy text. */
+.adm-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #0b2a6f;
+  border-radius: 6px;
+  color: #0b2a6f;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-btn-secondary svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.adm-btn-secondary:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+}
+.adm-btn-secondary:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+/* Legacy button classes.
+   The /admin/general pages have been migrated to .adm-btn / .adm-btn--*, but
+   /admin/pmo and /admin/usapan still reference these, so the rules stay until
+   those sections are migrated too. The height override below is what the
+   migrated pages no longer depend on. */
+.adm-btn-secondary[aria-pressed='true'] {
+  background: #eef3ff;
+  border-color: #0b2a6f;
+  color: #0b2a6f;
+}
+.adm-btn-secondary.mantine-Button-root {
+  height: 40px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #0b2a6f;
+  color: #0b2a6f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Underlined tabs */
+.adm-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+}
+.adm-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 12px 20px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+.adm-tab:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+.adm-tab:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: -2px;
+}
+.adm-tab[aria-selected='true'] {
+  border-bottom-color: #0b2a6f;
+  color: #0b2a6f;
+  font-weight: 600;
+}
+.adm-drawer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #0b2a6f;
+  border-radius: 6px;
+  color: #0b2a6f;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.adm-drawer-trigger:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+}
+.adm-drawer-trigger:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+@media (min-width: 1024px) {
+  .adm-drawer-trigger {
+    display: none;
+  }
+}
+/* ---------- Data table ---------- */
+.adm-table-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.adm-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.adm-table thead th {
+  padding: 12px 16px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+.adm-table tbody td {
+  padding: 12px 16px;
+  /* Horizontal dividers only - no vertical or outer cell borders. */
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  font-size: 15px;
+  text-align: left;
+  vertical-align: middle;
+}
+.adm-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.adm-table tbody tr:hover {
+  background: #f8faff;
+}
+.adm-table__no {
+  width: 64px;
+  color: #4b5563;
+  font-size: 13px;
+}
+.adm-table__nowrap {
+  white-space: nowrap;
+}
+.adm-table__wrap-any {
+  overflow-wrap: anywhere;
+}
+/* Long description: clamp to 2 lines; the ellipsis is added by CSS. */
+.adm-table__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 42ch;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.adm-table__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+/* Visually hidden caption */
+.adm-cap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Row action icon buttons */
+.adm-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #0b2a6f;
+  border-radius: 6px;
+  color: #0b2a6f;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-act svg {
+  width: 18px;
+  height: 18px;
+}
+.adm-act:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+}
+.adm-act:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-act--archive:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+.adm-act--danger {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+.adm-act--danger:hover {
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+/* ---------- Status badges ---------- */
+.adm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.adm-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* ---------- Pagination ---------- */
+.adm-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.adm-pager__info {
+  color: #4b5563;
+  font-size: 14px;
+}
+.adm-pager__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm-pagebtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-pagebtn:hover:not([aria-current='page']) {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+}
+.adm-pagebtn:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.adm-pagebtn[aria-current='page'] {
+  background: #0b2a6f;
+  border-color: #0b2a6f;
+  color: #fff;
+}
+.adm-pagebtn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- Loading / empty ---------- */
+.adm-skel {
+  height: 16px;
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+.adm-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: #4b5563;
+}
+.adm-empty__icon {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 10px;
+  color: #9ca3af;
+}
+
+/* ---------- Cards ---------- */
+.adm-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+.adm-card__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.adm-card__sub {
+  margin: 4px 0 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.adm-section {
+  margin-top: 32px;
+}
+.adm-section__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+/* ---------- Dialog shell ----------
+   Same structure as the public Add Schedule / FAQ dialogs (.sf-dlg): fixed
+   header, scrolling body, fixed footer. Fields and logic are never changed
+   by this - it is presentation only. */
+.adm-dlg {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  border-radius: 8px;
+}
+.adm-dlg__form {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.adm-dlg__header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.adm-dlg__eyebrow {
+  margin: 0 0 2px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.adm-dlg__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.adm-dlg__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #0b2a6f;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.adm-dlg__close:hover {
+  background: #f5f7fa;
+  border-color: #e5e7eb;
+}
+.adm-dlg__close:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+/* The only scrolling part. */
+.adm-dlg__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.adm-dlg__footer {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ---------- Page + chart helpers ---------- */
+.adm-page {
+  display: flex;
+  flex-direction: column;
+}
+.adm-page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+.adm-mt-3 {
+  margin-top: 16px;
+}
+.adm-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Ranked horizontal bars (barangay breakdown) */
+.adm-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm-rank__row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm-rank__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.adm-rank__label {
+  color: #1f2937;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.adm-rank__track {
+  display: block;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  width: 100%;
+}
+.adm-rank__fill {
+  display: block;
+  height: 100%;
+  background: #0b2a6f;
+  border-radius: 999px;
+  min-width: 4px;
+}
+.adm-rank__value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #0b2a6f;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.adm-rank__pct {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+}
+/* ---------- Primary button ---------- */
+.adm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  background: #0b2a6f;
+  border: 1px solid #0b2a6f;
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.adm-btn-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+.adm-btn-primary:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+/* ---------- PMO questionnaire tree ----------
+   A custom tree, not a table, so it gets its own rules rather than being
+   forced into the .adm-table pattern. */
+.adm-qtree {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+}
+.adm-qtree__node {
+  padding-left: 0;
+}
+.adm-qtree__node--depth-1 {
+  padding-left: 16px;
+}
+.adm-qtree__node--depth-2 {
+  padding-left: 32px;
+}
+.adm-qtree__node--depth-3 {
+  padding-left: 48px;
+}
+.adm-qtree__node--depth-4 {
+  padding-left: 64px;
+}
+.adm-qtree__node--depth-5 {
+  padding-left: 80px;
+}
+/* Connector line for nested rows. */
+.adm-qtree__children {
+  border-left: 2px solid #e5e7eb;
+  margin-left: 11px;
+}
+.adm-qtree__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: background-color 150ms ease;
+}
+.adm-qtree__row:hover {
+  background: #f8faff;
+}
+.adm-qtree__row--root {
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  margin-bottom: 4px;
+}
+.adm-qtree__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.adm-qtree__label {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.adm-qtree__row--filler .adm-qtree__label {
+  color: #0b2a6f;
+  font-weight: 700;
+}
+.adm-qtree__row--root .adm-qtree__label {
+  font-size: 16px;
+}
+/* Direct-on-table variant: pages can put .adm-table on the <Table> itself
+   instead of wrapping it, which avoids restructuring the JSX. */
+.mantine-Table-table.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mantine-Table-table.adm-table thead {
+  background: #f5f7fa;
+}
+.mantine-Table-table.adm-table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.mantine-Table-table.adm-table td {
+  padding: 12px 16px;
+  /* Horizontal dividers only - no vertical or outer borders. */
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  font-size: 15px;
+}
+.mantine-Table-table.adm-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.mantine-Table-table.adm-table tbody tr:hover td {
+  background: #f8faff;
+}
+/* Neutralise the striped variant - rows stay flat. */
+.mantine-Table-table.adm-table tbody tr:nth-child(even) td {
+  background: transparent;
+}
+.mantine-Table-table.adm-table tbody tr:nth-child(even):hover td {
+  background: #f8faff;
+}
+
+.adm-qtree__type {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 639.98px) {
+  .adm-rank__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .adm-rank__track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+/* ---------- Mantine Table inside the admin shell ----------
+   Pages that already use <Table> get the same horizontal-dividers-only look as
+   .adm-table by applying .adm-table-wrap to their wrapper. */
+.adm-table-wrap .mantine-Table-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.adm-table-wrap .mantine-Table-thead {
+  background: #f5f7fa;
+}
+.adm-table-wrap .mantine-Table-th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.adm-table-wrap .mantine-Table-td {
+  padding: 12px 16px;
+  /* Horizontal dividers only - no vertical or outer borders. */
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  font-size: 15px;
+}
+.adm-table-wrap .mantine-Table-tr:last-child .mantine-Table-td {
+  border-bottom: 0;
+}
+.adm-table-wrap .mantine-Table-tr:hover .mantine-Table-td {
+  background: #f8faff;
+}
+/* Strip the striped/column-border variants so rows stay flat. */
+.adm-table-wrap .mantine-Table-tr:nth-child(even) .mantine-Table-td {
+  background: transparent;
+}
+.adm-table-wrap .mantine-Table-tr:nth-child(even):hover .mantine-Table-td {
+  background: #f8faff;
+}
+/* Row actions sit in the last column, right aligned. */
+.adm-table-wrap .mantine-Table-td:last-child .mantine-Group {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+/* ---------- Mantine Pagination inside the admin shell ---------- */
+.adm-pager-mantine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.adm-pager-mantine .mantine-Pagination-control {
+  min-width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.adm-pager-mantine .mantine-Pagination-control:hover {
+  background: #eef3ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+}
+.adm-pager-mantine .mantine-Pagination-control[data-active] {
+  background: #0b2a6f;
+  border-color: #0b2a6f;
+  color: #fff;
+}
+
+/* ---------- Mantine Modal inside the admin shell ---------- */
+.adm-modal .mantine-Modal-content {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.adm-modal .mantine-Modal-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.adm-modal .mantine-Modal-title {
+  color: #0b2a6f;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.adm-modal .mantine-Modal-body {
+  color: #1f2937;
+}
+.adm-modal .mantine-Modal-close:hover {
+  background: #f5f7fa;
+}
+
+/* KPI accent variants */
+.analytics-kpi.adm-kpi {
+  background: #fff;
+}
+.adm-kpi--navy {
+  background: #eef3ff;
+  border-left-color: #0b2a6f;
+}
+.adm-kpi--blue {
+  background: #eff6ff;
+  border-left-color: #1d4ed8;
+}
+.adm-kpi--pending {
+  background: #fef3c7;
+  border-left-color: #f59e0b;
+}
+.adm-kpi--approved {
+  background: #dcfce7;
+  border-left-color: #16a34a;
+}
+.adm-kpi--rejected {
+  background: #fee2e2;
+  border-left-color: #dc2626;
+}
+.adm-kpi--finished {
+  background: #f3f4f6;
+  border-left-color: #9ca3af;
+}
+
+@media (max-width: 639.98px) {
+  .adm-dlg__body {
+    padding: 16px;
+  }
+  .adm-dlg__footer {
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+}
+.adm-dlg .mantine-InputWrapper-label {
+  margin-bottom: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+}
+.adm-dlg .mantine-InputWrapper-required {
+  color: #b91c1c;
+}
+.adm-dlg .mantine-Input-input,
+.adm-dlg .mantine-Select-input {
+  min-height: 40px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 16px;
+}
+.adm-dlg .mantine-Input-input:focus,
+.adm-dlg .mantine-Select-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.adm-dlg .mantine-InputWrapper-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+/* ---------- Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .adm-shell *,
+  .adm-shell *::before,
+  .adm-shell *::after,
+  .adm-dlg,
+  .adm-dlg * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+.analytics-page__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.analytics-page__subtitle {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.analytics-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.analytics-header__copy {
+  flex: 1 1 auto;
+}
+.analytics-header__meta {
+  flex: 0 0 auto;
+  text-align: right;
+}
+.analytics-header__eyebrow {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.analytics-header__greeting {
+  margin: 4px 0 0;
+  color: #0b2a6f;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.analytics-header__greeting span {
+  color: #0b2a6f;
+}
+.analytics-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+/* Section rhythm: the module gap above already separates blocks, so a module
+   root must not add its own leading margin. */
+.analytics-page--module {
+  min-width: 0;
+}
+.analytics-module-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.analytics-module-header--tight {
+  margin-top: 0;
+}
+.analytics-section__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+.analytics-section__desc {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.analytics-kpi-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 20px;
+}
+.analytics-kpi-grid--five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.analytics-kpi-grid--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+/* Collapse to fewer columns before the cards get too narrow to read. */
+@media (max-width: 1200px) {
+  .analytics-kpi-grid--five {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .analytics-kpi-grid--four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .analytics-kpi-grid--five {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .analytics-kpi-grid--five,
+  .analytics-kpi-grid--four {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.analytics-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .analytics-grid--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.analytics-card {
+  min-height: 100%;
+}
+.analytics-card--full,
+.analytics-card--wide {
+  grid-column: 1 / -1;
+}
+.analytics-pie-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.analytics-pie-chart {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+.analytics-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+}
+.analytics-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.analytics-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.analytics-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+.analytics-toggle__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  height: 32px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+.analytics-toggle__option:hover {
+  background: #e5e7eb;
+  color: #0b2a6f;
+}
+.analytics-toggle__option:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.analytics-toggle__option[aria-checked='true'] {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #0b2a6f;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+.analytics-chart {
+  min-height: 280px;
+}
+.analytics-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.analytics-skeleton-card {
+  height: 200px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+  background-size: 200% 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  animation: analytics-skeleton 1.2s ease-in-out infinite;
+}
+.analytics-skeleton-card--wide {
+  grid-column: 1 / -1;
+}
+.analytics-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 180px;
+  color: #4b5563;
+  text-align: center;
+}
+.analytics-empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  color: #6b7280;
+  font-size: 14px;
+}
+@media (max-width: 767px) {
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .analytics-header__meta {
+    text-align: left;
+  }
+  .analytics-grid--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .analytics-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .analytics-toggle__option {
+    flex: 1 1 0;
+  }
+}
+.adm-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+@media (min-width: 1024px) {
+  .adm-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  .adm-chart-grid > * {
+    height: 100%;
+  }
+}
+
+/* KPI row */
+.adm-kpi-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .adm-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .adm-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.adm-kpi {
+  padding: 16px 18px;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #4b5563;
+  border-radius: 8px;
+}
+.adm-kpi__label {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.adm-kpi__value {
+  margin-top: 4px;
+  color: #0b2a6f;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* 32px segmented control used for Month | Year toggles */
+.adm-segmented {
+  display: inline-flex;
+  padding: 2px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+.adm-segmented__opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 26px;
+  padding: 0 10px;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.adm-segmented__opt:hover {
+  color: #0b2a6f;
+}
+.adm-segmented__opt:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+}
+.adm-segmented__opt[aria-checked='true'] {
+  background: #0b2a6f;
+  color: #fff;
+}
+.adm-status--upcoming {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.adm-status--ongoing,
+.adm-status--approved {
+  background: #dcfce7;
+  color: #166534;
+}
+.adm-status--finished {
+  background: #e5e7eb;
+  color: #374151;
+}
+.adm-status--cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.adm-status--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.adm-status--rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}

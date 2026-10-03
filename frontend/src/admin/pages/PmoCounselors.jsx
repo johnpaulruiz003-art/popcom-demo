@@ -100,10 +100,11 @@ export function PmoCounselors() {
   return (
     <Stack>
       <Group justify="space-between" align="center">
-        <Title order={2}>PMO - Counselors</Title>
+        <h1 className="adm-head__title">PMO - Counselors</h1>
+      <p className="adm-head__desc">Manage the PMO counselors roster and assignments.</p>
         <Group gap="xs">
-          <Button size="xs" onClick={openCreate}>Add Counselor</Button>
-          <Button size="xs" variant="light" onClick={() => setShowInactive((v) => !v)}>
+          <Button size="xs" onClick={openCreate} className="adm-btn adm-btn--primary adm-btn--sm">Add Counselor</Button>
+          <Button size="xs" onClick={() => setShowInactive((v) => !v)} className="adm-btn-secondary">
             {showInactive ? 'View Active' : 'View Inactive'}
           </Button>
         </Group>
@@ -116,13 +117,10 @@ export function PmoCounselors() {
         <Text size="sm" c="dimmed">No counselors found.</Text>
       ) : (
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ textAlign: 'left' }}>Name</Table.Th>
@@ -143,7 +141,7 @@ export function PmoCounselors() {
                 </Table.Td>
                 <Table.Td style={{ textAlign: 'center' }}>
                   <Group justify="center" gap="xs">
-                    <Button size="xs" variant="light" onClick={() => openEdit(c)}>Edit</Button>
+                    <Button size="xs" onClick={() => openEdit(c)} className="adm-btn-secondary">Edit</Button>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -152,7 +150,7 @@ export function PmoCounselors() {
         </Table>
       )}
 
-      <DeleteConfirmModal
+      <DeleteConfirmModal admin
         opened={deleteId != null}
         onCancel={() => { if (!deleteLoading) setDeleteId(null); }}
         onConfirm={async () => {
@@ -216,7 +214,7 @@ export function PmoCounselors() {
                   </Group>
 
                   <Group justify="flex-end">
-                    <Button type="submit">Save</Button>
+                    <Button type="submit" className="adm-btn adm-btn--primary">Save</Button>
                   </Group>
                 </Stack>
               </div>

@@ -1,20 +1,62 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Stack, Title, Text, Group, Paper, Loader, Center, Grid, Switch } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
-
+import { Text, Loader, Center } from '@mantine/core';
 import { BarChart, PieChart } from '@mantine/charts';
-
 import dayjs from 'dayjs';
 
 import { getPmoAdminAnalytics } from '../../api/pmoAdmin.js';
 
+function ToggleGroup({ label, value, onChange, options }) {
+  const handleKeyDown = (event, index) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+      return;
+    }
+    event.preventDefault();
+    let nextIndex = index;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % options.length;
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + options.length) % options.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = options.length - 1;
+    onChange(options[nextIndex].value);
+  };
+
+  return (
+    <div className="analytics-toggle" role="radiogroup" aria-label={label}>
+      {options.map((option, index) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          className="analytics-toggle__option"
+          tabIndex={value === option.value ? 0 : -1}
+          onClick={() => onChange(option.value)}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Legend({ items }) {
+  return (
+    <div className="analytics-legend" aria-label="Chart legend">
+      {items.map((item) => (
+        <div key={item.label} className="analytics-legend__item">
+          <span className="analytics-legend__swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />
+          <span>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PmoAnalytics() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [showAppointmentsMonthlyView, setShowAppointmentsMonthlyView] = useState(true);
-  const [showSchedulesMonthlyView, setShowSchedulesMonthlyView] = useState(true);
-
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [appointmentsView, setAppointmentsView] = useState('month');
+  const [schedulesView, setSchedulesView] = useState('month');
 
   useEffect(() => {
     setLoading(true);
@@ -24,12 +66,17 @@ export function PmoAnalytics() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Prepare datasets for separate charts
-  const schedulesMonthlyData = (data?.schedulesMonthly || []).map((r) => ({
+  const sortMonthly = (rows) =>
+    (rows || [])
+      .map((r) => ({ ...r, ts: dayjs(r.month).valueOf() }))
+      .sort((a, b) => a.ts - b.ts)
+      .map(({ ts, ...rest }) => rest);
+
+  const schedulesMonthlyData = sortMonthly(data?.schedulesMonthly || []).map((r) => ({
     month: dayjs(r.month).format('MMM YYYY'),
     count: r.count,
   }));
-  const appointmentsMonthlyData = (data?.appointmentsMonthly || []).map((r) => ({
+  const appointmentsMonthlyData = sortMonthly(data?.appointmentsMonthly || []).map((r) => ({
     month: dayjs(r.month).format('MMM YYYY'),
     count: r.count,
   }));
@@ -68,10 +115,10 @@ export function PmoAnalytics() {
 
     const pct = (value) => (value / total) * 100;
     return [
-      { name: 'Pending', value: pct(pending), color: 'yellow.6' },
-      { name: 'Approved', value: pct(approved), color: 'green.6' },
-      { name: 'Rejected', value: pct(rejected), color: 'red.6' },
-      { name: 'Cancelled', value: pct(cancelled), color: 'gray.6' }
+      { label: 'Pending', value: pct(pending), color: '#f59e0b' },
+      { label: 'Approved', value: pct(approved), color: '#16a34a' },
+      { label: 'Rejected', value: pct(rejected), color: '#dc2626' },
+      { label: 'Cancelled', value: pct(cancelled), color: '#6b7280' }
     ];
   }, [appointmentStatusSummary]);
 
@@ -92,8 +139,7 @@ export function PmoAnalytics() {
       }
     });
 
-    const summary = { upcoming, finished, cancelled };
-    return summary;
+    return { upcoming, finished, cancelled };
   }, [data]);
 
   const scheduleStatusPieData = useMemo(() => {
@@ -102,265 +148,158 @@ export function PmoAnalytics() {
     if (!total) return [];
     const pct = (value) => (value / total) * 100;
     return [
-      { name: 'Upcoming', value: pct(upcoming), color: 'blue.6' },
-      { name: 'Finished', value: pct(finished), color: 'teal.6' },
-      { name: 'Cancelled', value: pct(cancelled), color: 'gray.6' }
+      { label: 'Upcoming', value: pct(upcoming), color: '#1d4ed8' },
+      { label: 'Finished', value: pct(finished), color: '#0d9488' },
+      { label: 'Cancelled', value: pct(cancelled), color: '#64748b' }
     ];
   }, [scheduleStatusSummary]);
 
-  const counselorsCount = data?.counselorsCount || 0;
-
   return (
-    <Stack gap="lg">
-      <Stack gap={4}>
-        <Title order={isMobile ? 3 : 2} fz={isMobile ? '1.4rem' : '1.8rem'}>
-          PMO - Data Analytics
-        </Title>
-        <Text c="dimmed" size={isMobile ? 'sm' : 'md'}>
-          Key performance indicators and orientation trends.
-        </Text>
-      </Stack>
+    <div className="analytics-page analytics-page--module">
+      <header className="analytics-module-header">
+        <div>
+          <h2 className="analytics-section__title">Pre-Marriage Orientation - Data Analytics</h2>
+          <p className="analytics-section__desc">Key performance indicators and orientation trends.</p>
+        </div>
+      </header>
 
       {loading ? (
-        <Center h={300}>
-          <Loader size="md" />
-        </Center>
+        <div className="analytics-skeleton-grid" aria-label="Loading PMO analytics data">
+          <div className="analytics-skeleton-card" />
+          <div className="analytics-skeleton-card" />
+          <div className="analytics-skeleton-card analytics-skeleton-card--wide" />
+        </div>
       ) : !data ? (
-        <Text size="sm" c="dimmed">No analytics data available.</Text>
+        <div className="adm-empty" aria-live="polite">No analytics data available.</div>
       ) : (
-        <Stack gap="md">
-          {/* Appointments overview */}
-          <Stack gap="xs">
-            <Text fw={600} size={isMobile ? 'sm' : 'md'}>Appointments Overview</Text>
-            <Group grow>
+        <div className="analytics-grid analytics-grid--two">
+          <section className="adm-card analytics-card analytics-card--full">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Appointments Overview</h3>
+                <p className="adm-card__sub">Current booking totals and status mix.</p>
+              </div>
+            </div>
+            <div className="analytics-kpi-grid analytics-kpi-grid--five">
+              <div className="analytics-kpi adm-kpi adm-kpi--navy">
+                <div className="adm-kpi__label">Total bookings</div>
+                <div className="adm-kpi__value">{data.totalBookings}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--pending">
+                <div className="adm-kpi__label">Pending</div>
+                <div className="adm-kpi__value">{appointmentStatusSummary.pending}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--approved">
+                <div className="adm-kpi__label">Approved</div>
+                <div className="adm-kpi__value">{appointmentStatusSummary.approved}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--rejected">
+                <div className="adm-kpi__label">Rejected</div>
+                <div className="adm-kpi__value">{appointmentStatusSummary.rejected}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--finished">
+                <div className="adm-kpi__label">Cancelled</div>
+                <div className="adm-kpi__value">{appointmentStatusSummary.cancelled}</div>
+              </div>
+            </div>
+          </section>
 
-              {/* Total bookings - neutral blue/gray */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#e5edff',
-                  borderColor: '#2563EB',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#6B7280">Total bookings</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#4B5563">{data.totalBookings}</Text>
-              </Paper>
-
-              {/* Pending - amber */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#fef9c3',
-                  borderColor: '#F59E0B',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#92400e">Pending</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#92400e">{appointmentStatusSummary.pending}</Text>
-              </Paper>
-
-              {/* Approved - green */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#dcfce7',
-                  borderColor: '#16A34A',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#166534">Approved</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#166534">{appointmentStatusSummary.approved}</Text>
-              </Paper>
-
-              {/* Rejected - red */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#fee2e2',
-                  borderColor: '#DC2626',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#b91c1c">Rejected</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#b91c1c">{appointmentStatusSummary.rejected}</Text>
-              </Paper>
-
-              {/* Cancelled - muted gray */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#9CA3AF',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#4b5563">Cancelled</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#4b5563">{appointmentStatusSummary.cancelled}</Text>
-              </Paper>
-            </Group>
-          </Stack>
-
-          {/* Appointment statuses + Appointments per month/year */}
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Paper withBorder p="md" radius="md" h="100%">
-                <Text fw={600} size={isMobile ? 'sm' : 'md'} mb="lg">Appointment Status</Text>
-
-                {appointmentStatusPieData.length > 0 ? (
-                  <div className="d-flex align-items-center gap-4" style={{ flex: 1, paddingLeft: '50px' }}>
-                    <PieChart
-                      h={isMobile ? 220 : 260}
-                      withLabels
-                      labelsPosition="inside"
-                      labelsType="percent"
-                      data={appointmentStatusPieData}
-                    />
-                    <div className="d-flex flex-column" style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', minWidth: 120 }}>
-
-                      <span className="mb-1" style={{ fontWeight: 600 }}>Legends</span>
-                      {appointmentStatusPieData.map((item) => {
-                        const cssVar = `var(--mantine-color-${item.color.replace('.', '-')})`;
-                        return (
-                          <div key={item.name} className="d-flex align-items-center mb-1">
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                backgroundColor: cssVar,
-                                marginRight: 6
-                              }}
-                            />
-                            <span style={{ fontWeight: 500 }}>{item.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <Center h={200}><Text c="dimmed">No status data</Text></Center>
-                )}
-              </Paper>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 8 }}>
-              <Paper withBorder p="md" radius="md" h="100%">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <Text fw={600} size={isMobile ? 'sm' : 'md'}>Appointments</Text>
-                    <Text size={isMobile ? 'xs' : 'sm'} c="dimmed">
-                      {showAppointmentsMonthlyView ? 'Appointments per month' : 'Appointments per year'}
-                    </Text>
-                  </div>
-                  <Switch
-                    size="lg"
-                    checked={!showAppointmentsMonthlyView}
-                    onChange={(event) =>
-                      setShowAppointmentsMonthlyView(!event.currentTarget.checked ? true : false)
-                    }
-                    onLabel="Year"
-                    offLabel="Month"
-                  />
+          <section className="adm-card analytics-card">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Appointment Status</h3>
+                <p className="adm-card__sub">Percentage of all appointment statuses.</p>
+              </div>
+            </div>
+            {appointmentStatusPieData.length > 0 ? (
+              <div className="analytics-pie-wrap" aria-label="PMO appointment status chart">
+                <div className="analytics-pie-chart">
+                  <PieChart h={220} withLabels labelsPosition="inside" labelsType="percent" data={appointmentStatusPieData} />
                 </div>
+                <Legend items={appointmentStatusPieData.map((item) => ({ label: item.label, color: item.color }))} />
+              </div>
+            ) : (
+              <div className="adm-empty">No status data.</div>
+            )}
+          </section>
 
-                {showAppointmentsMonthlyView ? (
-                  appointmentsMonthlyData.length > 0 ? (
-                    <BarChart
-                      h={isMobile ? 220 : 260}
-                      data={appointmentsMonthlyData}
-                      dataKey="month"
-                      series={[{ name: 'count', color: 'green.6' }]}
-                    />
-                  ) : (
-                    <Center h={200}><Text c="dimmed">No monthly appointment data</Text></Center>
-                  )
-                ) : appointmentsYearlyData.length > 0 ? (
-                  <BarChart
-                    h={isMobile ? 220 : 260}
-                    data={appointmentsYearlyData}
-                    dataKey="year"
-                    series={[{ name: 'count', color: 'green.6' }]}
-                  />
-                ) : (
-                  <Center h={200}><Text c="dimmed">No yearly appointment data</Text></Center>
-                )}
-              </Paper>
-            </Grid.Col>
-          </Grid>
+          <section className="adm-card analytics-card analytics-card--wide">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Appointments</h3>
+                <p className="adm-card__sub">{appointmentsView === 'month' ? 'Monthly booking volume.' : 'Yearly booking volume.'}</p>
+              </div>
+              <ToggleGroup
+                label="Appointments view"
+                value={appointmentsView}
+                onChange={setAppointmentsView}
+                options={[{ label: 'Month', value: 'month' }, { label: 'Year', value: 'year' }]}
+              />
+            </div>
+            <div className="analytics-chart" aria-label={`PMO appointments ${appointmentsView}`}>
+              {appointmentsView === 'month' ? (
+                appointmentsMonthlyData.length > 0 ? (
+                  <BarChart h={300} data={appointmentsMonthlyData} dataKey="month" series={[{ name: 'count', color: '#0b2a6f' }]} />
+                ) : <Center h={220}><Text c="dimmed">No monthly appointment data</Text></Center>
+              ) : appointmentsYearlyData.length > 0 ? (
+                <BarChart h={300} data={appointmentsYearlyData} dataKey="year" series={[{ name: 'count', color: '#0b2a6f' }]} />
+              ) : <Center h={220}><Text c="dimmed">No yearly appointment data</Text></Center>}
+            </div>
+          </section>
 
-          {/* Schedules overview */}
-          <Stack gap="xs">
-            <Text fw={600} size={isMobile ? 'sm' : 'md'}>Schedules Overview</Text>
-            <Group grow>
+          <section className="adm-card analytics-card analytics-card--full">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Schedules Overview</h3>
+                <p className="adm-card__sub">Program schedule totals and completion mix.</p>
+              </div>
+            </div>
+            <div className="analytics-kpi-grid analytics-kpi-grid--four">
+              <div className="analytics-kpi adm-kpi adm-kpi--navy">
+                <div className="adm-kpi__label">Total schedules</div>
+                <div className="adm-kpi__value">{scheduleStatusSummary.upcoming + scheduleStatusSummary.finished + scheduleStatusSummary.cancelled}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--approved">
+                <div className="adm-kpi__label">Finished</div>
+                <div className="adm-kpi__value">{scheduleStatusSummary.finished}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--pending">
+                <div className="adm-kpi__label">Upcoming</div>
+                <div className="adm-kpi__value">{scheduleStatusSummary.upcoming}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--finished">
+                <div className="adm-kpi__label">Cancelled</div>
+                <div className="adm-kpi__value">{scheduleStatusSummary.cancelled}</div>
+              </div>
+            </div>
+          </section>
 
-              {/* Total schedules - neutral blue/gray */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#e5edff',
-                  borderColor: '#2563EB',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#6B7280">Total schedules</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#4B5563">
-                  {scheduleStatusSummary.upcoming + scheduleStatusSummary.finished + scheduleStatusSummary.cancelled}
-                </Text>
-              </Paper>
-
-              {/* Finished - green */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#dcfce7',
-                  borderColor: '#16A34A',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#166534">Finished</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#166534">{scheduleStatusSummary.finished}</Text>
-              </Paper>
-
-              {/* Upcoming - pending/upcoming (amber) */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#fef9c3',
-                  borderColor: '#F59E0B',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#92400e">Upcoming</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#92400e">{scheduleStatusSummary.upcoming}</Text>
-              </Paper>
-
-              {/* Cancelled - muted gray */}
-              <Paper
-                withBorder
-                p="md"
-                radius="md"
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#9CA3AF',
-                }}
-              >
-                <Text size="xs" fw={700} tt="uppercase" c="#4b5563">Cancelled</Text>
-                <Text fw={700} size={isMobile ? 'md' : 'xl'} c="#4b5563">{scheduleStatusSummary.cancelled}</Text>
-              </Paper>
-            </Group>
-          </Stack>
-
-        </Stack>
+          <section className="adm-card analytics-card analytics-card--wide">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Schedule Status</h3>
+                <p className="adm-card__sub">The share of program status values over the selected period.</p>
+              </div>
+              <ToggleGroup
+                label="Schedule status view"
+                value={schedulesView}
+                onChange={setSchedulesView}
+                options={[{ label: 'Month', value: 'month' }, { label: 'Year', value: 'year' }]}
+              />
+            </div>
+            {scheduleStatusPieData.length > 0 ? (
+              <div className="analytics-pie-wrap" aria-label="PMO schedule status chart">
+                <div className="analytics-pie-chart">
+                  <PieChart h={220} withLabels labelsPosition="inside" labelsType="percent" data={scheduleStatusPieData} />
+                </div>
+                <Legend items={scheduleStatusPieData.map((item) => ({ label: item.label, color: item.color }))} />
+              </div>
+            ) : (
+              <div className="adm-empty">No schedule status data.</div>
+            )}
+          </section>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }

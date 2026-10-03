@@ -1,0 +1,507 @@
+/* ==================================================================
+   Inquiries (FAQ) page - /faqs
+
+   Scoped under .sf-faq. Reuses the site tokens (navy / blue / orange)
+   plus the shared .btn-primary / .btn-secondary classes from home.css.
+   ================================================================== */
+
+.sf-faq {
+  background: #f5f7fa;
+  color: #1f2937;
+  font-size: 1rem;
+  line-height: 1.7;
+  /* 40px top / 96px bottom so the floating help + back-to-top buttons
+     never cover the last question. */
+  padding: 40px 0 96px;
+}
+.sf-faq__container {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.sf-faq__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+@media (min-width: 1024px) {
+  .sf-faq__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+/* min-width:0 lets grid children shrink instead of forcing overflow. */
+.sf-faq__main,
+.sf-faq__aside {
+  min-width: 0;
+}
+.sf-faq__aside {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+/* ---------- Header ---------- */
+.sf-faq__headrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sf-faq__title {
+  margin: 0;
+  color: var(--sf-navy);
+  font-size: clamp(1.75rem, 3vw, 2.125rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+/* The short orange accent line used on the landing page. */
+.sf-faq__rule {
+  width: 56px;
+  height: 3px;
+  margin: 0.75rem 0 0;
+  background: var(--sf-orange);
+  border: 0;
+  opacity: 1;
+}
+.sf-faq__lede {
+  margin: 0.75rem 0 0;
+  max-width: 68ch;
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+/* ---------- Search ---------- */
+.sf-faq__search {
+  margin-top: 24px;
+  max-width: 420px;
+}
+.sf-faq__search .mantine-TextInput-input {
+  height: 44px;
+  min-height: 44px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 16px;
+}
+.sf-faq__search .mantine-TextInput-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.sf-faq__search .mantine-TextInput-input:focus,
+.sf-faq__search .mantine-TextInput-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.sf-faq__search .mantine-TextInput-section {
+  color: #4b5563;
+}
+.sf-faq__search .mantine-TextInput-section svg {
+  width: 18px;
+  height: 18px;
+}
+.sf-faq__count {
+  margin: 10px 0 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+/* "Add FAQ" in the header row; sits at the right on desktop, wraps below
+   the description on narrow screens. */
+.sf-faq__add {
+  flex: none;
+  margin-left: auto;
+}
+@media (max-width: 639.98px) {
+  .sf-faq__add {
+    margin-left: 0;
+  }
+}
+/* Clear-search button rendered inside the search input. */
+.sf-faq__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: #4b5563;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sf-faq__clear:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+.sf-faq__clear:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+}
+
+/* ---------- Category + question cards ---------- */
+.sf-faq__category {
+  margin: 40px 0 12px;
+  color: var(--sf-navy);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.sf-faq__category:first-child {
+  margin-top: 0;
+}
+.sf-faq__items {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* The question row is a flex line: the trigger grows, the admin icon
+   buttons sit to its right, then the chevron. Edit/Delete are SIBLINGS of
+   the trigger button - never nested inside it, which would be invalid HTML
+   and break keyboard / screen-reader use. */
+/* Row wrapper. The 1px divider between questions lives here so it is never
+   affected by Mantine's Accordion.Item styling. */
+.sf-faq__item {
+  border-top: 1px solid #e5e7eb;
+}
+.sf-faq__item:first-child {
+  border-top: 0;
+}
+.sf-faq__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+.sf-faq__row:first-child {
+  border-top: 0;
+}
+.sf-faq__trigger {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 20px;
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: break-word;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.sf-faq__trigger:hover {
+  background: #f5f7fa;
+}
+.sf-faq__trigger:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: -2px;
+}
+/* Mantine marks the open control with data-active. */
+.sf-faq__trigger[data-active] {
+  border-left-color: #1d4ed8;
+  background: #f8faff;
+}
+.sf-faq__chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 20px;
+  color: var(--sf-navy);
+  transition: transform 150ms ease;
+}
+.sf-faq__row[data-open] .sf-faq__chevron {
+  transform: rotate(180deg);
+}
+/* The admin buttons are outside the trigger, so they need their own
+   padding to line up with the row. */
+.sf-faq__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+}
+
+/* ---------- Shared admin button family ----------
+   Used by BOTH /faqs and /contact.
+
+   Filled navy button with white text - the same treatment as the
+   "Submit Feedback" button (.sf-btn-submit): navy fill, white label,
+   blue on hover. Previously these were white fill with navy text, which
+   read as unstyled next to the filled buttons elsewhere on the pages.
+
+     .sf-btn-icon   36px square icon button (FAQ row actions)
+     .sf-btn-sm     labelled button (Add / Edit / Replace)
+     .sf-btn-light  identical to .sf-btn-sm (kept for the hero Replace)
+     .sf-btn-danger filled red Delete
+
+   WARNING: keep every rule below balanced. An unterminated rule here once
+   made the minifier merge these selectors into an ":is(...)" group scoped
+   to a FAQ-only class, which silently killed every button style on /contact. */
+.sf-btn-icon,
+.sf-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  border-radius: 6px;
+  color: var(--sf-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.sf-btn-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+.sf-btn-sm {
+  height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+.sf-btn-icon svg,
+.sf-btn-sm svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.sf-btn-icon:hover,
+.sf-btn-sm:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+  color: var(--sf-white);
+}
+.sf-btn-icon:focus-visible,
+.sf-btn-sm:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+}
+.sf-btn-icon[disabled],
+.sf-btn-sm[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Same filled navy as .sf-btn-sm - kept as a name for the hero Replace
+   button so its intent stays readable in the markup. */
+.sf-btn-light,
+.sf-btn-sm.sf-btn-light {
+  background: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  color: var(--sf-white);
+}
+.sf-btn-light:hover,
+.sf-btn-sm.sf-btn-light:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+  color: var(--sf-white);
+}
+
+/* Delete: filled red so it still reads as destructive at a glance, while
+   matching the filled shape of the other buttons. */
+.sf-btn-danger,
+.sf-btn-icon.sf-btn-danger,
+.sf-btn-sm.sf-btn-danger {
+  background: #b91c1c;
+  border: 1px solid #b91c1c;
+  color: var(--sf-white);
+}
+.sf-btn-danger:hover,
+.sf-btn-icon.sf-btn-danger:hover,
+.sf-btn-sm.sf-btn-danger:hover {
+  background: #991b1b;
+  border-color: #991b1b;
+  color: var(--sf-white);
+}
+
+/* Mantine <Button> carrying the same visual language. */
+.sf-btn-sm.mantine-Button-root {
+  height: 36px;
+  padding: 0 12px;
+  background: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  color: var(--sf-white);
+  font-size: 14px;
+  font-weight: 600;
+}
+.sf-btn-sm.mantine-Button-root:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+  color: var(--sf-white);
+}
+
+/* global.css adds a glow + lift to every hovered button; these are plain
+   <button> elements, so the local reset is needed. */
+.sf-btn-icon:hover,
+.sf-btn-sm:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- Empty states ---------- */
+.sf-faq__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: center;
+}
+.sf-faq__empty-text {
+  margin: 0;
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+/* ---------- End-of-list callout ---------- */
+.sf-faq__callout {
+  margin-top: 40px;
+  padding: 20px;
+  background: #eef3ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+.sf-faq__callout-title {
+  margin: 0 0 6px;
+  color: var(--sf-navy);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.sf-faq__callout-text {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.sf-faq__callout-contact {
+  margin: 0 0 14px;
+  color: #4b5563;
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.sf-faq__callout-contact a {
+  color: var(--sf-blue);
+  overflow-wrap: anywhere;
+}
+.sf-faq__callout-contact a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Sidebar cards ---------- */
+.sf-faq__card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+.sf-faq__card-title {
+  margin: 0 0 14px;
+  color: var(--sf-navy);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+/* Vertical nav list, no bullets. */
+.sf-faq__nav {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-faq__nav a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-decoration: none;
+  overflow-wrap: break-word;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sf-faq__nav a:hover {
+  background: var(--sf-gray-50);
+  color: var(--sf-navy);
+}
+.sf-faq__nav a:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+.sf-faq__map {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-faq *,
+  .sf-faq *::before,
+  .sf-faq *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+  /* No chevron rotation under reduced motion. */
+  .sf-faq__row[data-open] .sf-faq__chevron {
+    transform: none;
+  }
+}
+
+/* ---------- Answer ---------- */
+.sf-faq__answer {
+  padding: 4px 20px 20px;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.sf-faq__answer p {
+  margin: 0 0 0.75rem;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.sf-faq__answer p:last-child {
+  margin-bottom: 0;
+}
+.sf-faq__answer ul,
+.sf-faq__answer ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.5rem;
+  text-align: left;
+}
+.sf-faq__answer li {
+  margin-bottom: 8px;
+}
+.sf-faq__answer li:last-child {
+  margin-bottom: 0;
+}

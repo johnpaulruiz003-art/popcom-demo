@@ -202,6 +202,13 @@ export function ProfileModal({ opened, onClose }) {
 
   const { refreshProfile, logout } = useAuth();
 
+  // Logging out lives here (inside the profile modal) instead of in the nav
+  // header, so the modal must close itself as well.
+  const handleLogout = () => {
+    logout?.();
+    onClose?.();
+  };
+
   const handleEnterEdit = () => {
     setFullName(user?.fullName || '');
     setEmail(user?.email || '');
@@ -722,14 +729,20 @@ export function ProfileModal({ opened, onClose }) {
                     <div className="fw-semibold fs-5">{user?.fullName || 'User'}</div>
                   </div>
 
-                  <div className="mt-3 mb-2">
+                  <div className="mt-3 mb-2 d-flex flex-column gap-2" style={{ maxWidth: 360 }}>
                     <button
                       type="button"
                       className="btn btn-primary w-100"
-                      style={{ maxWidth: 360 }}
                       onClick={handleEnterEdit}
                     >
                       Edit profile
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary w-100"
+                      onClick={handleLogout}
+                    >
+                      Logout
                     </button>
                   </div>
                 </div>

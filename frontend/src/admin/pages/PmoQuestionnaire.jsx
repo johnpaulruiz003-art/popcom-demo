@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Stack, Title, Text, Group, Button, Modal, TextInput, Select, Loader, Center, Box, Checkbox } from '@mantine/core';
+import { Stack, Button, Modal, TextInput, Select, Loader, Checkbox } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 
 import { createPmoAdminQuestion, getPmoAdminQuestionnaire, updatePmoAdminQuestion } from '../../api/pmoAdmin.js';
@@ -122,64 +122,80 @@ export function PmoQuestionnaire() {
     setModalOpen(true);
   };
 
+  // Flat nav rows: navy type, no gray card chrome. Filler rows are emphasised,
+  // sub-questions are indented under their parent.
   const renderNode = (q, depth, parentIsFiller) => {
     const children = byParent.get(q.questionID) || [];
     const isFiller = q.question_type === 'Filler';
     const isSub = q.question_type === 'Sub-question';
 
-    const left = depth * 16;
-    const labelStyle = isFiller
-      ? { fontWeight: 700, fontSize: depth === 0 ? 16 : 15 }
-      : { fontWeight: 500 };
+    const rowClass = [
+      'adm-qtree__row',
+      depth === 0 ? 'adm-qtree__row--root' : '',
+      isFiller ? 'adm-qtree__row--filler' : '',
+      isSub ? 'adm-qtree__row--sub' : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
-      <Box key={q.questionID} style={{ paddingLeft: left, borderLeft: depth ? '2px solid #f1f3f5' : undefined, marginLeft: depth ? 6 : 0 }}>
-        <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text style={labelStyle}>
-              {isSub || (parentIsFiller && !isFiller) ? `• ${q.question_text}` : `${q.question_text}`}
-            </Text>
-            <Text size="xs" c="dimmed">{q.question_type}</Text>
-          </Box>
-          <Group gap="xs" wrap="nowrap">
-            <Button size="xs" variant="light" onClick={() => openEdit(q)}>
-              Edit
-            </Button>
-          </Group>
-        </Group>
+      <div
+        key={q.questionID}
+        className={`adm-qtree__node adm-qtree__node--depth-${Math.min(depth, 5)}`}
+      >
+        <div className={rowClass}>
+          <div className="adm-qtree__text">
+            <span className="adm-qtree__label">
+              {isSub || (parentIsFiller && !isFiller) ? `• ${q.question_text}` : q.question_text}
+            </span>
+            <span className="adm-qtree__type">{q.question_type}</span>
+          </div>
+          <button
+            type="button"
+            className="adm-btn-secondary"
+            onClick={() => openEdit(q)}
+            aria-label={`Edit question: ${q.question_text}`}
+          >
+            Edit
+          </button>
+        </div>
 
         {children.length > 0 ? (
-          <Stack gap={6} mt={6}>
+          <div className="adm-qtree__children">
             {children.map((child) => renderNode(child, depth + 1, isFiller || parentIsFiller))}
-          </Stack>
+          </div>
         ) : null}
-      </Box>
+      </div>
     );
   };
 
   return (
-    <Stack>
-      <Group justify="space-between" align="center">
-        <Title order={2}>PMO - Questionnaire</Title>
-        <Group gap="xs">
-          <Button size="xs" onClick={openAdd}>Add Question</Button>
-        </Group>
-      </Group>
-      <Text c="dimmed">Manage PMO questionnaire items.</Text>
+    <div className="adm-page">
+      <div className="adm-head">
+        <div>
+          <h1 className="adm-head__title">PMO &ndash; Questionnaire</h1>
+          <p className="adm-head__desc">Manage PMO questionnaire items.</p>
+          <hr className="adm-head__rule" />
+        </div>
+        <div className="adm-head__toolbar">
+          <button type="button" className="adm-btn-primary" onClick={openAdd}>
+            Add Question
+          </button>
+        </div>
+      </div>
 
       {loading ? (
-        <Center>
-          <Loader size="sm" />
-        </Center>
+        <div className="adm-page-loader"><Loader size="sm" /></div>
       ) : rows.length === 0 ? (
-        <Text size="sm" c="dimmed">No questions found.</Text>
+        <div className="adm-empty">No questions found.</div>
       ) : (
-        <Stack gap={10}>
+        <div className="adm-qtree">
           {(byParent.get(null) || []).map((q) => renderNode(q, 0, false))}
-        </Stack>
+        </div>
       )}
 
       <Modal
+        className="adm-modal"
         opened={modalOpen}
         onClose={() => {
           setModalOpen(false);
@@ -251,21 +267,20 @@ export function PmoQuestionnaire() {
                 setForm((f) => ({ ...f, is_invisible: event.currentTarget.checked }))
               }
             />
-            <Group justify="flex-end">
+            <div className="adm-dlg__footer">
               <Button
-                variant="default"
-                onClick={() => {
-                  setModalOpen(false);
-                  resetForm();
-                }}
-              >
+ onClick={() => {
+ setModalOpen(false);
+ resetForm();
+ }}
+  className="adm-btn adm-btn--neutral">
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
-            </Group>
+              <Button type="submit" className="adm-btn adm-btn--primary">Save</Button>
+            </div>
           </Stack>
         </form>
       </Modal>
-    </Stack>
+    </div>
   );
 }

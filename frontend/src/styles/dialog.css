@@ -1,0 +1,271 @@
+/* ==================================================================
+   Shared dialog shell - .sf-dlg
+
+   Same structure as the Add Schedule modal on /calendar (which uses the
+   page-scoped .sf-calsched copy of this pattern), generalised here so the
+   FAQ and About Us dialogs share one implementation:
+
+     .sf-dlg          -> the Mantine Modal `content` class
+     __shell          -> grid: preview rail | form column
+     __header         -> fixed, never scrolls
+     __body           -> the ONLY scrolling part
+     __footer         -> fixed, never scrolls
+     __aside          -> preview rail / summary
+
+   Everything is scoped under .sf-dlg, which is why the calendar's
+   .sf-calsched rules are left untouched: reusing that class name here
+   would leak calendar styling into unrelated modals.
+
+   Dialogs that already look fundamentally different (full-screen booklet
+   viewer, the shared Login/Register auth modals) deliberately do NOT use
+   this file.
+   ================================================================== */
+
+.sf-dlg {
+  display: flex;
+  flex-direction: column;
+  /* 100vh first, then 100dvh where supported (mobile browser chrome). */
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.sf-dlg__shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* The explicit row is minmax(0, 1fr): an `auto` row is content-sized and
+   would let the form column grow past the modal instead of handing the
+   overflow to the scrolling body. */
+@media (min-width: 768px) {
+  .sf-dlg__shell {
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+}
+.sf-dlg__aside {
+  min-width: 0;
+  padding: 24px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (min-width: 768px) {
+  .sf-dlg__aside {
+    border-bottom: 0;
+    border-right: 1px solid #e5e7eb;
+  }
+}
+.sf-dlg__form {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---------- Header (fixed) ---------- */
+.sf-dlg__header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.sf-dlg__eyebrow {
+  margin: 0 0 2px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.sf-dlg__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.sf-dlg__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #0b2a6f;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.sf-dlg__close:hover {
+  background: #f5f7fa;
+  border-color: #e5e7eb;
+}
+.sf-dlg__close:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+/* ---------- Body (the only scrolling part) ---------- */
+.sf-dlg__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 639.98px) {
+  .sf-dlg__body {
+    padding: 16px;
+  }
+}
+
+/* ---------- Footer (fixed) ---------- */
+.sf-dlg__footer {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+@media (max-width: 639.98px) {
+  .sf-dlg__footer {
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+}
+/* ---------- Preview rail content ---------- */
+.sf-dlg__aside-title {
+  margin: 0 0 12px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.sf-dlg__preview-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.sf-dlg__preview-row:last-child {
+  margin-bottom: 0;
+}
+.sf-dlg__preview-row dt {
+  flex: none;
+  margin: 0;
+  color: #4b5563;
+  font-weight: 600;
+}
+.sf-dlg__preview-row dd {
+  margin: 0;
+  min-width: 0;
+  color: #1f2937;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Fields ---------- */
+.sf-dlg .mantine-InputWrapper-label {
+  margin-bottom: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.sf-dlg .mantine-InputWrapper-required {
+  color: #b91c1c;
+}
+.sf-dlg .mantine-Input-input,
+.sf-dlg .mantine-Select-input {
+  min-height: 40px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.sf-dlg .mantine-Input-input:focus,
+.sf-dlg .mantine-Input-input:focus-visible,
+.sf-dlg .mantine-Select-input:focus,
+.sf-dlg .mantine-Select-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.sf-dlg .mantine-Input-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.sf-dlg .mantine-Textarea-input {
+  min-height: 40px;
+  resize: vertical;
+}
+.sf-dlg .mantine-InputWrapper-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.4;
+}
+/* Dropdowns / popovers portal to <body>; give them a z-index above the
+   modal root (1000) so they can never render behind the dialog. */
+.sf-dlg .mantine-Select-dropdown,
+.sf-dlg .mantine-Popover-dropdown {
+  z-index: 1200;
+}
+
+/* ---------- Footer buttons ---------- */
+.sf-dlg__footer .btn-primary,
+.sf-dlg__footer .btn-secondary,
+.sf-dlg__footer .sf-btn-danger {
+  min-height: 40px;
+  min-width: 120px;
+  border-radius: 6px;
+  font-size: 15px;
+}
+/* global.css adds a glow + lift to every hovered button; these dialogs are
+   portalled to <body> so the in-page reset does not reach them. */
+.sf-dlg__footer .btn-primary:hover,
+.sf-dlg__footer .btn-secondary:hover,
+.sf-dlg__footer .sf-btn-danger:hover,
+.sf-dlg__close:hover {
+  transform: none;
+  box-shadow: none;
+}
+.sf-dlg__footer .btn-primary:focus-visible,
+.sf-dlg__footer .btn-secondary:focus-visible,
+.sf-dlg__footer .sf-btn-danger:focus-visible {
+  outline: 3px solid #e8712b;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-dlg,
+  .sf-dlg * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}

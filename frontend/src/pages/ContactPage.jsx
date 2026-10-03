@@ -1,5 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Title, Text, Stack, Card, TextInput, Textarea, Button, Group, Paper, Modal, Select, Loader, Center, FileInput } from '@mantine/core';
+import { Text, Stack, TextInput, Textarea, Button, Modal, Select, Loader, Center } from '@mantine/core';
+import {
+  IconBuilding, IconPhone, IconMail, IconUser,
+  IconLock, IconCamera, IconPlus, IconPencil, IconTrash, IconX,
+  IconCheck, IconAlertCircle
+} from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 
@@ -12,6 +17,9 @@ import { LoginModal } from '../components/auth/LoginModal.jsx';
 import { RegisterModal } from '../components/auth/RegisterModal.jsx';
 import aboutUsImage from '../content/About Us/AboutUs.jpg';
 import sanFabianLogo from '../content/About Us/SanFabian-Logo.png';
+import '../styles/contactPage.css';
+import '../styles/faqPage.css';
+import '../styles/dialog.css';
 
 const HIERARCHY_POSITIONS = [
   'Mayor',
@@ -20,6 +28,32 @@ const HIERARCHY_POSITIONS = [
   'Population Office Staff',
   'Barangay Representative'
 ];
+
+const SERVICE_LINKS = [
+  ['/services/pre-marriage-orientation', 'Pre-Marriage Orientation (PMOC)'],
+  ['/services/usapan-series', 'Usapan Series'],
+  ['/services/rpfp', 'Responsible Parenthood &amp; Family Development (RPFP)'],
+  ['/services/ahdp', 'Adolescent Health and Development Program (AHDP)'],
+  ['/services/iec', 'Population Awareness &amp; IEC Activities'],
+  ['/services/population-profiling', 'Demographic Data Collection &amp; Population Profiling'],
+  ['/services/community-events', 'Support During Community Events'],
+  ['/services/other-assistance', 'Other Assistance']
+];
+
+/**
+ * Split a hierarchy name of the form "Bessie Disu (Alacan)" into the person
+ * and the barangay. Display-time only - the stored name is never changed.
+ * Returns null when the string does not match, so the caller can fall back to
+ * showing the raw name.
+ */
+const splitNameAndBarangay = (rawName) => {
+  const match = /^(.*?)\s*\((.+)\)\s*$/.exec(String(rawName || ''));
+  if (!match) return null;
+  const name = match[1].trim();
+  const barangay = match[2].trim();
+  if (!name || !barangay) return null;
+  return { name, barangay };
+};
 
 export function ContactPage() {
   const { user, accessToken, isAdmin } = useAuth();
@@ -34,6 +68,8 @@ export function ContactPage() {
   const [hierarchyName, setHierarchyName] = useState('');
   const [hierarchyPosition, setHierarchyPosition] = useState('');
   const [feedbackConfirmOpen, setFeedbackConfirmOpen] = useState(false);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
   const [office, setOffice] = useState(null);
   const [officeLoading, setOfficeLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -209,17 +245,18 @@ export function ContactPage() {
         return;
       }
 
+      setFeedbackSubmitting(true);
+      setFeedbackMessage(null);
+
       // Submit only the message; backend attaches userID from token
       await submitFeedback({ message: values.message });
-      showNotification({
-        title: 'Feedback sent',
-        message: 'Thank you for your feedback. We will review your message shortly.',
-        color: 'green'
-      });
+      setFeedbackMessage({ type: 'success', text: 'Thank you for your feedback. We will review your message shortly.' });
       form.reset();
     } catch (err) {
       console.error(err);
-      showNotification({ title: 'Error', message: 'Failed to send feedback.', color: 'red' });
+      setFeedbackMessage({ type: 'error', text: 'Failed to send feedback. Please try again.' });
+    } finally {
+      setFeedbackSubmitting(false);
     }
   };
 
@@ -324,359 +361,416 @@ export function ContactPage() {
 
   return (
     <>
-    <br />
-    <div className="container">
-      <div className="row g-4">
-        <div className="col-12 col-lg-8">
-          <Stack spacing="lg" px="sm">
-              <div className="mb-3 position-relative">
-                <img
-                  src={office?.officeImageUrl || aboutUsImage}
-                  alt="About the Municipal Population Office"
-                  className="img-fluid rounded shadow-sm w-100"
-                  style={{ objectFit: 'cover', maxHeight: 320 }}
-                />
+    <div className="sf-about">
+      <div className="sf-about__container">
+        <div className="sf-about__grid">
+        <div className="sf-about__main">
+          <div className="sf-about__hero">
+            <div className="sf-about__hero-frame">
+              <img
+                className="sf-about__hero-img"
+                src={office?.officeImageUrl || aboutUsImage}
+                alt="Staff of the Municipal Population Office of San Fabian"
+              />
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="sf-btn-sm sf-btn-light sf-about__replace"
+                  onClick={handleReplaceImage}
+                  disabled={imageUploading}
+                >
+                  <IconCamera width={16} height={16} aria-hidden="true" />
+                  {imageUploading ? 'Uploading...' : 'Replace'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <Stack spacing="sm">
+            <div>
+              <h1 className="sf-about__title">
+                About Our <span className="sf-about__title-accent">Municipal Population Office</span>
+              </h1>
+              <hr className="sf-about__rule" />
+            </div>
+            <div className="sf-about__prose">
+              <p>
+                The <strong>Municipal Population Office (MPO) of San Fabian</strong> serves as
+                the primary frontline department dedicated to managing and implementing the
+                <strong> Philippine Population and Development Program (PPDP)</strong> at the
+                local level.
+              </p>
+              <p>
+                We believe that a well-informed and empowered community is the foundation of a resilient San Fabian.
+                Our work focuses on the intersection of people, resources, and environment to ensure that every
+                San Fabianense is accounted for and supported.
+              </p>
+            </div>
+
+            <hr className="sf-about__divider" />
+
+            <div className="sf-about__card">
+              <h2 className="sf-about__h2">Mission &amp; Vision</h2>
+              <h3 className="sf-about__h3">Our Vision</h3>
+              <div className="sf-about__statement">
+                <p>
+                  &quot;We envision a progressive and empowered San Fabian where every family is well-informed and capable of making responsible decisions regarding their size and well-being, leading to a high quality of life within a sustainable and ecologically balanced community.&quot;
+                </p>
+              </div>
+              <h3 className="sf-about__h3">Our Mission</h3>
+              <div className="sf-about__statement">
+                <p>
+                  &quot;To provide comprehensive population and development services through the integration of Responsible Parenthood and Family Planning (RPFP), Adolescent Health and Development (AHD), and Population-Development (POPDEV) strategies. We commit to strengthening the capacity of every San Fabianense to contribute to and benefit from the municipality&rsquo;s socio-economic progress.&quot;
+                </p>
+              </div>
+            </div>
+
+            <hr className="sf-about__divider" />
+
+            <h2 className="sf-about__h2">Core Programs &amp; Services</h2>
+            <p className="sf-about__prose">
+              The MPO leads several key program areas to support San Fabian families and communities:
+            </p>
+            <ul className="sf-about__list">
+              <li>
+                <strong>Responsible Parenthood &amp; Family Planning (RPFP)</strong> – Providing education and access to family
+                planning methods to help couples achieve their desired family size.
+              </li>
+              <li>
+                <strong>Adolescent Health and Development (AHD)</strong> – Youth-focused initiatives aimed at preventing
+                teenage pregnancy and promoting healthy lifestyle choices among the San Fabian youth.
+              </li>
+              <li>
+                <strong>Pre-Marriage Orientation and Counseling (PMOC)</strong> – Mandatory sessions for engaged couples to
+                prepare them for the psychological and social responsibilities of married life.
+              </li>
+              <li>
+                <strong>Population Data Management</strong> – Maintaining the Municipal Population Information System to help
+                the local government unit (LGU) make informed decisions for infrastructure and social services.
+              </li>
+            </ul>
+
+            <h3 className="sf-about__h3" style={{ marginTop: 24 }}>Why Population Matters</h3>
+            <p className="sf-about__prose">
+              Population management is not just about numbers; it is about human development. By understanding our
+              demographics, we can:
+            </p>
+            <ul className="sf-about__list">
+              <li>Ensure there are enough classrooms for our students.</li>
+              <li>Optimize healthcare delivery to our barangays.</li>
+              <li>Support the economic productivity of our labor force.</li>
+            </ul>
+          </Stack>
+        </div>
+            
+
+            <aside className="sf-about__aside" aria-label="Contact, feedback and office location">
+            <div className="sf-about__card">
+              <div className="sf-about__card-head">
+                <h2 className="sf-about__card-title">Contact Us</h2>
                 {isAdmin && (
                   <button
                     type="button"
-                    className="btn btn-sm btn-primary position-absolute"
-                    style={{ right: '12px', bottom: '12px' }}
-                    onClick={handleReplaceImage}
-                    disabled={imageUploading}
+                    className="sf-btn-sm"
+                    onClick={openOfficeEdit}
                   >
-                    {imageUploading ? 'Uploading...' : 'Replace'}
+                    <IconPencil width={16} height={16} aria-hidden="true" />
+                    Edit
                   </button>
                 )}
               </div>
 
-              <Stack spacing="sm">
-                <Title order={1} style={{ margin: 0 }}>
-                  About Our <span style={{ color: '#6ba4f0ff' }}>Municipal Population Office</span>
-                </Title>
-                <Text
-                  size="md"
-                  style={{ textAlign: 'justify' }}
-                >
-                  The <span style={{ fontWeight: 600 }}>Municipal Population Office (MPO) of San Fabian</span> serves as
-                  the primary frontline department dedicated to managing and implementing the
-                  <span style={{ fontWeight: 600 }}> Philippine Population and Development Program (PPDP)</span> at the
-                  local level.
-                </Text>
-                <Text
-                  size="md"
-                  style={{ textAlign: 'justify' }}
-                >
-                  We believe that a well-informed and empowered community is the foundation of a resilient San Fabian.
-                  Our work focuses on the intersection of people, resources, and environment to ensure that every
-                  San Fabianense is accounted for and supported.
-                </Text>
-
-                <hr />
-
-                <Paper radius="md" shadow="xs" p="md" withBorder>
-                  <Title order={2} weight={600} mb="xs" className="hover-underline">
-                    Mission &amp; Vision
-                    <hr />
-                  </Title>
-                  <Title order={3} weight={500} size="lg">Our Vision</Title>
-                  <Text size="md" align="justify">
-                    "We envision a progressive and empowered San Fabian where every family is well-informed and capable of making responsible decisions regarding their size and well-being, leading to a high quality of life within a sustainable and ecologically balanced community."
-                  </Text>
-                  <br />
-                  <Title order={3} weight={500} size="lg" mt="xs">Our Mission</Title>
-                  <Text size="md" align="justify">
-                    "To provide comprehensive population and development services through the integration of Responsible Parenthood and Family Planning (RPFP), Adolescent Health and Development (AHD), and Population-Development (POPDEV) strategies. We commit to strengthening the capacity of every San Fabianense to contribute to and benefit from the municipality’s socio-economic progress."
-                  </Text>
-                </Paper>
-
-                <hr />
-
-                <Title order={2} weight={600} mt="sm">
-                  Core Programs &amp; Services
-                </Title>
-                <Text size="md" align="justify">
-                  The MPO leads several key program areas to support San Fabian families and communities:
-                </Text>
-                <ul className="mb-0 md" style={{ textAlign: 'justify' }}>
-                  <li>
-                    <b>Responsible Parenthood &amp; Family Planning (RPFP)</b> – Providing education and access to family
-                    planning methods to help couples achieve their desired family size.
-                  </li>
-                  <li>
-                    <b>Adolescent Health and Development (AHD)</b> – Youth-focused initiatives aimed at preventing
-                    teenage pregnancy and promoting healthy lifestyle choices among the San Fabian youth.
-                  </li>
-                  <li>
-                    <b>Pre-Marriage Orientation and Counseling (PMOC)</b> – Mandatory sessions for engaged couples to
-                    prepare them for the psychological and social responsibilities of married life.
-                  </li>
-                  <li>
-                    <b>Population Data Management</b> – Maintaining the Municipal Population Information System to help
-                    the local government unit (LGU) make informed decisions for infrastructure and social services.
-                  </li>
-                </ul>
-
-                <Title order={3} weight={600} mt="sm">
-                  Why Population Matters
-                </Title>
-                <Text size="md" align="justify">
-                  Population management is not just about numbers; it is about human development. By understanding our
-                  demographics, we can:
-                </Text>
-                <ul className="mb-0 md" style={{ textAlign: 'justify' }}>
-                  <li>Ensure there are enough classrooms for our students.</li>
-                  <li>Optimize healthcare delivery to our barangays.</li>
-                  <li>Support the economic productivity of our labor force.</li>
-                </ul>
-
-                <hr />
-              </Stack>
-            </Stack>
+              {officeLoading ? (
+                <p className="sf-about__contact-text">Loading office information...</p>
+              ) : office ? (
+                <>
+                  <p className="sf-about__contact-office">{office.officeName}</p>
+                  <ul className="sf-about__contact-list">
+                    <li className="sf-about__contact-row">
+                      <IconBuilding className="sf-about__contact-icon" aria-hidden="true" />
+                      <span className="sf-about__contact-text">
+                        <span className="sf-about__contact-label">Address</span>
+                        <span className="sf-about__contact-value">{office.address}</span>
+                      </span>
+                    </li>
+                    <li className="sf-about__contact-row">
+                      <IconPhone className="sf-about__contact-icon" aria-hidden="true" />
+                      <span className="sf-about__contact-text">
+                        <span className="sf-about__contact-label">Contact number</span>
+                        <span className="sf-about__contact-value">
+                          <a href={`tel:${office.contactNumber}`}>{office.contactNumber}</a>
+                        </span>
+                      </span>
+                    </li>
+                    <li className="sf-about__contact-row">
+                      <IconMail className="sf-about__contact-icon" aria-hidden="true" />
+                      <span className="sf-about__contact-text">
+                        <span className="sf-about__contact-label">Email</span>
+                        <span className="sf-about__contact-value">
+                          <a href={`mailto:${office.email}`}>{office.email}</a>
+                        </span>
+                      </span>
+                    </li>
+                    <li className="sf-about__contact-row">
+                      <IconUser className="sf-about__contact-icon" aria-hidden="true" />
+                      <span className="sf-about__contact-text">
+                        <span className="sf-about__contact-label">Office Head</span>
+                        <span className="sf-about__contact-value">{office.officeHead}</span>
+                      </span>
+                    </li>
+                  </ul>
+                </>
+              ) : null}
             </div>
-            
 
-            <div className="col-12 col-lg-4">
-              <div className="vstack gap-3">
-
-                <div className="card shadow-sm">
-                  <div className="card-header py-2 px-3 bg-light">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h5 className="card-title h5 mb-0">Contact Us</h5>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={openOfficeEdit}
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="card-body md">
-                    {officeLoading ? (
-                      <p className="mb-0">Loading office information...</p>
-                    ) : office ? (
-                      <>
-                        <p className="mb-1 fw-semibold">{office.officeName}</p>
-                        <p className="mb-1">Address: {office.address}</p>
-                        <p className="mb-1">Contact number: {office.contactNumber}</p>
-                        <p className="mb-0">Email: {office.email}</p>
-                        <p className="mb-0">Office Head: {office.officeHead}</p>
-                      </>
-                    ) : (
-                      <>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="card shadow-sm">
-                  <div className="card-header py-2 px-3 bg-light">
-                    <h5 className="card-title h6 mb-0">Feedback Form</h5>
-                  </div>
-                  <div className="card-body">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const result = form.validate();
-                        if (result.hasErrors) return;
-                        setFeedbackConfirmOpen(true);
-                      }}
-                    >
-                      <Stack>
-                        <TextInput label="Full Name" value={form.values.fullName} readOnly disabled />
-                        <TextInput label="Email" value={form.values.email} readOnly disabled />
-                        <TextInput label="Contact Number" value={form.values.contactNumber} readOnly disabled />
-                        <TextInput
-                          label="Barangay"
-                          value={form.values.barangay}
-                          readOnly={!isAdmin}
-                          disabled={!isAdmin}
-                          onChange={(event) => {
-                            if (isAdmin) {
-                              form.setFieldValue('barangay', event.currentTarget.value);
-                            }
-                          }}
-                        />
-                        <Textarea
-                          label="Message"
-                          placeholder="Your feedback, inquiry, or concern"
-                          required
-                          minRows={3}
-                          {...form.getInputProps('message')}
-                        />
-                        <Group className="mt-2">
-                          <Button type="submit">
-                            Submit Feedback
-                          </Button>
-                        </Group>
-                      </Stack>
-                    </form>
-                  </div>
-                </div>
-
-                <div className="card shadow-sm text-center">
-                  <div className="card-body py-3">
-                    <img
-                      src={sanFabianLogo}
-                      alt="Municipality of San Fabian Logo"
-                      className="img-fluid"
-                      style={{ maxHeight: 250, objectFit: 'contain' }}
+                <div className="sf-about__card">
+              <h2 className="sf-about__card-title">Feedback Form</h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const result = form.validate();
+                  if (result.hasErrors) return;
+                  setFeedbackConfirmOpen(true);
+                }}
+              >
+                <Stack>
+                  <div className="sf-about__field sf-about__field--locked">
+                    <TextInput
+                      label="Full Name"
+                      value={form.values.fullName}
+                      readOnly
+                      disabled
+                      rightSection={<IconLock className="sf-about__lock" aria-hidden="true" />}
                     />
                   </div>
-                </div>
-
-                <div className="card shadow-sm">
-                  <div className="card-header py-2 px-3 bg-light">
-                    <h5 className="card-title h6 mb-0">Services</h5>
+                  <div className="sf-about__field sf-about__field--locked">
+                    <TextInput
+                      label="Email"
+                      value={form.values.email}
+                      readOnly
+                      disabled
+                      rightSection={<IconLock className="sf-about__lock" aria-hidden="true" />}
+                    />
                   </div>
-                  <div className="card-body">
-                    <ul className="small mb-0">
-                      <li><a href="/services/pre-marriage-orientation" className="text-decoration-none">Pre-Marriage Orientation (PMOC)</a></li>
-                      <li><a href="/services/usapan-series" className="text-decoration-none">Usapan Series</a></li>
-                      <li><a href="/services/rpfp" className="text-decoration-none">Responsible Parenthood &amp; Family Development (RPFP)</a></li>
-                      <li><a href="/services/ahdp" className="text-decoration-none">Adolescent Health and Development Program (AHDP)</a></li>
-                      <li><a href="/services/iec" className="text-decoration-none">Population Awareness &amp; IEC Activities</a></li>
-                      <li><a href="/services/population-profiling" className="text-decoration-none">Demographic Data Collection &amp; Population Profiling</a></li>
-                      <li><a href="/services/community-events" className="text-decoration-none">Support During Community Events</a></li>
-                      <li><a href="/services/other-assistance" className="text-decoration-none">Other Assistance</a></li>
-                    </ul>
+                  <div className="sf-about__field sf-about__field--locked">
+                    <TextInput
+                      label="Contact Number"
+                      value={form.values.contactNumber}
+                      readOnly
+                      disabled
+                      rightSection={<IconLock className="sf-about__lock" aria-hidden="true" />}
+                    />
                   </div>
-                </div>
-
-                <div className="card shadow-sm">
-                  <div className="card-header py-2 px-3 bg-light">
-                    <h5 className="card-title h6 mb-0">Population Office Location</h5>
+                  <div
+                    className={
+                      isAdmin ? 'sf-about__field' : 'sf-about__field sf-about__field--locked'
+                    }
+                  >
+                    <TextInput
+                      label="Barangay"
+                      value={form.values.barangay}
+                      readOnly={!isAdmin}
+                      disabled={!isAdmin}
+                      rightSection={
+                        isAdmin ? null : <IconLock className="sf-about__lock" aria-hidden="true" />
+                      }
+                      onChange={(event) => {
+                        if (isAdmin) {
+                          form.setFieldValue('barangay', event.currentTarget.value);
+                        }
+                      }}
+                    />
                   </div>
-                  <div className="card-body">
-                    <div className="ratio ratio-4x3 rounded overflow-hidden">
-                      <iframe
-                        title="San Fabian Population Office Location"
-                        src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
+                  <div className="sf-about__field">
+                    <Textarea
+                      label="Message"
+                      placeholder="Your feedback, inquiry, or concern"
+                      required
+                      minRows={4}
+                      {...form.getInputProps('message')}
+                    />
+                  </div>
+                  {feedbackMessage && (
+                    <div
+                      className={`sf-about__alert sf-about__alert--${feedbackMessage.type}`}
+                      role={feedbackMessage.type === 'error' ? 'alert' : 'status'}
+                    >
+                      {feedbackMessage.type === 'success' ? (
+                        <IconCheck aria-hidden="true" />
+                      ) : (
+                        <IconAlertCircle aria-hidden="true" />
+                      )}
+                      <span>{feedbackMessage.text}</span>
                     </div>
-                  </div>
-                </div>
+                  )}
+                  <button
+                    type="submit"
+                    className="sf-btn-submit"
+                    disabled={feedbackSubmitting}
+                  >
+                    {feedbackSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                  </button>
+                </Stack>
+              </form>
+            </div>
 
+                <div className="sf-about__seal">
+              <img
+                className="sf-about__seal-img"
+                src={sanFabianLogo}
+                alt="Official seal of the Municipality of San Fabian"
+              />
+            </div>
+
+            <div className="sf-about__card">
+              <h2 className="sf-about__card-title">Services</h2>
+              <ul className="sf-about__nav">
+                {SERVICE_LINKS.map(([href, label]) => (
+                  <li key={href}>
+                    <a href={href}>{label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="sf-about__card">
+              <h2 className="sf-about__card-title">Population Office Location</h2>
+              <iframe
+                className="sf-about__map"
+                title="San Fabian Population Office Location"
+                src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </aside>
+        </div>
+                <section className="org-chart" aria-labelledby="org-chart-title">
+          <div className="org-chart__head">
+            <div>
+              <h2 className="org-chart__title" id="org-chart-title">
+                Organization Hierarchy
+              </h2>
+              <p className="org-chart__sub">
+                Visual overview of the Municipal Population Office leadership and support structure.
+              </p>
+            </div>
+            {isAdmin && (
+              <div className="org-chart__actions">
+                <button type="button" className="sf-btn-sm" onClick={() => openHierarchyModal('add')}>
+                  <IconPlus width={16} height={16} aria-hidden="true" />
+                  Add
+                </button>
+                <button type="button" className="sf-btn-sm" onClick={() => openHierarchyModal('edit')}>
+                  <IconPencil width={16} height={16} aria-hidden="true" />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn-sm sf-btn-danger"
+                  onClick={() => openHierarchyModal('delete')}
+                >
+                  <IconTrash width={16} height={16} aria-hidden="true" />
+                  Delete
+                </button>
               </div>
-            </div>
+            )}
           </div>
-          <br />
-          <div className="row g-4">
-            <div className="col-12">
-              <Paper radius="md" shadow="xs" p="md" withBorder>
-                {isAdmin && (
-                  <Group justify="flex-end" mb="xs">
-                    <Button size="xs" variant="outline" onClick={() => openHierarchyModal('add')}>
-                      Add
-                    </Button>
-                    <Button size="xs" variant="outline" onClick={() => openHierarchyModal('edit')}>
-                      Edit
-                    </Button>
-                    <Button size="xs" color="red" variant="outline" onClick={() => openHierarchyModal('delete')}>
-                      Delete
-                    </Button>
-                  </Group>
-                )}
-                <Title order={2} weight={600} mb="xs" className="hover-underline text-center">
-                  Organization Hierarchy
-                </Title>
-                <Text size="sm" c="dimmed" mb="md" align="center">
-                  Visual overview of the Municipal Population Office leadership and support structure.
-                </Text>
 
-                <div className="d-flex flex-column align-items-center mb-4">
-                  <div className="px-4 py-2 rounded-3 text-white text-center hover-underline" style={{ backgroundColor: '#0377c5ff', minWidth: 220 }}>
-                    <div>{mayor?.name || '—'}</div>
-                    <div className="fw-semibold">Mayor</div>                  
-                  </div>
-                </div>
+          {hierarchyLoading ? (
+            <Center py="sm">
+              <Loader size="sm" />
+            </Center>
+          ) : (
+            <>
+              {/* Levels 1-3: one node per row, stacked and connected. */}
+              <ul className="org-chart__level">
+                <li className="org-chart__node org-chart__node--top">
+                  <span className="org-chart__name">{mayor?.name || '\u2014'}</span>
+                  <span className="org-chart__role">Mayor</span>
+                </li>
+              </ul>
 
-                <div className="d-flex justify-content-center mb-3">
-                  <div className="border-start border-2" style={{ height: 24, borderColor: '#0377c5ff' }} />
-                </div>
+              <div className="org-chart__connector" aria-hidden="true" />
 
-                <div className="d-flex flex-column align-items-center mb-4">
-                  <div className="px-4 py-2 rounded-3 text-white text-center" style={{ backgroundColor: '#0377c5ff', minWidth: 220 }}>
-                    <div className="fw-semibold">Vice Mayor</div>
-                    <div>{viceMayor?.name || '—'}</div>
-                  </div>
-                </div>
+              <ul className="org-chart__level">
+                <li className="org-chart__node org-chart__node--top">
+                  <span className="org-chart__name">{viceMayor?.name || '\u2014'}</span>
+                  <span className="org-chart__role">Vice Mayor</span>
+                </li>
+              </ul>
 
-                <div className="d-flex justify-content-center mb-3">
-                  <div className="border-start border-2" style={{ height: 24, borderColor: '#0377c5ff' }} />
-                </div>
+              <div className="org-chart__connector" aria-hidden="true" />
 
-                <div className="d-flex flex-column align-items-center mb-4">
-                  <div className="px-4 py-2 rounded-3 text-white text-center" style={{ backgroundColor: '#0377c5ff', minWidth: 220 }}>
-                    <div>{head?.name || '—'}</div>
-                    <div className="fw-semibold">Population Office Head</div>                 
-                  </div>
-                </div>
+              <ul className="org-chart__level">
+                <li className="org-chart__node org-chart__node--top">
+                  <span className="org-chart__name">{head?.name || '\u2014'}</span>
+                  <span className="org-chart__role">Population Office Head</span>
+                </li>
+              </ul>
 
-                <div className="d-flex justify-content-center mb-3">
-                  <div className="border-start border-2" style={{ height: 24, borderColor: '#0377c5ff' }} />
-                </div>
+              <div className="org-chart__connector" aria-hidden="true" />
 
-                {staffMembers.length === 0 ? (
-                  <>
-                    <div className="d-flex flex-column align-items-center mb-4">
-                      <div className="px-4 py-2 rounded-3 text-white text-center hover-underline" style={{ backgroundColor: '#0377c5ff', minWidth: 220 }}>
-                        <div className="fw-semibold">Population Office Staff</div>
-                        <div>—</div>
-                      </div>
-                    </div>
+              {/* Level 4: office staff. The role is carried by this group
+                  heading so it is not repeated on every card. */}
+              {staffMembers.length > 0 && (
+                <h3 className="org-chart__heading">
+                  Population Office Staff{' '}
+                  <span className="org-chart__heading-count">({staffMembers.length})</span>
+                </h3>
+              )}
+              {staffMembers.length === 0 ? (
+                <ul className="org-chart__level">
+                  <li className="org-chart__node org-chart__node--staff">
+                    <span className="org-chart__name">&mdash;</span>
+                    <span className="org-chart__role">Population Office Staff</span>
+                  </li>
+                </ul>
+              ) : (
+                <ul className="org-chart__level">
+                  {staffMembers.map((staff) => (
+                    <li key={staff.id} className="org-chart__node org-chart__node--staff">
+                      <span className="org-chart__name">{staff.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-                    <div className="d-flex justify-content-center mb-3">
-                      <div className="border-start border-2" style={{ height: 24, borderColor: '#0377c5ff' }} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="row g-3 justify-content-center mb-3">
-                      {staffMembers.map((staff) => (
-                        <div key={staff.id} className="col-12 col-sm-6 col-md-4 col-lg-3 d-flex flex-column align-items-center">
-                          <div className="px-3 py-2 rounded-3 text-white text-center hover-underline" style={{ backgroundColor: '#0377c5ff', minWidth: 180 }}>
-                            <div>{staff.name}</div>
-                            <div className="fw-semibold">Population Office Staff</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+              <div className="org-chart__connector" aria-hidden="true" />
 
-                <div className="d-flex justify-content-center mb-3">
-                  <div className="border-start border-2" style={{ height: 24, borderColor: '#0377c5ff' }} />
-                </div>
-
-                {hierarchyLoading ? (
-                  <Center py="sm">
-                    <Loader size="sm" />
-                  </Center>
-                ) : (
-                  <div className="row g-3 justify-content-center">
-                    {barangayReps.map((rep) => (
-                      <div key={rep.id} className="col-12 col-sm-6 col-md-4 col-lg-3 d-flex flex-column align-items-center">
-                        <div
-                          className="px-3 py-2 rounded-3 text-white text-center hover-underline"
-                          style={{ backgroundColor: '#0377c5ff', minWidth: 300, minHeight: 80 }}
-                        >
-                          <div>{rep.name}</div>
-                          <div className="fw-semibold">Barangay Representative</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Paper>
-            </div>
-          </div>
+              {/* Level 5: barangay representatives, one per barangay. */}
+              {barangayReps.length > 0 && (
+                <h3 className="org-chart__heading">
+                  Barangay Representatives{' '}
+                  <span className="org-chart__heading-count">({barangayReps.length})</span>
+                </h3>
+              )}
+              <ul className="org-chart__level">
+                {barangayReps.map((rep) => {
+                  const split = splitNameAndBarangay(rep.name);
+                  return (
+                    <li key={rep.id} className="org-chart__node org-chart__node--brgy">
+                      <span className="org-chart__name">
+                        {split ? split.name : rep.name}
+                      </span>
+                      {split ? (
+                        <span className="org-chart__role">Brgy. {split.barangay}</span>
+                      ) : (
+                        /* Regex did not match: keep the raw name and show the
+                           role so no information is lost. */
+                        <span className="org-chart__role">Barangay Representative</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </section>
+      </div>
+    </div>
 
           <LoginModal
             opened={loginOpen}
@@ -697,44 +791,55 @@ export function ContactPage() {
             withCloseButton={false}
             centered
             size="sm"
-            radius="lg"
+            radius="md"
+            padding={0}
+            zIndex={1000}
+            classNames={{ content: 'sf-dlg' }}
+            overlayProps={{ backgroundOpacity: 0.5, blur: 0, transitionProps: { duration: 150 } }}
+            transitionProps={{ transition: 'fade', duration: 150 }}
           >
-            <Stack gap="md">
-              <div className="d-flex flex-column align-items-center text-center">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center mb-3"
-                  style={{ width: 56, height: 56, backgroundColor: '#fee2e2', color: '#dc2626' }}
-                >
-                  <span style={{ fontSize: 24 }}>!</span>
+            <div className="sf-dlg__form">
+              <div className="sf-dlg__header">
+                <div>
+                  <p className="sf-dlg__eyebrow">Feedback Form</p>
+                  <h2 className="sf-dlg__title">Are you sure?</h2>
                 </div>
-                <Text fw={600} size="lg" mb={2}>
-                  Are you sure?
-                </Text>
+                <button
+                  type="button"
+                  className="sf-dlg__close"
+                  aria-label="Close"
+                  onClick={() => setFeedbackConfirmOpen(false)}
+                >
+                  <IconX width={20} height={20} aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="sf-dlg__body">
                 <Text size="sm" c="dimmed">
                   Are you sure you want to submit this feedback? This action cannot be undone.
                 </Text>
               </div>
 
-              <Button
-                color="green"
-                fullWidth
-                onClick={() => {
-                  setFeedbackConfirmOpen(false);
-                  handleSubmit(form.values).catch(() => {});
-                }}
-              >
-                Submit feedback
-              </Button>
-
-              <Button
-                variant="outline"
-                color="gray"
-                fullWidth
-                onClick={() => setFeedbackConfirmOpen(false)}
-              >
-                Cancel
-              </Button>
-            </Stack>
+              <div className="sf-dlg__footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setFeedbackConfirmOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    setFeedbackConfirmOpen(false);
+                    handleSubmit(form.values).catch(() => {});
+                  }}
+                >
+                  Submit feedback
+                </button>
+              </div>
+            </div>
           </Modal>
 
           {isAdmin && (
@@ -745,81 +850,59 @@ export function ContactPage() {
               centered
               size="xl"
               padding={0}
-              styles={{
-                content: {
-                  backgroundColor: 'transparent',
-                  boxShadow: 'none',
-                },
-                body: {
-                  padding: 0,
-                },
-              }}
-              overlayProps={{ opacity: 1, color: '#050000ff' }}
+              zIndex={1000}
+              classNames={{ content: 'sf-dlg' }}
+              overlayProps={{ backgroundOpacity: 0.5, blur: 0, transitionProps: { duration: 150 } }}
+              transitionProps={{ transition: 'fade', duration: 150 }}
             >
-              <div className="card border-0 shadow-lg" style={{ borderRadius: '0.75rem' }}>
-                <div className="row g-0 align-items-stretch">
-                  {/* Preview on the left: text summary */}
-                  <div
-                    className="col-md-5 d-none d-md-block bg-light"
-                    style={{ borderRight: '1px solid #e5e7eb' }}
-                  >
-                    <div className="h-100 w-100 p-4 d-flex flex-column justify-content-center" align="left">
-                      <div className="mb-3 small text-muted w-100">Preview</div>
-                      <div className="w-100" style={{ maxWidth: 320 }}>
-                        <div className="mb-2">
-                          <div className="small text-muted">Office name</div>
-                          <div className="fw-semibold">
-                            {officeForm.values.officeName || '—'}
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <div className="small text-muted">Address</div>
-                          <div>
-                            {officeForm.values.address || '—'}
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <div className="small text-muted">Contact number</div>
-                          <div>
-                            {officeForm.values.contactNumber || '—'}
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <div className="small text-muted">Email</div>
-                          <div>
-                            {officeForm.values.email || '—'}
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <div className="small text-muted">Office head</div>
-                          <div>
-                            {officeForm.values.officeHead || '—'}
-                          </div>
-                        </div>
-                      </div>
+              <div className="sf-dlg__shell">
+                <div className="sf-dlg__aside">
+                  <p className="sf-dlg__aside-title">Preview</p>
+                  <dl className="sf-dlg__preview-row">
+                    <dt>Office name</dt>
+                    <dd>{officeForm.values.officeName || '\u2014'}</dd>
+                  </dl>
+                  <dl className="sf-dlg__preview-row">
+                    <dt>Address</dt>
+                    <dd>{officeForm.values.address || '\u2014'}</dd>
+                  </dl>
+                  <dl className="sf-dlg__preview-row">
+                    <dt>Contact number</dt>
+                    <dd>{officeForm.values.contactNumber || '\u2014'}</dd>
+                  </dl>
+                  <dl className="sf-dlg__preview-row">
+                    <dt>Email</dt>
+                    <dd>{officeForm.values.email || '\u2014'}</dd>
+                  </dl>
+                  <dl className="sf-dlg__preview-row">
+                    <dt>Office head</dt>
+                    <dd>{officeForm.values.officeHead || '\u2014'}</dd>
+                  </dl>
+                </div>
+
+                <div className="sf-dlg__form">
+                  <div className="sf-dlg__header">
+                    <div>
+                      <p className="sf-dlg__eyebrow">Contact Us</p>
+                      <h2 className="sf-dlg__title">Edit Office Details</h2>
                     </div>
+                    <button
+                      type="button"
+                      className="sf-dlg__close"
+                      aria-label="Close"
+                      onClick={() => setOfficeEditOpen(false)}
+                    >
+                      <IconX width={20} height={20} aria-hidden="true" />
+                    </button>
                   </div>
 
-                  {/* Form on the right */}
-                  <div className="col-12 col-md-7 p-4 bg-white">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <div>
-                        <div className="text-uppercase small text-muted mb-1">Contact Us</div>
-                        <h2 className="h5 mb-0">Edit Office Details</h2>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn-close"
-                        aria-label="Close"
-                        onClick={() => setOfficeEditOpen(false)}
-                      />
-                    </div>
-
-                    <form
-                      onSubmit={officeForm.onSubmit((values) => {
-                        handleOfficeSave(values).catch(() => {});
-                      })}
-                    >
+                  <form
+                    onSubmit={officeForm.onSubmit((values) => {
+                      handleOfficeSave(values).catch(() => {});
+                    })}
+                    style={{ display: 'contents' }}
+                  >
+                    <div className="sf-dlg__body">
                       <Stack>
                         <TextInput
                           label="Office name"
@@ -848,22 +931,22 @@ export function ContactPage() {
                           required
                           {...officeForm.getInputProps('officeHead')}
                         />
-
-                        <Group justify="flex-end" mt="md">
-                          <Button
-                            variant="default"
-                            type="button"
-                            onClick={() => setOfficeEditOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button type="submit">
-                            Save changes
-                          </Button>
-                        </Group>
                       </Stack>
-                    </form>
-                  </div>
+                    </div>
+
+                    <div className="sf-dlg__footer">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => setOfficeEditOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn-primary">
+                        Save changes
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </Modal>
@@ -875,38 +958,36 @@ export function ContactPage() {
               onClose={closeHierarchyModal}
               centered
               withCloseButton={false}
+              size="md"
               padding={0}
-              styles={{
-                content: {
-                  backgroundColor: 'transparent',
-                  boxShadow: 'none',
-                },
-                body: {
-                  padding: 0,
-                },
-              }}
+              zIndex={1000}
+              classNames={{ content: 'sf-dlg' }}
+              overlayProps={{ backgroundOpacity: 0.5, blur: 0, transitionProps: { duration: 150 } }}
+              transitionProps={{ transition: 'fade', duration: 150 }}
             >
-              <div className="card border-0 shadow-lg" style={{ borderRadius: '0.75rem' }}>
-                <div className="p-4">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                      <div className="text-uppercase small text-muted mb-1">Organization Hierarchy</div>
-                      <h2 className="h5 mb-0">
-                        {hierarchyModalMode === 'add'
-                          ? 'Add hierarchy entry'
-                          : hierarchyModalMode === 'edit'
-                          ? 'Edit hierarchy entry'
-                          : 'Delete hierarchy entry'}
-                      </h2>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      aria-label="Close"
-                      onClick={closeHierarchyModal}
-                    />
+              <div className="sf-dlg__form">
+                <div className="sf-dlg__header">
+                  <div>
+                    <p className="sf-dlg__eyebrow">Organization Hierarchy</p>
+                    <h2 className="sf-dlg__title">
+                      {hierarchyModalMode === 'add'
+                        ? 'Add hierarchy entry'
+                        : hierarchyModalMode === 'edit'
+                        ? 'Edit hierarchy entry'
+                        : 'Delete hierarchy entry'}
+                    </h2>
                   </div>
+                  <button
+                    type="button"
+                    className="sf-dlg__close"
+                    aria-label="Close"
+                    onClick={closeHierarchyModal}
+                  >
+                    <IconX width={20} height={20} aria-hidden="true" />
+                  </button>
+                </div>
 
+                <div className="sf-dlg__body">
                   <Stack gap="sm">
                     {(hierarchyModalMode === 'edit' || hierarchyModalMode === 'delete') && (
                       <Select
@@ -917,6 +998,7 @@ export function ContactPage() {
                         onChange={handleHierarchyPrimaryChange}
                         searchable
                         clearable
+                        comboboxProps={{ withinPortal: true, zIndex: 1200 }}
                       />
                     )}
 
@@ -929,6 +1011,7 @@ export function ContactPage() {
                           value={hierarchyPosition}
                           onChange={(v) => setHierarchyPosition(v || '')}
                           required
+                          comboboxProps={{ withinPortal: true, zIndex: 1200 }}
                         />
                         <TextInput
                           label="Name"
@@ -947,28 +1030,33 @@ export function ContactPage() {
                       </Text>
                     )}
                   </Stack>
+                </div>
 
-                  <div className="d-flex justify-content-end gap-2 pt-3 mt-3 border-top">
-                    <Button
-                      variant="default"
-                      onClick={closeHierarchyModal}
-                      disabled={hierarchySaving}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      color={hierarchyModalMode === 'delete' ? 'red' : 'blue'}
-                      onClick={submitHierarchy}
-                      loading={hierarchySaving}
-                    >
-                      {hierarchyModalMode === 'delete' ? 'Delete' : 'Save'}
-                    </Button>
-                  </div>
+                <div className="sf-dlg__footer">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={closeHierarchyModal}
+                    disabled={hierarchySaving}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={hierarchyModalMode === 'delete' ? 'sf-btn-danger' : 'btn-primary'}
+                    onClick={submitHierarchy}
+                    disabled={hierarchySaving}
+                  >
+                    {hierarchySaving
+                      ? 'Saving...'
+                      : hierarchyModalMode === 'delete'
+                      ? 'Delete'
+                      : 'Save'}
+                  </button>
                 </div>
               </div>
             </Modal>
           )}
-        </div>
       </>
   );
 }

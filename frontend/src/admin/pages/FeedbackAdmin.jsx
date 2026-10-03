@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Stack, Title, Table, Loader, Center, Button, Group, Modal, Text, TextInput, Select, SegmentedControl, Pagination } from '@mantine/core';
+import { Stack, Title, Table, Loader, Center, Button, Group, Modal, Text, TextInput, Select, Pagination } from '@mantine/core';
 import { DatePickerInput, MonthPickerInput, YearPickerInput } from '@mantine/dates';
 import { showNotification } from '@mantine/notifications';
 
@@ -185,54 +185,73 @@ export function FeedbackAdmin() {
   };
 
   return (
-    <Stack>
-      <Group justify="space-between" align="center">
-        <Group gap="md" align="center">
-          <Title order={2}>Feedback</Title>
-          <SegmentedControl
-            size="sm"
-            value={mode}
-            onChange={setMode}
-            data={[
-              { label: 'Website', value: 'website' },
-              { label: 'Client Satisfaction', value: 'client' }
-            ]}
-          />
-        </Group>
-        <Group gap="xs">
-          <Button size="sm" variant="outline" onClick={() => setSummaryOpened(true)}>
+    <div className="adm-page">
+      <div className="adm-head">
+        <div>
+          <h1 className="adm-head__title">Feedback</h1>
+          <p className="adm-head__desc">
+            Review website feedback and client satisfaction submissions.
+          </p>
+          <hr className="adm-head__rule" />
+        </div>
+        <div className="adm-head__toolbar">
+          <div className="adm-segmented" role="radiogroup" aria-label="Feedback source">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'website'}
+              className="adm-segmented__opt"
+              onClick={() => setMode('website')}
+            >
+              Website
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'client'}
+              className="adm-segmented__opt"
+              onClick={() => setMode('client')}
+            >
+              Client Satisfaction
+            </button>
+          </div>
+          <button
+            type="button"
+            className="adm-btn adm-btn--secondary"
+ onClick={() => setSummaryOpened(true)}
+ >
             Summary
-          </Button>
+          </button>
           <TextInput
+            className="adm-search"
             size="sm"
+            aria-label="Search feedback"
             placeholder={mode === 'website' ? 'Search website feedback...' : 'Search client satisfaction...'}
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
-            style={{ maxWidth: 260 }}
           />
-        </Group>
-      </Group>
+        </div>
+      </div>
 
       {mode === 'website' && (loading ? (
-        <Center py="lg">
-          <Loader />
-        </Center>
+        <div className="adm-page-loader"><Loader /></div>
       ) : (
+        <div className="adm-table-wrap">
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
+          <caption className="adm-cap">
+            Website feedback, showing {filteredItems.length} entries.
+          </caption>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
+              <Table.Th className="adm-table__no" style={{ textAlign: 'left' }}>No.</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Barangay</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Message</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Date</Table.Th>
-              <Table.Th style={{ textAlign: 'center' }}>Actions</Table.Th>
+              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -240,23 +259,32 @@ export function FeedbackAdmin() {
               const rowNumber = (websiteCurrentPage - 1) * listPageSize + index + 1;
               return (
               <Table.Tr key={f.id}>
-                <Table.Td>{rowNumber}</Table.Td>
-                <Table.Td>{f.barangay || '—'}</Table.Td>
-                <Table.Td>{f.message}</Table.Td>
-                <Table.Td>{formatDate(f.created_at)}</Table.Td>
+                <Table.Td className="adm-table__no">{rowNumber}</Table.Td>
+                <Table.Td className="adm-table__wrap-any">{f.barangay || '—'}</Table.Td>
+                <Table.Td><span className="adm-table__desc">{f.message}</span></Table.Td>
+                <Table.Td className="adm-table__nowrap">{formatDate(f.created_at)}</Table.Td>
                 <Table.Td>
-                  <Group gap="xs" justify="center">
-                    <Button size="xs" variant="light" onClick={() => setViewing(f)}>View</Button>
+                  <Group gap="xs" justify="flex-end" wrap="nowrap">
+                    <Button
+                      className="adm-btn adm-btn--secondary adm-btn--xs" aria-label={`View feedback from ${f.barangay || 'unknown barangay'}`}
+ onClick={() => setViewing(f)}
+ >
+                      View
+                    </Button>
                   </Group>
                 </Table.Td>
               </Table.Tr>
             );})}
           </Table.Tbody>
         </Table>
+        </div>
       ))}
 
       {mode === 'website' && !loading && filteredItems.length > listPageSize && (
-        <Group justify="flex-end">
+        <div className="adm-pager">
+          <span className="adm-pager__info">
+            Showing {websitePagedItems.length} of {filteredItems.length} feedback entries
+          </span>
           <Pagination
             value={websiteCurrentPage}
             onChange={setWebsitePage}
@@ -264,31 +292,30 @@ export function FeedbackAdmin() {
             size="sm"
             radius="md"
           />
-        </Group>
+        </div>
       )}
 
       {mode === 'client' && (clientLoading ? (
-        <Center py="lg">
-          <Loader />
-        </Center>
+        <div className="adm-page-loader"><Loader /></div>
       ) : (
+        <div className="adm-table-wrap">
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
+          <caption className="adm-cap">
+            Client satisfaction feedback, showing {filteredClientItems.length} entries.
+          </caption>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
+              <Table.Th className="adm-table__no" style={{ textAlign: 'left' }}>No.</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Client type</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Service availed</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Region</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Sex / Age</Table.Th>
               <Table.Th style={{ textAlign: 'left' }}>Date</Table.Th>
-              <Table.Th style={{ textAlign: 'center' }}>Actions</Table.Th>
+              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -296,16 +323,21 @@ export function FeedbackAdmin() {
               const rowNumber = (clientCurrentPage - 1) * listPageSize + index + 1;
               return (
               <Table.Tr key={f.id}>
-                <Table.Td>{rowNumber}</Table.Td>
-                <Table.Td>{f.client_type}</Table.Td>
-                <Table.Td>{f.service_availed}</Table.Td>
-                <Table.Td>{f.region_of_residence}</Table.Td>
-                <Table.Td>{`${f.sex || ''}${f.age != null ? `, ${f.age}` : ''}`}</Table.Td>
+                <Table.Td className="adm-table__no">{rowNumber}</Table.Td>
+                <Table.Td className="adm-table__wrap-any">{f.client_type}</Table.Td>
+                <Table.Td className="adm-table__wrap-any">{f.service_availed}</Table.Td>
+                <Table.Td className="adm-table__wrap-any">{f.region_of_residence}</Table.Td>
+                <Table.Td className="adm-table__nowrap">{`${f.sex || ''}${f.age != null ? `, ${f.age}` : ''}`}</Table.Td>
                 {/* Show the CSM survey date (not submission timestamp) */}
-                <Table.Td>{formatDate(f.date)}</Table.Td>
+                <Table.Td className="adm-table__nowrap">{formatDate(f.date)}</Table.Td>
                 <Table.Td>
-                  <Group gap="xs" justify="center">
-                    <Button size="xs" variant="light" onClick={() => setClientViewing(f)}>View</Button>
+                  <Group gap="xs" justify="flex-end" wrap="nowrap">
+                    <Button
+                      className="adm-btn adm-btn--secondary adm-btn--xs" aria-label={`View client satisfaction feedback ${rowNumber}`}
+ onClick={() => setClientViewing(f)}
+ >
+                      View
+                    </Button>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -313,17 +345,19 @@ export function FeedbackAdmin() {
             {filteredClientItems.length === 0 && (
               <Table.Tr>
                 <Table.Td colSpan={7}>
-                  <Text size="sm" c="dimmed">
+                  <div className="adm-empty">
                     No client satisfaction feedback entries match the search.
-                  </Text>
+                  </div>
                 </Table.Td>
               </Table.Tr>
             )}
           </Table.Tbody>
         </Table>
+        </div>
       ))}
 
       <Modal
+        className="adm-modal"
         opened={summaryOpened}
         onClose={() => setSummaryOpened(false)}
         size="xl"
@@ -439,13 +473,10 @@ export function FeedbackAdmin() {
             </Text>
 
             <Table
-              striped
-              withTableBorder
-              withColumnBorders
               highlightOnHover
               verticalSpacing="xs"
               fontSize="sm"
-            >
+             className="adm-table">
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -497,13 +528,10 @@ export function FeedbackAdmin() {
               <b>Total client satisfaction entries:</b> {clientItems.length}
             </Text>
             <Table
-              striped
-              withTableBorder
-              withColumnBorders
               highlightOnHover
               verticalSpacing="xs"
               fontSize="sm"
-            >
+             className="adm-table">
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -566,7 +594,7 @@ export function FeedbackAdmin() {
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="adm-iconbtn adm-iconbtn--neutral"
                   aria-label="Close"
                   onClick={() => setViewing(null)}
                 />
@@ -605,6 +633,6 @@ export function FeedbackAdmin() {
           </Stack>
         )}
       </Modal>
-    </Stack>
+    </div>
   );
 }

@@ -1,0 +1,60 @@
+/* ==================================================================
+   Event type + status colours - THE single source of truth.
+
+   Every place an event type or an event status is shown (legends,
+   avatars, status badges, calendar tiles, modals) reads these custom
+   properties, either through styles/../utils/eventColors.js or directly.
+   Do not hardcode these hex values anywhere else.
+
+   Each dark-text / soft-background pair is >= 4.5:1 (WCAG AA):
+     PMO       #6B21A8 on #F3E8FF = 7.39:1
+     Usapan    #115E59 on #CCFBF1 = 6.73:1
+     Activity  #92400E on #FEF3C7 = 6.37:1
+     Other     #374151 on #E5E7EB = 8.33:1
+     Upcoming  #1E40AF on #DBEAFE = 7.15:1
+     Ongoing   #166534 on #DCFCE7 = 6.49:1
+     Cancelled #991B1B on #FEE2E2 = 6.80:1
+   ================================================================== */
+
+:root {
+  /* ---------- Event types: soft background / dark text / solid dot ---------- */
+  --cal-type-pmo-bg: #f3e8ff;      /* Pre-Marriage Orientation (violet) */
+  --cal-type-pmo-fg: #6b21a8;
+  --cal-type-pmo-dot: #7c3aed;
+
+  --cal-type-usapan-bg: #ccfbf1;   /* Usapan-Series (teal) */
+  --cal-type-usapan-fg: #115e59;
+  --cal-type-usapan-dot: #0d9488;
+
+  --cal-type-act-bg: #fef3c7;      /* Event/Activity (amber) */
+  --cal-type-act-fg: #92400e;
+  --cal-type-act-dot: #f59e0b;
+
+  --cal-type-other-bg: #e5e7eb;    /* Any other / unknown type (neutral) */
+  --cal-type-other-fg: #374151;
+  --cal-type-other-dot: #6b7280;
+
+  /* ---------- Statuses: soft background / dark text / dot ---------- */
+  /* NOTE: Upcoming is blue and Ongoing is green. */
+  --cal-status-upcoming-bg: #dbeafe;
+  --cal-status-upcoming-fg: #1e40af;
+  --cal-status-upcoming-dot: #2563eb;
+
+  --cal-status-ongoing-bg: #dcfce7;
+  --cal-status-ongoing-fg: #166534;
+  --cal-status-ongoing-dot: #16a34a;
+
+  --cal-status-finished-bg: #e5e7eb;
+  --cal-status-finished-fg: #374151;
+  --cal-status-finished-dot: #6b7280;
+
+  --cal-status-cancelled-bg: #fee2e2;
+  --cal-status-cancelled-fg: #991b1b;
+  --cal-status-cancelled-dot: #dc2626;
+
+  /* Neutral token reused wherever a value has no dedicated colour
+     (e.g. the "Scheduled" state in the admin add/edit preview). */
+  --cal-neutral-bg: #e5e7eb;
+  --cal-neutral-fg: #374151;
+  --cal-neutral-dot: #6b7280;
+}

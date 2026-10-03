@@ -50,7 +50,7 @@ export function PmoMeifPrint() {
       <Center style={{ minHeight: '60vh' }}>
         <Stack gap="sm" align="center">
           <Text c="red" size="sm">{error || 'No data found.'}</Text>
-          <Button size="xs" variant="light" onClick={() => navigate(-1)}>Back</Button>
+          <Button size="xs" onClick={() => navigate(-1)} className="adm-btn adm-btn--secondary adm-btn--sm">Back</Button>
         </Stack>
       </Center>
     );
@@ -351,8 +351,8 @@ export function PmoMeifPrint() {
         }
       `}</style>
       <div className="meif-toolbar no-print">
-        <Button size="xs" variant="light" onClick={() => navigate(-1)}>Back</Button>
-        <Button size="xs" onClick={handlePrint}>Print</Button>
+        <Button size="xs" onClick={() => navigate(-1)} className="adm-btn adm-btn--secondary adm-btn--sm">Back</Button>
+        <Button size="xs" onClick={handlePrint} className="adm-btn adm-btn--primary adm-btn--sm">Print</Button>
       </div>
 
       {/* Husband copy */}

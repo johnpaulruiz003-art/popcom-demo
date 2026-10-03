@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+﻿import React, { useMemo, useState } from 'react';
 import { Modal, TextInput, Select, Radio, Textarea, Button, Group, Text } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { showNotification } from '@mantine/notifications';
@@ -7,9 +6,18 @@ import { useMediaQuery } from '@mantine/hooks';
 import dayjs from 'dayjs';
 
 import { submitClientSatisfactionFeedback } from '../../api/feedback.js';
+import { ServiceDetailLayout, SERVICE_ITEMS } from './ServiceDetailLayout.jsx';
 
-export function ServiceBootstrapLayout({ title, imageUrl, imageAlt, showBack = true, children }) {
-  const navigate = useNavigate();
+export function ServiceBootstrapLayout({
+  title,
+  imageUrl,
+  imageAlt,
+  intro,
+  video,
+  tabs,
+  showBack = true,
+  children,
+}) {
   const isCompact = useMediaQuery('(max-width: 991px)');
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -37,17 +45,6 @@ export function ServiceBootstrapLayout({ title, imageUrl, imageAlt, showBack = t
   });
   const [feedbackErrors, setFeedbackErrors] = useState({});
 
-  const serviceItems = [
-    { to: '/services/pre-marriage-orientation', label: 'Pre-Marriage Orientation (PMOC)' },
-    { to: '/services/usapan-series', label: 'Usapan Sessions' },
-    { to: '/services/rpfp', label: 'Responsible Parenthood (RPFP)' },
-    { to: '/services/ahdp', label: 'Adolescent Health (AHDP)' },
-    { to: '/services/iec', label: 'Population Awareness (IEC)' },
-    { to: '/services/population-profiling', label: 'Demographic Profiling' },
-    { to: '/services/community-events', label: 'Community Events' },
-    { to: '/services/other-assistance', label: 'Other Assistance' }
-  ];
-
   const ageOptions = useMemo(
     () =>
       Array.from({ length: 91 }, (_, i) => {
@@ -58,8 +55,8 @@ export function ServiceBootstrapLayout({ title, imageUrl, imageAlt, showBack = t
   );
 
   const serviceOptions = useMemo(
-    () => serviceItems.map((s) => ({ value: s.label, label: s.label })),
-    [serviceItems]
+    () => SERVICE_ITEMS.map((s) => ({ value: s.label, label: s.label })),
+    []
   );
 
   const clientTypeOptions = [
@@ -216,151 +213,19 @@ export function ServiceBootstrapLayout({ title, imageUrl, imageAlt, showBack = t
   };
 
   return (
-    <section className="py-4 bg-white">
-      <div className="container">
-        {/* Float sidebar on the right for large screens so main text can flow underneath */}
-        <aside className="d-none d-lg-block float-lg-end ms-lg-4 service-sidebar-float" style={{ width: '35%' }}>
-          <div className="vstack gap-3">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2">Services</h5>
-                <hr />
-                <div className="row small">
-                  <div className="col-12">
-                    <ul className="list-styled mb-0">
-                      {serviceItems.slice(0, Math.ceil(serviceItems.length)).map((s) => (
-                        <li key={s.to} className="mb-1"><Link to={s.to} className="text-decoration-none">{s.label}</Link></li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card shadow-sm">
-              <div className="card-body" >
-                <h5 className="card-title h6 mb-2"><b>Population Office Location</b></h5>
-                <hr />
-                <div className="ratio ratio-4x3 rounded overflow-hidden mb-3">
-                  <iframe
-                    title="San Fabian Population Office Location"
-                    src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-                <Link to="/services/meif-template" className="btn btn-outline-primary w-100 btn-sm">
-                  View MEIF Form
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary w-100 btn-sm mt-2"
-                  onClick={() => setFeedbackModalOpen(true)}
-                >
-                  View Client Feedback Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <div className="service-content fs-6" style={{ display: 'contents', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>
-            {showBack ? (
-              <div className="d-flex mb-3">
-                <button
-                  className="btn btn-primary rounded-pill px-4 py-2 d-inline-flex align-items-center shadow-sm"
-                  onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/services'))}
-                  aria-label="Go back"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" className="me-2" aria-hidden="true" focusable="false">
-                    <path d="M11.354 1.146a.5.5 0 0 1 0 .708L5.207 8l6.147 6.146a.5.5 0 0 1-.708.708l-6.5-6.5a.5.5 0 0 1 0-.708l6.5-6.5a.5.5 0 0 1 .708 0z"/>
-                  </svg>
-                  Back
-                </button>
-              </div>
-            ) : null}
-            
-            {imageUrl ? (
-              <div className="card border-0 mb-3">
-                <div className="card-body p-1 d-flex justify-content-center">
-                  <img
-                    src={imageUrl}
-                    alt={imageAlt || title}
-                    className="img-fluid rounded"
-                    style={{
-                      height: 'auto',
-                      maxWidth: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            {title ? (
-              <h1 className="h3 fw-bold mb-3" style={{paddingBottom: '1rem'}}>{title}</h1>
-            ) : null}
-
-            {children}
-        </div>
-        
-
-        {/* Stacked sidebar for small screens */}
-        <div className="d-lg-none mt-4">
-          <div className="vstack gap-3">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2">Services</h5>
-                <hr />
-                <div className="row small">
-                  <div className="col-6">
-                    <ul className="list-styled mb-0">
-                      {serviceItems.slice(0, Math.ceil(serviceItems.length / 2)).map((s) => (
-                        <li key={s.to} className="mb-1"><Link to={s.to}>{s.label}</Link></li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="col-6">
-                    <ul className="list-styled mb-0">
-                      {serviceItems.slice(Math.ceil(serviceItems.length / 2)).map((s) => (
-                        <li key={s.to} className="mb-1"><Link to={s.to}>{s.label}</Link></li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title h6 mb-2"><b>Population Office Location</b></h5>
-                <div className="ratio ratio-4x3 rounded overflow-hidden mb-3">
-                  <iframe
-                    title="San Fabian Population Office Location"
-                    src="https://www.google.com/maps?q=16.120723263859666,120.40280245009167&z=15&output=embed"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-                <Link to="/services/meif-template" className="btn btn-outline-primary w-100 btn-sm">
-                  View MEIF Form
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary w-100 btn-sm mt-2"
-                  onClick={() => setFeedbackModalOpen(true)}
-                >
-                  View Client Feedback Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <>
+      <ServiceDetailLayout
+        title={title}
+        imageUrl={imageUrl}
+        imageAlt={imageAlt}
+        intro={intro}
+        video={video}
+        tabs={tabs}
+        showBack={showBack}
+        onOpenFeedback={() => setFeedbackModalOpen(true)}
+      >
+        {children}
+      </ServiceDetailLayout>
       <Modal
         opened={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
@@ -635,13 +500,13 @@ export function ServiceBootstrapLayout({ title, imageUrl, imageAlt, showBack = t
             <p className="text-center fw-semibold mt-2 mb-4">THANK YOU!</p>
 
             <div className="d-flex justify-content-end gap-2">
-              <Button type="submit" loading={submittingFeedback}>
+              <Button className="sf-btn-navy" type="submit" loading={submittingFeedback}>
                 Submit Feedback
               </Button>
             </div>
           </div>
         </form>
       </Modal>
-    </section>
+    </>
   );
 }

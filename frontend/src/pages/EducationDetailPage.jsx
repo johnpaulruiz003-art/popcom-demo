@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Title, Text, Stack, Card, Group, Image, Button, useMantineTheme, Divider, SimpleGrid, Table, List, Accordion, Badge, AspectRatio, Center, Loader } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 
-import { getEducationById, resolveEducationWebThumbnail, resolveItemDiagram, resolveItemThumbnail } from '../content/education.js';
+import { getEducationById, resolveCategoryImage, resolveEducationWebThumbnail, resolveItemDiagram, resolveItemThumbnail } from '../content/education.js';
 import { listEducationWeb, listEducationWebKeyConcepts } from '../api/educationWeb.js';
 import { YouTubeWithConsent } from '../components/common/YouTubeWithConsent.jsx';
 
@@ -45,10 +45,13 @@ export function EducationDetailPage() {
 
   const getImageUrl = (it) => {
     if (!it) return '';
+    // 1) Image the row carried (Education Web thumbnail, then the visual).
     if (it.imageUrl) return it.imageUrl;
+    // 2) Thumbnail mapped from the bundled Education Web assets.
     const resolved = resolveItemThumbnail(it);
     if (resolved) return resolved;
-    return '';
+    // 3) Category fallback, so the detail hero is never blank.
+    return resolveCategoryImage(it.category, it.title || it.id || '');
   };
 
   useEffect(() => {

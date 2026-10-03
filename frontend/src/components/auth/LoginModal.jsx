@@ -6,6 +6,7 @@ import { useMediaQuery } from '@mantine/hooks';
 
 import { useAuth } from '../../context/AuthContext.jsx';
 import { startPasswordReset, verifyPasswordReset, completePasswordReset } from '../../api/auth.js';
+import { isMocksEnabled } from '../../mocks/mockData.js';
 import PopcomLogo from '../../content/POPCOM-Logo.jpg';
 
 // mode: 'login' | 'forgot-identify' | 'forgot-verify' | 'forgot-reset'
@@ -278,6 +279,13 @@ export function LoginModal({ opened, onClose, redirectTo, onOpenRegister }) {
                       </button>
                     </div>
                   </div>
+                  {isMocksEnabled() && (
+                    <div className="alert alert-info small mb-3" role="note">
+                      <strong>Demo mode:</strong> mock data is enabled. Sign in with{' '}
+                      <code>admin / admin123</code>, <code>officer / officer123</code> or{' '}
+                      <code>user / user123</code>.
+                    </div>
+                  )}
                   <br />
                   <div className="d-flex align-items-center mb-3 gap-2" >
                     <Button

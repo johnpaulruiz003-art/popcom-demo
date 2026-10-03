@@ -191,11 +191,11 @@ export function PmoDbTools() {
             size="sm"
           />
           <Button
-            size="sm"
-            disabled={exportLoading}
-            loading={exportLoading}
-            onClick={handleExport}
-          >
+ size="sm"
+ disabled={exportLoading}
+ loading={exportLoading}
+ onClick={handleExport}
+  className="adm-btn adm-btn--primary adm-btn--sm">
             Download
           </Button>
         </Group>
@@ -305,11 +305,10 @@ export function PmoDbTools() {
 
         <Group align="center" gap="md">
           <Button
-            component="label"
-            size="sm"
-            variant="outline"
-            disabled={importLoading}
-          >
+ component="label"
+ size="sm"
+ disabled={importLoading}
+  className="adm-btn adm-btn--secondary adm-btn--sm">
             Choose backup file
             <input
               type="file"
@@ -374,12 +373,11 @@ export function PmoDbTools() {
           <Group justify="space-between" mt="sm" align="center">
             <Text size="sm">Mode: <b>Add (skip duplicates)</b></Text>
             <Button
-              size="sm"
-              color="red"
-              disabled={!importPayload || importLoading || importSubmitting}
-              loading={importSubmitting}
-              onClick={handleOpenImportModal}
-            >
+ size="sm"
+ disabled={!importPayload || importLoading || importSubmitting}
+ loading={importSubmitting}
+ onClick={handleOpenImportModal}
+  className="adm-btn adm-btn--danger-solid adm-btn--sm">
               Import to database
             </Button>
           </Group>
@@ -426,21 +424,17 @@ export function PmoDbTools() {
           )}
           <Group justify="center" mt="sm">
             <Button
-              color="red"
-              fullWidth
-              onClick={handleConfirmImport}
-              loading={importSubmitting}
-            >
+ onClick={handleConfirmImport}
+ loading={importSubmitting}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
               Apply import
             </Button>
           </Group>
           <Group justify="center">
             <Button
-              variant="subtle"
-              color="gray"
-              onClick={() => setImportModalOpen(false)}
-              disabled={importSubmitting}
-            >
+ onClick={() => setImportModalOpen(false)}
+ disabled={importSubmitting}
+  className="adm-btn adm-btn--secondary">
               Cancel
             </Button>
           </Group>
@@ -476,10 +470,8 @@ export function PmoDbTools() {
           )}
           <Group justify="center" mt="sm">
             <Button
-              color="green"
-              fullWidth
-              onClick={() => setImportSuccessModalOpen(false)}
-            >
+ onClick={() => setImportSuccessModalOpen(false)}
+  className="adm-btn adm-btn--success" style={{ width: "100%" }}>
               Close
             </Button>
           </Group>

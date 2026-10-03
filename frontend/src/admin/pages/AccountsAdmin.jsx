@@ -16,6 +16,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
+import { IconArchive, IconEye, IconListDetails, IconPlus } from '@tabler/icons-react';
 
 import { getUsers, createUser, updateUser, setUserActive } from '../../api/users.js';
 import { socket } from '../../socket.js';
@@ -321,7 +322,8 @@ export function AccountsAdmin() {
   if (!canManage) {
     return (
       <Stack>
-        <Title order={2}>Accounts</Title>
+        <h1 className="adm-head__title">Accounts</h1>
+      <p className="adm-head__desc">Review and manage user accounts.</p>
       </Stack>
     );
   }
@@ -347,20 +349,34 @@ export function AccountsAdmin() {
       <Group justify="space-between" align="center">
         <Title order={2}>Accounts</Title>
         <Group gap="sm">
-          <Button size="sm" variant="outline" onClick={() => setSummaryOpened(true)}>
-            Summary
-          </Button>
-          <Button onClick={openCreate}>Add Account</Button>
           <Button
             size="sm"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
+            leftSection={<IconListDetails size={16} />}
+            onClick={() => setSummaryOpened(true)}
+            className="adm-btn adm-btn--secondary adm-btn--sm adm-btn--icon-mobile"
+            aria-label="Open accounts summary"
+          >
+            <span className="adm-btn__label">Summary</span>
+          </Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={openCreate}
+            className="adm-btn adm-btn--primary adm-btn--icon-mobile"
+            aria-label="Add account"
+          >
+            <span className="adm-btn__label">Add Account</span>
+          </Button>
+          <Button
+            size="sm"
+            leftSection={showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}
             onClick={() => {
               setShowArchived((prev) => !prev);
               setPage(1);
             }}
+            className="adm-btn adm-btn--secondary adm-btn--sm adm-btn--icon-mobile"
+            aria-label={showArchived ? 'Show active accounts' : 'Show archived accounts'}
           >
-            Archived
+            <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Archived'}</span>
           </Button>
         </Group>
       </Group>
@@ -371,13 +387,10 @@ export function AccountsAdmin() {
         </Center>
       ) : (
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -413,32 +426,29 @@ export function AccountsAdmin() {
                   <Table.Td>
                     <div className="d-inline-flex gap-1">
                       <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => openEdit(u)}
-                        disabled={isRowBusy}
-                      >
+ size="xs"
+ onClick={() => openEdit(u)}
+ disabled={isRowBusy}
+  className="adm-btn adm-btn--secondary">
                         Edit
                       </Button>
                       {!isArchived && (
                         <Button
-                          size="xs"
-                          color="red"
-                          variant="light"
-                          disabled={isRowBusy}
-                          onClick={() => !isRowBusy && handleArchive(u)}
-                        >
+ size="xs"
+ color="red"
+ disabled={isRowBusy}
+ onClick={() => !isRowBusy && handleArchive(u)}
+  className="adm-btn adm-btn--secondary">
                           Archive
                         </Button>
                       )}
                       {isArchived && (
                         <Button
-                          size="xs"
-                          color="green"
-                          variant="light"
-                          disabled={isRowBusy}
-                          onClick={() => !isRowBusy && handleUnarchive(u)}
-                        >
+ size="xs"
+ color="green"
+ disabled={isRowBusy}
+ onClick={() => !isRowBusy && handleUnarchive(u)}
+  className="adm-btn adm-btn--secondary">
                           Unarchive
                         </Button>
                       )}
@@ -529,13 +539,10 @@ export function AccountsAdmin() {
           </Text>
 
           <Table
-            striped
-            withTableBorder
-            withColumnBorders
             highlightOnHover
             verticalSpacing="xs"
             fontSize="sm"
-          >
+           className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -630,7 +637,7 @@ export function AccountsAdmin() {
               </div>
               <button
                 type="button"
-                className="btn-close"
+                className="adm-iconbtn adm-iconbtn--neutral"
                 aria-label="Close"
                 onClick={closeModal}
               />
@@ -686,7 +693,7 @@ export function AccountsAdmin() {
                 />
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="adm-btn adm-btn--primary">Save changes</Button>
                 </div>
               </Stack>
             </form>

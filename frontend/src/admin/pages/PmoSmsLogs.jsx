@@ -247,7 +247,8 @@ function PmoSmsLogs() {
   return (
     <Stack>
       <Group justify="space-between" align="center">
-        <Title order={2}>SMS Logs</Title>
+        <h1 className="adm-head__title">SMS Logs</h1>
+      <p className="adm-head__desc">Review SMS delivery logs and failures.</p>
         <Group gap="xs" align="center">
           <Select
             placeholder="Filter by event"
@@ -274,13 +275,11 @@ function PmoSmsLogs() {
             w={160}
           />
           <Button
-            size="xs"
-            variant="outline"
-            color="red"
-            disabled={!items.some((row) => !row.success) || resendAllLoading}
-            loading={resendAllLoading}
-            onClick={handleResendAllFailed}
-          >
+ size="xs"
+ disabled={!items.some((row) => !row.success) || resendAllLoading}
+ loading={resendAllLoading}
+ onClick={handleResendAllFailed}
+  className="adm-btn adm-btn--danger-outline adm-btn--sm">
             Resend all failed
           </Button>
         </Group>
@@ -292,13 +291,10 @@ function PmoSmsLogs() {
         <Text size="sm" c="dimmed">No SMS logs found.</Text>
       ) : (
         <Table
-          striped
-          withTableBorder
-          withColumnBorders
           highlightOnHover
           verticalSpacing="xs"
           fontSize="sm"
-        >
+         className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -324,7 +320,7 @@ function PmoSmsLogs() {
                   </Table.Td>
                   <Table.Td style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.message}</Table.Td>
                   <Table.Td>
-                    <Button size="xs" variant="light" onClick={() => { setViewRow(row); setViewOpen(true); }}>
+                    <Button size="xs" onClick={() => { setViewRow(row); setViewOpen(true); }} className="adm-btn-secondary">
                       View
                     </Button>
                   </Table.Td>
@@ -363,7 +359,7 @@ function PmoSmsLogs() {
           <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{viewRow?.message || '—'}</Text>
           {!viewRow?.success && (
             <Group justify="flex-end" mt="sm">
-              <Button size="xs" loading={resendLoading} onClick={handleResend}>
+              <Button size="xs" loading={resendLoading} onClick={handleResend} className="adm-btn adm-btn--primary adm-btn--sm">
                 Re-send SMS
               </Button>
             </Group>

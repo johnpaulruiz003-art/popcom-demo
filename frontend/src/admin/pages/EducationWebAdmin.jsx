@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Title, Stack, Group, Button, Table, Modal, TextInput, Textarea, Checkbox, NumberInput, Loader, Center, Badge, FileInput, Pagination } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
+import { IconArchive, IconEye, IconPlus } from '@tabler/icons-react';
 import { listEducationWeb, createEducationWeb, updateEducationWeb, archiveEducationWeb, unarchiveEducationWeb, listEducationWebKeyConcepts, upsertEducationWebKeyConcepts } from '../../api/educationWeb.js';
 import { uploadEducationWebImage } from '../../api/uploads.js';
 
@@ -262,20 +263,24 @@ export function EducationWebAdmin() {
   return (
     <Stack>
       <Group justify="space-between" mb="sm">
-        <Title order={2}>Education Web Content</Title>
+        <h1 className="adm-head__title">Education Web Content</h1>
+      <p className="adm-head__desc">Manage Education Corner web content.</p>
         <Group gap="xs">
           <Button
-            variant={showArchived ? 'default' : 'filled'}
+            leftSection={<IconPlus size={16} />}
             onClick={openCreate}
+            className="adm-btn adm-btn--primary adm-btn--icon-mobile"
+            aria-label="Add education content"
           >
-            Add content
+            <span className="adm-btn__label">Add content</span>
           </Button>
           <Button
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
+            leftSection={showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}
             onClick={() => setShowArchived((v) => !v)}
+            className="adm-btn adm-btn--secondary adm-btn--icon-mobile"
+            aria-label={showArchived ? 'Show active content' : 'Show archived content'}
           >
-            Archived
+            <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Archived'}</span>
           </Button>
         </Group>
       </Group>
@@ -283,7 +288,7 @@ export function EducationWebAdmin() {
       {loading ? (
         <Center py="lg"><Loader /></Center>
       ) : (
-        <Table striped withTableBorder withColumnBorders highlightOnHover>
+        <Table highlightOnHover className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Title</Table.Th>
@@ -316,23 +321,21 @@ export function EducationWebAdmin() {
                 </Table.Td>
                 <Table.Td style={{textAlign: 'center'}}>
                   <Group justify="flex-end" gap="xs">
-                    <Button size="xs" variant="light" onClick={() => openEdit(it)}>Edit</Button>
+                    <Button size="xs" onClick={() => openEdit(it)} className="adm-btn adm-btn--secondary">Edit</Button>
                     {isPublishedItem(it) ? (
                       <Button
-                        size="xs"
-                        color="red"
-                        variant="light"
-                        onClick={() => handleArchive(it.id)}
-                      >
+ size="xs"
+ color="red"
+ onClick={() => handleArchive(it.id)}
+  className="adm-btn adm-btn--secondary">
                         Archive
                       </Button>
                     ) : (
                       <Button
-                        size="xs"
-                        color="green"
-                        variant="light"
-                        onClick={() => handleUnarchive(it.id)}
-                      >
+ size="xs"
+ color="green"
+ onClick={() => handleUnarchive(it.id)}
+  className="adm-btn adm-btn--secondary">
                         Unarchive
                       </Button>
                     )}
@@ -448,7 +451,7 @@ export function EducationWebAdmin() {
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="adm-iconbtn adm-iconbtn--neutral"
                   aria-label="Close"
                   onClick={() => setModalOpened(false)}
                 />
@@ -511,11 +514,9 @@ export function EducationWebAdmin() {
                             </div>
                           </div>
                           <Button
-                            size="xs"
-                            variant="subtle"
-                            color="red"
-                            onClick={() => removeConcept(idx)}
-                          >
+ size="xs"
+ onClick={() => removeConcept(idx)}
+  className="adm-btn adm-btn--danger-outline adm-btn--sm">
                             Remove
                           </Button>
                         </Group>
@@ -534,7 +535,7 @@ export function EducationWebAdmin() {
                         {...conceptForm.getInputProps('conceptDescription')}
                       />
                       <Group justify="flex-end">
-                        <Button size="xs" type="button" onClick={addConcept}>
+                        <Button size="xs" type="button" onClick={addConcept} className="adm-btn adm-btn--primary adm-btn--sm">
                           Add
                         </Button>
                       </Group>
@@ -584,25 +585,24 @@ export function EducationWebAdmin() {
                   />
                   <Group justify="flex-end" gap="xs">
                     <Button
-                      type="button"
-                      size="xs"
-                      variant="light"
-                      onClick={() => {
-                        const current = form.values.youtubeVideoUrl;
-                        const normalized = normalizeYoutubeInput(current);
-                        form.setFieldValue('youtubeVideoUrl', normalized);
-                      }}
-                    >
+ type="button"
+ size="xs"
+ onClick={() => {
+ const current = form.values.youtubeVideoUrl;
+ const normalized = normalizeYoutubeInput(current);
+ form.setFieldValue('youtubeVideoUrl', normalized);
+ }}
+  className="adm-btn adm-btn--secondary">
                       Check / clean URL
                     </Button>
                   </Group>
                   <Checkbox label="Published" {...form.getInputProps('isPublished', { type: 'checkbox' })} />
 
                   <Group justify="flex-end" mt="md">
-                    <Button variant="default" type="button" onClick={() => setModalOpened(false)}>
+                    <Button type="button" onClick={() => setModalOpened(false)} className="adm-btn adm-btn--neutral">
                       Cancel
                     </Button>
-                    <Button type="submit" loading={saving}>
+                    <Button type="submit" loading={saving} className="adm-btn adm-btn--primary">
                       Save
                     </Button>
                   </Group>

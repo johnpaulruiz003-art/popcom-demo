@@ -12,13 +12,13 @@ export function SectionSideNav({ basePath, items }) {
           const active = location.pathname.startsWith(to);
           return (
             <Button
-              key={it.key}
-              component={NavLink}
-              to={to}
-              variant={active ? 'light' : 'subtle'}
-              color={active ? 'blue' : 'dark'}
-              justify="flex-start"
-            >
+ key={it.key}
+ component={NavLink}
+ to={to}
+ variant={active ? 'light' : 'subtle'}
+ color={active ? 'blue' : 'dark'}
+ justify="flex-start"
+  className="adm-btn adm-btn--primary">
               {it.label}
             </Button>
           );

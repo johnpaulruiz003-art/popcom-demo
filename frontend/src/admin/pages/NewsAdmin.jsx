@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Stack,
-  Title,
   Group,
   Button,
   Table,
@@ -11,13 +10,13 @@ import {
   FileInput,
   Progress,
   Loader,
-  Center,
   Pagination,
   Select
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 import { DatePickerInput } from '@mantine/dates';
+import { IconArchive, IconEye } from '@tabler/icons-react';
 
 import { getNewsAdminList, createNews, updateNews, archiveNews, unarchiveNews } from '../../api/news.js';
 import { socket } from '../../socket.js';
@@ -310,49 +309,56 @@ export function NewsAdmin() {
   );
 
   return (
-    <Stack>
-      <Group justify="space-between">
-        <Title order={2}>News</Title>
-        <Group gap="sm" align="center">
+    <div className="adm-page">
+      <div className="adm-head">
+        <div>
+          <h1 className="adm-head__title">News</h1>
+          <p className="adm-head__desc">
+            Publish and manage news articles shown on the public portal.
+          </p>
+          <hr className="adm-head__rule" />
+        </div>
+        <div className="adm-head__toolbar">
           <TextInput
+            className="adm-search"
             size="sm"
             placeholder="Search news..."
+            aria-label="Search news"
             value={search}
             onChange={(e) => { setSearch(e.currentTarget.value); setPage(1); }}
-            style={{ maxWidth: 260 }}
           />
           <Button
-            size="sm"
-            variant={showArchived ? 'filled' : 'outline'}
-            color={showArchived ? 'gray' : 'dark'}
+            className="adm-btn adm-btn--secondary adm-btn--sm adm-btn--icon-mobile"
+            aria-pressed={showArchived}
+            leftSection={showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}
             onClick={() => { setShowArchived((v) => !v); setPage(1); }}
+            aria-label={showArchived ? 'Show active news' : 'Show archived news'}
           >
-            Archived
+            <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Show archived'}</span>
           </Button>
-        </Group>
-      </Group>
+        </div>
+      </div>
 
       {loading ? (
-        <Center py="lg">
-          <Loader />
-        </Center>
+        <div className="adm-page-loader"><Loader /></div>
       ) : (
         <>
+          <div className="adm-table-wrap">
           <Table
-            striped
-            withTableBorder
-            withColumnBorders
             highlightOnHover
             verticalSpacing="xs"
             fontSize="sm"
           >
+            <caption className="adm-cap">
+              News articles, showing {filteredItems.length} of {items.length} entries.
+            </caption>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>No.</Table.Th>
+                <Table.Th className="adm-table__no">No.</Table.Th>
                 <Table.Th>Title</Table.Th>
                 <Table.Th>Description</Table.Th>
                 <Table.Th>Author</Table.Th>
-                <Table.Th>Actions</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -360,45 +366,40 @@ export function NewsAdmin() {
                 const rowNumber = (currentPage - 1) * pageSize + index + 1;
                 return (
                   <Table.Tr key={n.id}>
-                    <Table.Td>{rowNumber}</Table.Td>
-                    <Table.Td width="20%">{n.title}</Table.Td>
-                  <Table.Td align="justify">
-                    {(() => {
-                      const full = n.content || n.shortDescription || '';
-                      return full.length > 200 ? `${full.slice(0, 200)}...` : full;
-                    })()}
+                    <Table.Td className="adm-table__no">{rowNumber}</Table.Td>
+                    <Table.Td width="20%" className="adm-table__wrap-any">{n.title}</Table.Td>
+                  <Table.Td>
+                    <span className="adm-table__desc">
+                      {(() => {
+                        const full = n.content || n.shortDescription || '';
+                        return full.length > 200 ? `${full.slice(0, 200)}...` : full;
+                      })()}
+                    </span>
                   </Table.Td>
                   <Table.Td>{n.authorUsername || '-'}</Table.Td>
                   <Table.Td>
-                    <Group justify="flex-end">
+                    <Group gap={8} justify="flex-end" wrap="nowrap">
                       {(isAdmin || (isOfficer && isOwnedByCurrentUser(n))) && (
-                        <Button size="xs" variant="light" onClick={() => openEdit(n)} w="100%">
+                        <Button
+                          className="adm-btn adm-btn--secondary adm-btn--xs" onClick={() => openEdit(n)}
+ >
                           Edit
                         </Button>
                       )}
-                      {(isAdmin || (isOfficer && isOwnedByCurrentUser(n))) && (
-                        isPublishedItem(n) ? (
+                      {(isAdmin || (isOfficer && isOwnedByCurrentUser(n))) &&
+                        (isPublishedItem(n) ? (
                           <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            onClick={() => handleArchive(n.id)}
-                            w="100%"
-                          >
+                            className="adm-btn adm-btn--secondary adm-act--archive adm-btn--xs" onClick={() => handleArchive(n.id)}
+ >
                             Archive
                           </Button>
                         ) : (
                           <Button
-                            size="xs"
-                            color="green"
-                            variant="light"
-                            onClick={() => handleUnarchive(n)}
-                            w="100%"
-                          >
+                            className="adm-btn adm-btn--secondary adm-btn--xs" onClick={() => handleUnarchive(n)}
+ >
                             Unarchive
                           </Button>
-                        )
-                      )}
+                        ))}
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -406,22 +407,27 @@ export function NewsAdmin() {
               })}
             </Table.Tbody>
           </Table>
+          </div>
 
           {filteredItems.length > pageSize && (
-            <Group justify="center" mt="md">
+            <div className="adm-pager">
+              <span className="adm-pager__info">
+                Showing {pagedItems.length} of {filteredItems.length} news articles
+              </span>
               <Pagination
                 size="md"
                 value={currentPage}
                 onChange={setPage}
                 total={totalPages}
               />
-            </Group>
+            </div>
           )}
         </>
       )}
 
 
       <Modal
+        className="adm-modal"
         opened={modalOpened}
         onClose={closeModal}
         withCloseButton={false}
@@ -506,7 +512,7 @@ export function NewsAdmin() {
               </div>
               <button
                 type="button"
-                className="btn-close"
+                className="adm-iconbtn adm-iconbtn--neutral"
                 aria-label="Close"
                 onClick={closeModal}
               />
@@ -549,7 +555,7 @@ export function NewsAdmin() {
                 {uploadProgress > 0 && uploadProgress < 100 && <Progress value={uploadProgress} />}
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="adm-btn adm-btn--primary">Save changes</Button>
                 </div>
               </Stack>
             </form>
@@ -577,6 +583,6 @@ export function NewsAdmin() {
           </div>
         )}
       </Modal>
-    </Stack>
+    </div>
   );
 }

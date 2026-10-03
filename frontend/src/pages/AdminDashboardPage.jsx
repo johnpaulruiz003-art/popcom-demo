@@ -25,6 +25,81 @@ import { uploadAnnouncementImage } from '../api/uploads.js';
 import { getFaqs, createFaq, updateFaq, deleteFaq } from '../api/faq.js';
 import { getFeedback, updateFeedbackStatus } from '../api/feedback.js';
 import { getAllAppointments, updateAppointmentStatus } from '../api/appointments.js';
+import { isMocksEnabled, mockFaqs } from '../mocks/mockData.js';
+
+const MOCK_NEWS = [
+  {
+    id: 'mock-news-1',
+    title: 'Barangay Family Planning Drive',
+    shortDescription: 'The municipality is preparing mobile counseling sessions this week.',
+    content: 'The barangay is preparing mobile counseling sessions and information booths for residents.',
+    imageUrl: ''
+  },
+  {
+    id: 'mock-news-2',
+    title: 'Adolescent Health Orientation',
+    shortDescription: 'Youth services and referral pathways are now open for registration.',
+    content: 'Youth services and referral pathways are available for registration this month.',
+    imageUrl: ''
+  }
+];
+
+const MOCK_ANNOUNCEMENTS = [
+  {
+    id: 'mock-ann-1',
+    title: 'Health Caravan',
+    description: 'A mobile health and population awareness campaign in the barangay hall grounds.',
+    startDate: '2026-10-12T09:00:00.000Z',
+    endDate: '2026-10-12T12:00:00.000Z',
+    location: 'Barangay Hall Grounds',
+    status: 'UPCOMING'
+  },
+  {
+    id: 'mock-ann-2',
+    title: 'PMO Counseling Session',
+    description: 'A walk-in counseling session for couples and individuals preparing for family planning decisions.',
+    startDate: '2026-10-08T08:00:00.000Z',
+    endDate: '2026-10-08T10:00:00.000Z',
+    location: 'Population Office',
+    status: 'ONGOING'
+  }
+];
+
+const MOCK_FEEDBACK = [
+  {
+    id: 'mock-feedback-1',
+    name: 'Maria Santos',
+    email: 'maria@example.com',
+    message: 'The materials were clear and the staff were very accommodating.',
+    status: 'NEW'
+  },
+  {
+    id: 'mock-feedback-2',
+    name: 'Juan Dela Cruz',
+    email: 'juan@example.com',
+    message: 'I would appreciate more weekend counseling sessions.',
+    status: 'REVIEWED'
+  }
+];
+
+const MOCK_APPOINTMENTS = [
+  {
+    id: 'mock-appointment-1',
+    service_slug: 'Pre-Marriage Orientation',
+    requested_date: '2026-10-15T00:00:00.000Z',
+    citizen_full_name: 'Angela Morado',
+    barangay: 'Poblacion',
+    status: 'PENDING'
+  },
+  {
+    id: 'mock-appointment-2',
+    service_slug: 'Usapan Series',
+    requested_date: '2026-10-18T00:00:00.000Z',
+    citizen_full_name: 'Ramon Flores',
+    barangay: 'Longos',
+    status: 'APPROVED'
+  }
+];
 
 export function AdminDashboardPage() {
   // News state
@@ -81,6 +156,20 @@ export function AdminDashboardPage() {
 
   // Loaders
   useEffect(() => {
+    if (isMocksEnabled()) {
+      setNews(MOCK_NEWS);
+      setNewsLoading(false);
+      setAnnouncements(MOCK_ANNOUNCEMENTS);
+      setAnnLoading(false);
+      setFaqs(mockFaqs || []);
+      setFaqLoading(false);
+      setFeedbackItems(MOCK_FEEDBACK);
+      setFeedbackLoading(false);
+      setAppointments(MOCK_APPOINTMENTS);
+      setAppointmentsLoading(false);
+      return;
+    }
+
     // News
     setNewsLoading(true);
     getNewsList({ page: 1, limit: 50 })
@@ -122,6 +211,21 @@ export function AdminDashboardPage() {
   // News handlers
   const handleNewsSubmit = async (values) => {
     try {
+      if (isMocksEnabled()) {
+        const nextItem = {
+          id: `mock-news-${Date.now()}`,
+          title: values.title,
+          shortDescription: values.shortDescription,
+          content: values.content,
+          imageUrl: values.imageUrl || ''
+        };
+        setNews((prev) => [nextItem, ...prev]);
+        showNotification({ title: 'News created', message: 'News item created successfully', color: 'green' });
+        setNewsModalOpened(false);
+        newsForm.reset();
+        return;
+      }
+
       await createNews({
         title: values.title,
         shortDescription: values.shortDescription,
@@ -142,6 +246,10 @@ export function AdminDashboardPage() {
 
   const handleNewsDelete = async (id) => {
     try {
+      if (isMocksEnabled()) {
+        setNews((prev) => prev.filter((n) => n.id !== id));
+        return;
+      }
       await deleteNews(id);
       setNews((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
@@ -175,6 +283,37 @@ export function AdminDashboardPage() {
 
   const handleAnnouncementSubmit = async (values) => {
     try {
+      if (isMocksEnabled()) {
+        const payload = {
+          id: editingAnnouncementId || `mock-ann-${Date.now()}`,
+          title: values.title,
+          description: values.description,
+          startDate: values.startDate ? new Date(values.startDate).toISOString() : null,
+          endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
+          location: values.location || '',
+          status: 'UPCOMING'
+        };
+
+        setAnnouncements((prev) => {
+          if (editingAnnouncementId) {
+            return prev.map((item) => (item.id === editingAnnouncementId ? payload : item));
+          }
+          return [payload, ...prev];
+        });
+
+        showNotification({
+          title: 'Saved',
+          message: 'Announcement saved successfully',
+          color: 'green'
+        });
+        setAnnModalOpened(false);
+        setEditingAnnouncementId(null);
+        setAnnImageFile(null);
+        setAnnUploadProgress(0);
+        annForm.reset();
+        return;
+      }
+
       let imageUrl = undefined;
       if (annImageFile instanceof File) {
         setAnnUploadProgress(1);
@@ -216,6 +355,10 @@ export function AdminDashboardPage() {
 
   const handleAnnouncementArchive = async (id) => {
     try {
+      if (isMocksEnabled()) {
+        setAnnouncements((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'ARCHIVED' } : item)));
+        return;
+      }
       await archiveAnnouncement(id);
       const res = await getAnnouncements({ page: 1, limit: 50 });
       setAnnouncements(res.data.data || []);
@@ -227,6 +370,11 @@ export function AdminDashboardPage() {
 
   const handleAnnouncementDelete = async (id) => {
     try {
+      if (isMocksEnabled()) {
+        setAnnouncements((prev) => prev.filter((item) => item.id !== id));
+        showNotification({ title: 'Deleted', message: 'Announcement permanently deleted', color: 'green' });
+        return;
+      }
       await deleteAnnouncement(id);
       const res = await getAnnouncements({ page: 1, limit: 50 });
       setAnnouncements(res.data.data || []);
@@ -254,6 +402,25 @@ export function AdminDashboardPage() {
 
   const handleFaqSubmit = async (values) => {
     try {
+      if (isMocksEnabled()) {
+        const nextFaq = {
+          id: editingFaqId || `mock-faq-${Date.now()}`,
+          question: values.question,
+          answer: values.answer,
+          topic: 'Mocked FAQ'
+        };
+        setFaqs((prev) => {
+          if (editingFaqId) {
+            return prev.map((faq) => (faq.id === editingFaqId ? nextFaq : faq));
+          }
+          return [nextFaq, ...prev];
+        });
+        showNotification({ title: 'Saved', message: 'FAQ saved', color: 'green' });
+        setFaqModalOpened(false);
+        setEditingFaqId(null);
+        return;
+      }
+
       if (editingFaqId) {
         await updateFaq(editingFaqId, { question: values.question, answer: values.answer });
       } else {
@@ -272,6 +439,10 @@ export function AdminDashboardPage() {
 
   const handleFaqDelete = async (id) => {
     try {
+      if (isMocksEnabled()) {
+        setFaqs((prev) => prev.filter((f) => f.id !== id));
+        return;
+      }
       await deleteFaq(id);
       setFaqs((prev) => prev.filter((f) => f.id !== id));
     } catch (err) {
@@ -283,6 +454,10 @@ export function AdminDashboardPage() {
   // Feedback handlers
   const handleFeedbackStatusChange = async (id, status) => {
     try {
+      if (isMocksEnabled()) {
+        setFeedbackItems((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+        return;
+      }
       await updateFeedbackStatus(id, status);
       const res = await getFeedback({ page: 1, limit: 50 });
       setFeedbackItems(res.data.data || []);
@@ -295,6 +470,10 @@ export function AdminDashboardPage() {
   // Appointment handlers
   const handleAppointmentStatusChange = async (id, status) => {
     try {
+      if (isMocksEnabled()) {
+        setAppointments((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+        return;
+      }
       await updateAppointmentStatus(id, status);
       const res = await getAllAppointments();
       setAppointments(res.data.data || []);

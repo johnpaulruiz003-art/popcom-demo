@@ -319,16 +319,16 @@ export function UsapanRequests() {
     <Stack>
       <Group justify="space-between" align="center">
         <div>
-          <Title order={2}>Usapan-Series - Requests</Title>
-          <Text c="dimmed">View and manage Pending Usapan-Series requests submitted by barangay officers.</Text>
+          <h1 className="adm-head__title">Usapan-Series - Requests</h1>
+          <Text c="dimmed">
+      <p className="adm-head__desc">View and manage Pending Usapan-Series requests submitted by barangay officers.</p></Text>
         </div>
         <Group gap="xs" align="center">
           <Button
-            size="xs"
-            variant="outline"
-            onClick={() => setSummaryOpen(true)}
-            disabled={rows.length === 0}
-          >
+ size="xs"
+ onClick={() => setSummaryOpen(true)}
+ disabled={rows.length === 0}
+  className="adm-btn adm-btn--secondary adm-btn--sm">
             Summary
           </Button>
           <TextInput
@@ -348,7 +348,7 @@ export function UsapanRequests() {
       ) : filteredRows.length === 0 ? (
         <Text size="sm" c="dimmed">No pending requests found.</Text>
       ) : (
-        <Table striped withTableBorder withColumnBorders highlightOnHover>
+        <Table highlightOnHover className="adm-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>No.</Table.Th>
@@ -387,35 +387,32 @@ export function UsapanRequests() {
                   <Table.Td>
                     <Group gap="xs" justify="flex-start">
                       <Button
-                        size="xs"
-                        variant="light"
-                        color="blue"
-                        onClick={() => handleApprove(s)}
-                        loading={isRowBusy}
-                        disabled={isRowBusy}
-                      >
+ size="xs"
+ color="blue"
+ onClick={() => handleApprove(s)}
+ loading={isRowBusy}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                         Approve
                       </Button>
                       <Button
-                        size="xs"
-                        variant="light"
-                        color="orange"
-                        onClick={() => !isRowBusy && setRejecting(s)}
-                        disabled={isRowBusy}
-                      >
+ size="xs"
+ color="orange"
+ onClick={() => !isRowBusy && setRejecting(s)}
+ disabled={isRowBusy}
+  className="adm-btn-secondary">
                         Reject
                       </Button>
                       <Button
-                        size="xs"
-                        variant="light"
-                        color="yellow"
-                        disabled={
-                          isRowBusy ||
-                          String(s.status).toUpperCase() === 'CANCELLED' ||
-                          String(s.status).toUpperCase() === 'COMPLETED'
-                        }
-                        onClick={() => { if (!isRowBusy) setCancelId(s.id); }}
-                      >
+ size="xs"
+ color="yellow"
+ disabled={
+ isRowBusy ||
+ String(s.status).toUpperCase() === 'CANCELLED' ||
+ String(s.status).toUpperCase() === 'COMPLETED'
+ }
+ onClick={() => { if (!isRowBusy) setCancelId(s.id); }}
+  className="adm-btn-secondary">
                         Cancel
                       </Button>
                     </Group>
@@ -472,19 +469,15 @@ export function UsapanRequests() {
 
           <div className="d-flex flex-column gap-2 mt-2">
             <Button
-              color="red"
-              fullWidth
-              onClick={handleConfirmCancel}
-              loading={cancelLoading}
-              disabled={cancelLoading}
-            >
+ onClick={handleConfirmCancel}
+ loading={cancelLoading}
+ disabled={cancelLoading}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
               Cancel request
             </Button>
             <Button
-              color="gray"
-              fullWidth
-              onClick={() => { if (!cancelLoading) { setCancelId(null); setCancelReason(''); } }}
-            >
+ onClick={() => { if (!cancelLoading) { setCancelId(null); setCancelReason(''); } }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
               Back
             </Button>
           </div>
@@ -568,7 +561,7 @@ export function UsapanRequests() {
             <Text size="sm"><b>Total requests:</b> {filteredSummaryRows.length}</Text>
           </Stack>
 
-          <Table striped highlightOnHover withTableBorder withColumnBorders>
+          <Table highlightOnHover className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>No.</Table.Th>
@@ -645,7 +638,7 @@ export function UsapanRequests() {
               </div>
               <button
                 type="button"
-                className="btn-close"
+                className="adm-iconbtn adm-iconbtn--neutral"
                 aria-label="Close"
                 onClick={() => { setEditOpen(false); setEditing(null); }}
               />
@@ -678,10 +671,10 @@ export function UsapanRequests() {
                 />
 
                 <div className="d-flex justify-content-end gap-2 pt-2 mt-1 border-top">
-                  <Button variant="default" type="button" onClick={() => { setEditOpen(false); setEditing(null); }}>
+                  <Button type="button" onClick={() => { setEditOpen(false); setEditing(null); }} className="adm-btn adm-btn--neutral">
                     Cancel
                   </Button>
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="adm-btn adm-btn--primary">Save changes</Button>
                 </div>
               </Stack>
             </form>
@@ -723,19 +716,15 @@ export function UsapanRequests() {
 
           <div className="d-flex flex-column gap-2 mt-2">
             <Button
-              color="orange"
-              fullWidth
-              loading={rowActionLoadingId === (rejecting?.id || null)}
-              disabled={rowActionLoadingId === (rejecting?.id || null)}
-              onClick={handleReject}
-            >
+ loading={rowActionLoadingId === (rejecting?.id || null)}
+ disabled={rowActionLoadingId === (rejecting?.id || null)}
+ onClick={handleReject}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
               Confirm rejection
             </Button>
             <Button
-              variant="default"
-              fullWidth
-              onClick={() => { setRejecting(null); setRejectReason(''); }}
-            >
+ onClick={() => { setRejecting(null); setRejectReason(''); }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
               Cancel
             </Button>
           </div>

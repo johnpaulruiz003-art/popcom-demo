@@ -4,6 +4,7 @@
   import { DatePickerInput, MonthPickerInput, YearPickerInput } from '@mantine/dates';
   import { showNotification } from '@mantine/notifications';
   import dayjs from 'dayjs';
+  import { IconArchive, IconEye, IconListDetails } from '@tabler/icons-react';
   
   import { getFamilyPlanningBookings, approveFamilyPlanningBooking, rejectFamilyPlanningBooking, cancelFamilyPlanningBooking, archiveFamilyPlanningBooking, unarchiveFamilyPlanningBooking } from '../../api/familyPlanning.js';
   import { socket } from '../../socket.js';
@@ -355,10 +356,17 @@
     return (
       <Stack>
         <Group justify="space-between" align="center" mb="xs">
-          <Title order={2}>Family Planning Bookings</Title>
+          <h1 className="adm-head__title">Family Planning Bookings</h1>
+      <p className="adm-head__desc">Manage family planning bookings and requests.</p>
           <Group gap="xs">
-            <Button size="sm" variant="outline" onClick={() => setSummaryOpened(true)}>
-              Summary
+            <Button
+              size="sm"
+              leftSection={<IconListDetails size={16} />}
+              onClick={() => setSummaryOpened(true)}
+              className="adm-btn adm-btn--secondary adm-btn--sm adm-btn--icon-mobile"
+              aria-label="Open bookings summary"
+            >
+              <span className="adm-btn__label">Summary</span>
             </Button>
             <TextInput
               size="sm"
@@ -369,11 +377,12 @@
             />
             <Button
               size="sm"
-              variant={showArchived ? 'filled' : 'outline'}
-              color={showArchived ? 'gray' : 'dark'}
+              leftSection={showArchived ? <IconEye size={16} /> : <IconArchive size={16} />}
               onClick={() => { setShowArchived((prev) => !prev); setPage(1); }}
+              className="adm-btn adm-btn--secondary adm-btn--sm adm-btn--icon-mobile"
+              aria-label={showArchived ? 'Show active bookings' : 'Show archived bookings'}
             >
-              Archived
+              <span className="adm-btn__label">{showArchived ? 'Showing archived' : 'Archived'}</span>
             </Button>
           </Group>
         </Group>
@@ -381,13 +390,10 @@
           <Center py="lg"><Loader /></Center>
         ) : (
           <Table
-            striped
-            withTableBorder
-            withColumnBorders
             highlightOnHover
             verticalSpacing="xs"
             fontSize="sm"
-          >
+           className="adm-table">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -426,50 +432,45 @@
                   <Table.Td>
                     <Group gap="xs" justify="flex-start">
                       <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => setViewing(b)}
-                        disabled={isRowBusy}
-                      >
+ size="xs"
+ onClick={() => setViewing(b)}
+ disabled={isRowBusy}
+  className="adm-btn adm-btn--secondary">
                         View
                       </Button>
                       {!isArchived && (
                         <>
                           <Button
-                            size="xs"
-                            color="green"
-                            variant="light"
-                            disabled={isRowBusy || !isPending}
-                            onClick={() => !isRowBusy && isPending && handleApproveClick(b.id)}
-                          >
+ size="xs"
+ color="green"
+ disabled={isRowBusy || !isPending}
+ onClick={() => !isRowBusy && isPending && handleApproveClick(b.id)}
+  className="adm-btn adm-btn--secondary">
                             Approve
                           </Button>
                           <Button
-                            size="xs"
-                            color="orange"
-                            variant="light"
-                            disabled={isRowBusy || !isPending}
-                            onClick={() => !isRowBusy && isPending && setRejectingId(b.id)}
-                          >
+ size="xs"
+ color="orange"
+ disabled={isRowBusy || !isPending}
+ onClick={() => !isRowBusy && isPending && setRejectingId(b.id)}
+  className="adm-btn adm-btn--secondary">
                             Reject
                           </Button>
                           <Button
-                            size="xs"
-                            color="gray"
-                            variant="light"
-                            disabled={isRowBusy || isCancelled || isRejected}
-                            onClick={() => !isRowBusy && !isCancelled && !isRejected && handleCancel(b.id)}
-                          >
+ size="xs"
+ color="gray"
+ disabled={isRowBusy || isCancelled || isRejected}
+ onClick={() => !isRowBusy && !isCancelled && !isRejected && handleCancel(b.id)}
+  className="adm-btn adm-btn--secondary">
                             Cancel
                           </Button>
                           {!isPending && (
                             <Button
-                              size="xs"
-                              color="red"
-                              variant="light"
-                              disabled={isRowBusy}
-                              onClick={() => !isRowBusy && handleArchive(b.id)}
-                            >
+ size="xs"
+ color="red"
+ disabled={isRowBusy}
+ onClick={() => !isRowBusy && handleArchive(b.id)}
+  className="adm-btn adm-btn--secondary">
                               Archive
                             </Button>
                           )}
@@ -477,12 +478,11 @@
                       )}
                       {isArchived && (
                         <Button
-                          size="xs"
-                          color="green"
-                          variant="light"
-                          disabled={isRowBusy}
-                          onClick={() => !isRowBusy && handleUnarchive(b.id)}
-                        >
+ size="xs"
+ color="green"
+ disabled={isRowBusy}
+ onClick={() => !isRowBusy && handleUnarchive(b.id)}
+  className="adm-btn adm-btn--secondary">
                           Unarchive
                         </Button>
                       )}
@@ -700,13 +700,10 @@
             </Group>
 
             <Table
-              striped
-              withTableBorder
-              withColumnBorders
               highlightOnHover
               verticalSpacing="xs"
               fontSize="sm"
-            >
+             className="adm-table">
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th style={{ textAlign: 'left' }}>No.</Table.Th>
@@ -785,7 +782,7 @@
                   </div>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="adm-iconbtn adm-iconbtn--neutral"
                     aria-label="Close"
                     onClick={() => setViewing(null)}
                   />
@@ -852,19 +849,15 @@
 
             <div className="d-flex flex-column gap-2 mt-2">
               <Button
-                color="red"
-                fullWidth
-                onClick={handleReject}
-                loading={rowActionLoadingId === (rejectingId || null)}
-                disabled={rowActionLoadingId === (rejectingId || null)}
-              >
+ onClick={handleReject}
+ loading={rowActionLoadingId === (rejectingId || null)}
+ disabled={rowActionLoadingId === (rejectingId || null)}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
                 Confirm rejection
               </Button>
               <Button
-                color="gray"
-                fullWidth
-                onClick={() => { setRejectingId(null); setRejectReason(''); }}
-              >
+ onClick={() => { setRejectingId(null); setRejectReason(''); }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
                 Back
               </Button>
             </div>
@@ -905,18 +898,15 @@
 
             <div className="d-flex flex-column gap-2 mt-2">
               <Button
-                color="green"
-                fullWidth
-                onClick={handleConfirmApprove}
-                loading={rowActionLoadingId === (approvingId || null)}
-                disabled={rowActionLoadingId === (approvingId || null)}
-              >
+ onClick={handleConfirmApprove}
+ loading={rowActionLoadingId === (approvingId || null)}
+ disabled={rowActionLoadingId === (approvingId || null)}
+  className="adm-btn adm-btn--success" style={{ width: "100%" }}>
                 Confirm approval
               </Button>
               <Button
-                variant="default"
-                onClick={() => { setApprovingId(null); setApproveNote(''); }}
-              >
+ onClick={() => { setApprovingId(null); setApproveNote(''); }}
+  className="adm-btn adm-btn--neutral">
                 Exit
               </Button>
             </div>
@@ -957,19 +947,15 @@
 
             <div className="d-flex flex-column gap-2 mt-2">
               <Button
-                color="red"
-                fullWidth
-                onClick={handleConfirmCancel}
-                loading={rowActionLoadingId === (cancelingId || null)}
-                disabled={rowActionLoadingId === (cancelingId || null)}
-              >
+ onClick={handleConfirmCancel}
+ loading={rowActionLoadingId === (cancelingId || null)}
+ disabled={rowActionLoadingId === (cancelingId || null)}
+  className="adm-btn adm-btn--danger-solid" style={{ width: "100%" }}>
                 Cancel appointment
               </Button>
               <Button
-                color="gray"
-                fullWidth
-                onClick={() => { setCancelingId(null); setCancelReason(''); }}
-              >
+ onClick={() => { setCancelingId(null); setCancelReason(''); }}
+  className="adm-btn adm-btn--neutral" style={{ width: "100%" }}>
                 Back
               </Button>
             </div>

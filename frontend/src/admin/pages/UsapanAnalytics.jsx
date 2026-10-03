@@ -1,23 +1,68 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Stack, Title, Group, Card, Text, Select, Loader, Center, Paper, Grid, Switch } from '@mantine/core';
+import { Text, Loader, Center } from '@mantine/core';
 import { PieChart, BarChart } from '@mantine/charts';
 import dayjs from 'dayjs';
 
 import { getCalendarEvents } from '../../api/calendar.js';
 import { getAllAppointments } from '../../api/appointments.js';
 
+function ToggleGroup({ label, value, onChange, options }) {
+  const handleKeyDown = (event, index) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+      return;
+    }
+    event.preventDefault();
+    let nextIndex = index;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % options.length;
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + options.length) % options.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = options.length - 1;
+    onChange(options[nextIndex].value);
+  };
+
+  return (
+    <div className="analytics-toggle" role="radiogroup" aria-label={label}>
+      {options.map((option, index) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          className="analytics-toggle__option"
+          tabIndex={value === option.value ? 0 : -1}
+          onClick={() => onChange(option.value)}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Legend({ items }) {
+  return (
+    <div className="analytics-legend" aria-label="Chart legend">
+      {items.map((item) => (
+        <div key={item.label} className="analytics-legend__item">
+          <span className="analytics-legend__swatch" style={{ backgroundColor: item.color }} aria-hidden="true" />
+          <span>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function UsapanAnalytics() {
   const [month, setMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
-  const [showSchedulesMonthlyView, setShowSchedulesMonthlyView] = useState(true);
+  const [showSchedulesMonthlyView, setShowSchedulesMonthlyView] = useState('month');
   const [events, setEvents] = useState([]);
   const [requests, setRequests] = useState([]);
 
   const fetchData = async (targetMonth) => {
     setLoading(true);
     try {
-      // For analytics, load the full year that contains the selected month,
-      // so we can compute schedules per month and per year similar to PMO.
       const start = dayjs(targetMonth).startOf('year').toISOString();
       const end = dayjs(targetMonth).endOf('year').toISOString();
       const [calendarRes, appointmentsRes] = await Promise.all([
@@ -26,15 +71,14 @@ export function UsapanAnalytics() {
       ]);
 
       const allEvents = calendarRes.data.data || [];
-      const onlyUsapan = allEvents.filter((e) => e && e.type === 'Usapan-Series');
-      setEvents(onlyUsapan);
+      setEvents(allEvents.filter((e) => e && e.type === 'Usapan-Series'));
 
       const allAppointments = appointmentsRes?.data?.data || [];
-      const usapanRequests = allAppointments.filter((a) => a && a.service_slug === 'usapan-series');
-      setRequests(usapanRequests);
+      setRequests(allAppointments.filter((a) => a && a.service_slug === 'usapan-series'));
     } catch (err) {
       console.error(err);
       setEvents([]);
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -45,8 +89,6 @@ export function UsapanAnalytics() {
   }, [month]);
 
   const summary = useMemo(() => {
-    const total = events.length;
-
     const counts = {
       pending: 0,
       scheduled: 0,
@@ -66,11 +108,10 @@ export function UsapanAnalytics() {
       else if (status === 'CANCELLED') counts.cancelled += 1;
     });
 
-    return { total, ...counts };
+    return { total: events.length, ...counts };
   }, [events]);
 
   const scheduleStatusSummary = useMemo(() => {
-    const rows = events || [];
     const summary = {
       pending: 0,
       scheduled: 0,
@@ -80,7 +121,7 @@ export function UsapanAnalytics() {
       cancelled: 0
     };
 
-    rows.forEach((e) => {
+    events.forEach((e) => {
       const status = String(e.status || '').trim().toUpperCase();
       if (status === 'PENDING') summary.pending += 1;
       else if (status === 'SCHEDULED') summary.scheduled += 1;
@@ -100,18 +141,18 @@ export function UsapanAnalytics() {
 
     const pct = (value) => (value / total) * 100;
     const data = [];
-    if (pending) data.push({ name: 'Pending', value: pct(pending), color: 'yellow.6' });
-    if (scheduled) data.push({ name: 'Scheduled', value: pct(scheduled), color: 'blue.6' });
-    if (ongoing) data.push({ name: 'Ongoing', value: pct(ongoing), color: 'orange.6' });
-    if (completed) data.push({ name: 'Completed', value: pct(completed), color: 'teal.6' });
-    if (rejected) data.push({ name: 'Rejected', value: pct(rejected), color: 'red.6' });
-    if (cancelled) data.push({ name: 'Cancelled', value: pct(cancelled), color: 'gray.6' });
+    if (pending) data.push({ label: 'Pending', value: pct(pending), color: '#f59e0b' });
+    if (scheduled) data.push({ label: 'Scheduled', value: pct(scheduled), color: '#1d4ed8' });
+    if (ongoing) data.push({ label: 'Ongoing', value: pct(ongoing), color: '#e8712b' });
+    if (completed) data.push({ label: 'Completed', value: pct(completed), color: '#0d9488' });
+    if (rejected) data.push({ label: 'Rejected', value: pct(rejected), color: '#dc2626' });
+    if (cancelled) data.push({ label: 'Cancelled', value: pct(cancelled), color: '#64748b' });
     return data;
   }, [scheduleStatusSummary]);
 
   const schedulesMonthlyData = useMemo(() => {
     const counts = {};
-    (events || []).forEach((e) => {
+    events.forEach((e) => {
       const d = dayjs(e.startDate || e.dateStr || e.date);
       if (!d.isValid()) return;
       const key = d.format('YYYY-MM');
@@ -125,7 +166,7 @@ export function UsapanAnalytics() {
 
   const schedulesYearlyData = useMemo(() => {
     const counts = {};
-    (events || []).forEach((e) => {
+    events.forEach((e) => {
       const d = dayjs(e.startDate || e.dateStr || e.date);
       if (!d.isValid()) return;
       const key = d.format('YYYY');
@@ -137,240 +178,100 @@ export function UsapanAnalytics() {
       .map(([year, count]) => ({ year, count }));
   }, [events]);
 
-  const requestStatusSummary = useMemo(() => {
-    const rows = requests || [];
-    const summary = {
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      cancelled: 0,
-      completed: 0
-    };
-
-    rows.forEach((r) => {
-      const status = String(r.status || '').trim().toUpperCase();
-      if (status === 'PENDING') summary.pending += 1;
-      else if (status === 'APPROVED') summary.approved += 1;
-      else if (status === 'REJECTED') summary.rejected += 1;
-      else if (status === 'CANCELLED') summary.cancelled += 1;
-      else if (status === 'COMPLETED') summary.completed += 1;
-    });
-
-    return summary;
-  }, [requests]);
-
-  const requestStatusPieData = useMemo(() => {
-    const { pending, approved, rejected, cancelled, completed } = requestStatusSummary;
-    const total = pending + approved + rejected + cancelled + completed;
-    if (!total) return [];
-
-    const pct = (value) => (value / total) * 100;
-    const data = [];
-    if (pending) data.push({ name: 'Pending', value: pct(pending), color: 'yellow.6' });
-    if (approved) data.push({ name: 'Approved', value: pct(approved), color: 'green.6' });
-    if (rejected) data.push({ name: 'Rejected', value: pct(rejected), color: 'red.6' });
-    if (cancelled) data.push({ name: 'Cancelled', value: pct(cancelled), color: 'gray.6' });
-    if (completed) data.push({ name: 'Completed', value: pct(completed), color: 'blue.6' });
-    return data;
-  }, [requestStatusSummary]);
-
-  const topBarangays = useMemo(() => {
-    const counts = {};
-    events.forEach((e) => {
-      const b = (e.location || '').trim();
-      if (!b) return;
-      counts[b] = (counts[b] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-  }, [events]);
-
   return (
-    <Stack>
-      <Group justify="space-between">
-        <Title order={2}>Usapan-Series - Data Analytics</Title>
-      </Group>
+    <div className="analytics-page analytics-page--module">
+      <header className="analytics-module-header">
+        <div>
+          <h2 className="analytics-section__title">Usapan-Series - Data Analytics</h2>
+          <p className="analytics-section__desc">Key performance indicators and series schedule trends.</p>
+        </div>
+      </header>
 
       {loading ? (
-        <Center py="lg"><Loader /></Center>
+        <div className="analytics-skeleton-grid" aria-label="Loading Usapan analytics data">
+          <div className="analytics-skeleton-card" />
+          <div className="analytics-skeleton-card" />
+          <div className="analytics-skeleton-card analytics-skeleton-card--wide" />
+        </div>
       ) : (
-        <>
-          <Group align="stretch" mb="sm">
-            {/* Total schedules - neutral blue/gray */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#e5edff', // very light blue
-                borderColor: '#2563EB',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#6B7280">Total Schedules</Text>
-              <Text fw={900} size="xl" c="#697381ff">{summary.total}</Text>
-            </Card>
+        <div className="analytics-grid analytics-grid--two">
+          <section className="adm-card analytics-card analytics-card--full">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Usapan-Series Overview</h3>
+                <p className="adm-card__sub">Program totals across all scheduled series and outreach activities.</p>
+              </div>
+            </div>
 
-            {/* Completed - green */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#dcfce7',
-                borderColor: '#16A34A',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#166534">Completed</Text>
-              <Text fw={900} size="xl" c="#166534">{summary.completed}</Text>
-            </Card>
+            <div className="analytics-kpi-grid analytics-kpi-grid--five">
+              <div className="analytics-kpi adm-kpi adm-kpi--navy">
+                <div className="adm-kpi__label">Total schedules</div>
+                <div className="adm-kpi__value">{summary.total}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--approved">
+                <div className="adm-kpi__label">Completed</div>
+                <div className="adm-kpi__value">{summary.completed}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--pending">
+                <div className="adm-kpi__label">Scheduled</div>
+                <div className="adm-kpi__value">{summary.scheduled}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--rejected">
+                <div className="adm-kpi__label">Rejected</div>
+                <div className="adm-kpi__value">{summary.rejected}</div>
+              </div>
+              <div className="analytics-kpi adm-kpi adm-kpi--finished">
+                <div className="adm-kpi__label">Cancelled</div>
+                <div className="adm-kpi__value">{summary.cancelled}</div>
+              </div>
+            </div>
+          </section>
 
-            {/* Scheduled - blue */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#dbeafe',
-                borderColor: '#2563EB',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#1d4ed8">Approved</Text>
-              <Text fw={900} size="xl" c="#1d4ed8">{summary.scheduled}</Text>
-            </Card>
-
-            {/* Pending - amber/orange */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#fef3c7',
-                borderColor: '#F59E0B',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#92400e">Pending</Text>
-              <Text fw={900} size="xl" c="#92400e">{summary.pending}</Text>
-            </Card>
-
-            {/* Rejected - red */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#fee2e2',
-                borderColor: '#DC2626',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#b91c1c">Rejected</Text>
-              <Text fw={900} size="xl" c="#b91c1c">{summary.rejected}</Text>
-            </Card>
-
-            {/* Cancelled - muted gray */}
-            <Card
-              withBorder
-              radius="md"
-              style={{
-                flex: 1,
-                backgroundColor: '#f3f4f6',
-                borderColor: '#9CA3AF',
-              }}
-            >
-              <Text size="xs" fw={700} tt="uppercase" c="#4b5563">Cancelled</Text>
-              <Text fw={900} size="xl" c="#4b5563">{summary.cancelled}</Text>
-            </Card>
-          </Group>
-
-          {/* Schedules: status pie + per month + per year */}
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Paper withBorder p="md" radius="md" h="100%">
-                <Text fw={600} mb="lg">Schedule Status</Text>
-                {scheduleStatusPieData.length > 0 ? (
-                  <div className="d-flex align-items-center gap-4" style={{ flex: 1, paddingLeft: '40px' }}>
-                    <PieChart
-                      h={240}
-                      withLabels
-                      labelsPosition="inside"
-                      labelsType="percent"
-                      data={scheduleStatusPieData}
-                    />
-                    <div className="d-flex flex-column" style={{ fontSize: '0.9rem', minWidth: 120 }}>
-                      <span className="mb-1" style={{ fontWeight: 600 }}>Legends</span>
-                      {scheduleStatusPieData.map((item) => {
-                        const cssVar = `var(--mantine-color-${item.color.replace('.', '-')})`;
-                        return (
-                          <div key={item.name} className="d-flex align-items-center mb-1">
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                backgroundColor: cssVar,
-                                marginRight: 6
-                              }}
-                            />
-                            <span style={{ fontWeight: 500 }}>{item.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <Center h={200}><Text c="dimmed">No status data</Text></Center>
-                )}
-              </Paper>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 12, md: 8 }}>
-              <Paper withBorder p="md" radius="md" h="100%">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <Text fw={600}>Schedules</Text>
-                    <Text size="xs" c="dimmed">
-                      {showSchedulesMonthlyView ? 'Schedules per month' : 'Schedules per year'}
-                    </Text>
-                  </div>
-                  <Switch
-                    size="lg"
-                    checked={!showSchedulesMonthlyView}
-                    onChange={(event) =>
-                      setShowSchedulesMonthlyView(!event.currentTarget.checked ? true : false)
-                    }
-                    onLabel="Year"
-                    offLabel="Month"
-                  />
+          <section className="adm-card analytics-card">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Schedule Status</h3>
+                <p className="adm-card__sub">Share of all Usapan-Series statuses.</p>
+              </div>
+            </div>
+            {scheduleStatusPieData.length > 0 ? (
+              <div className="analytics-pie-wrap" aria-label="Usapan schedule status chart">
+                <div className="analytics-pie-chart">
+                  <PieChart h={220} withLabels labelsPosition="inside" labelsType="percent" data={scheduleStatusPieData} />
                 </div>
+                <Legend items={scheduleStatusPieData.map((item) => ({ label: item.label, color: item.color }))} />
+              </div>
+            ) : (
+              <div className="adm-empty">No status data.</div>
+            )}
+          </section>
 
-                {showSchedulesMonthlyView ? (
-                  schedulesMonthlyData.length > 0 ? (
-                    <BarChart
-                      h={240}
-                      data={schedulesMonthlyData}
-                      dataKey="month"
-                      series={[{ name: 'count', color: 'blue.6' }]}
-                    />
-                  ) : (
-                    <Center h={200}><Text c="dimmed">No monthly schedule data</Text></Center>
-                  )
-                ) : schedulesYearlyData.length > 0 ? (
-                  <BarChart
-                    h={260}
-                    data={schedulesYearlyData}
-                    dataKey="year"
-                    series={[{ name: 'count', color: 'blue.6' }]}
-                  />
-                ) : (
-                  <Center h={200}><Text c="dimmed">No yearly schedule data</Text></Center>
-                )}
-              </Paper>
-            </Grid.Col>
-
-          </Grid>
-        </>
+          <section className="adm-card analytics-card analytics-card--wide">
+            <div className="adm-chart-head">
+              <div>
+                <h3 className="adm-card__title">Schedules</h3>
+                <p className="adm-card__sub">{showSchedulesMonthlyView === 'month' ? 'Schedules per month.' : 'Schedules per year.'}</p>
+              </div>
+              <ToggleGroup
+                label="Usapan schedule view"
+                value={showSchedulesMonthlyView}
+                onChange={setShowSchedulesMonthlyView}
+                options={[{ label: 'Month', value: 'month' }, { label: 'Year', value: 'year' }]}
+              />
+            </div>
+            <div className="analytics-chart" aria-label={`Usapan schedules ${showSchedulesMonthlyView}`}>
+              {showSchedulesMonthlyView === 'month' ? (
+                schedulesMonthlyData.length > 0 ? (
+                  <BarChart h={300} data={schedulesMonthlyData} dataKey="month" series={[{ name: 'count', color: '#0b2a6f' }]} />
+                ) : <Center h={220}><Text c="dimmed">No monthly schedule data</Text></Center>
+              ) : schedulesYearlyData.length > 0 ? (
+                <BarChart h={300} data={schedulesYearlyData} dataKey="year" series={[{ name: 'count', color: '#0b2a6f' }]} />
+              ) : <Center h={220}><Text c="dimmed">No yearly schedule data</Text></Center>}
+            </div>
+          </section>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }
+

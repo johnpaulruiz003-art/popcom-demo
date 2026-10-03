@@ -1,0 +1,593 @@
+/* ==================================================================
+   About Us page - /contact
+
+   Scoped under .sf-about. Reuses the site tokens (navy / blue / orange)
+   plus the shared .btn-primary / .btn-secondary classes from home.css.
+   ================================================================== */
+
+.sf-about {
+  background: #f5f7fa;
+  color: #1f2937;
+  font-size: 1rem;
+  line-height: 1.7;
+  /* 40px top / 96px bottom so the floating help + back-to-top buttons
+     never cover the last line of content. */
+  padding: 40px 0 96px;
+}
+.sf-about__container {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.sf-about__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+@media (min-width: 1024px) {
+  .sf-about__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+/* min-width:0 so grid children shrink instead of forcing overflow. */
+.sf-about__main,
+.sf-about__aside {
+  min-width: 0;
+}
+/* The sidebar is deliberately NOT sticky here - it is a long column. */
+.sf-about__aside {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+/* ---------- Hero ---------- */
+.sf-about__hero {
+  position: relative;
+  margin: 0 0 24px;
+}
+.sf-about__hero-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  background: #f5f7fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sf-about__hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Faces sit above centre in the source photo. */
+  object-position: center 30%;
+}
+.sf-about__replace {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+}
+
+/* ---------- Title ---------- */
+.sf-about__title {
+  margin: 0;
+  color: var(--sf-navy);
+  font-size: clamp(1.6rem, 3vw, 2.125rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.sf-about__title-accent {
+  /* Was #6ba4f0ff (~2.3:1 on white, below AA). #1D4ED8 is ~8.6:1. */
+  color: #1d4ed8;
+}
+.sf-about__rule {
+  width: 56px;
+  height: 3px;
+  margin: 0.75rem 0 0;
+  background: var(--sf-orange);
+  border: 0;
+  opacity: 1;
+}
+
+/* ---------- Prose ---------- */
+.sf-about__prose {
+  margin: 16px 0 0;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.sf-about__prose p {
+  margin: 0 0 16px;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.sf-about__prose p:last-child {
+  margin-bottom: 0;
+}
+.sf-about__prose strong {
+  color: #1f2937;
+  font-weight: 700;
+}
+.sf-about__divider {
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  opacity: 1;
+}
+
+/* ---------- Section headings ---------- */
+.sf-about__h2 {
+  margin: 0 0 16px;
+  color: var(--sf-navy);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.sf-about__h3 {
+  margin: 0 0 8px;
+  color: var(--sf-navy);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ---------- Cards ---------- */
+.sf-about__card {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+@media (max-width: 639.98px) {
+  .sf-about__card {
+    padding: 16px;
+  }
+}
+/* Statement blocks with an orange left rule. */
+.sf-about__statement {
+  margin: 0 0 20px;
+  padding-left: 16px;
+  border-left: 3px solid var(--sf-orange);
+}
+.sf-about__statement:last-child {
+  margin-bottom: 0;
+}
+.sf-about__statement p {
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+/* ---------- Program lists ---------- */
+.sf-about__list {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.7;
+  text-align: left;
+}
+.sf-about__list li {
+  margin-bottom: 10px;
+  overflow-wrap: break-word;
+}
+.sf-about__list li:last-child {
+  margin-bottom: 0;
+}
+.sf-about__list li::marker {
+  color: var(--sf-orange);
+}
+.sf-about__list strong {
+  color: var(--sf-navy);
+  font-weight: 700;
+}
+
+/* ---------- Sidebar cards ---------- */
+.sf-about__card-title {
+  margin: 0 0 14px;
+  color: var(--sf-navy);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.sf-about__card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sf-about__card-head .sf-about__card-title {
+  margin: 0;
+}
+
+/* Contact rows: 18px icon + muted label / value */
+.sf-about__contact-office {
+  margin: 0 0 14px;
+  color: var(--sf-navy);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+.sf-about__contact-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-about__contact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+.sf-about__contact-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--sf-navy);
+}
+.sf-about__contact-text {
+  min-width: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.sf-about__contact-label {
+  display: block;
+  color: #4b5563;
+  font-size: 13px;
+}
+.sf-about__contact-value {
+  display: block;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+.sf-about__contact-value a {
+  color: var(--sf-blue);
+  text-decoration: none;
+}
+.sf-about__contact-value a:hover {
+  text-decoration: underline;
+}
+.sf-about__contact-value a:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+
+/* ---------- Feedback form ---------- */
+.sf-about__field .mantine-InputWrapper-label {
+  margin-bottom: 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.sf-about__field .mantine-InputWrapper-required {
+  color: #b91c1c;
+}
+.sf-about__field .mantine-Input-input,
+.sf-about__field .mantine-Textarea-input {
+  min-height: 40px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.sf-about__field .mantine-Textarea-input {
+  min-height: 96px;
+  resize: vertical;
+}
+.sf-about__field .mantine-Input-input:focus,
+.sf-about__field .mantine-Input-input:focus-visible,
+.sf-about__field .mantine-Textarea-input:focus,
+.sf-about__field .mantine-Textarea-input:focus-visible {
+  border-color: #1d4ed8;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 0;
+}
+.sf-about__field .mantine-Input-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.sf-about__field .mantine-InputWrapper-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+/* Read-only prefilled user fields: readable grey, not near-invisible. */
+.sf-about__field--locked :is(.mantine-Input-input:disabled, .mantine-Input-input[readonly]) {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #374151;
+  -webkit-text-fill-color: #374151;
+  opacity: 1;
+}
+
+/* ---------- Seal card ---------- */
+.sf-about__seal {
+  padding: 16px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+.sf-about__seal-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 200px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+/* Lock glyph on the read-only prefilled feedback fields. */
+.sf-about__lock {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: #4b5563;
+  pointer-events: none;
+}
+/* Filled navy submit button. Deliberately NOT named .btn-primary: that class
+   also exists in Bootstrap, so the two stylesheets fight over it and the
+   rendered colour depends on which one loads last. */
+.sf-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: var(--sf-navy);
+  border: 1px solid var(--sf-navy);
+  border-radius: 6px;
+  color: var(--sf-white);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.sf-btn-submit:hover {
+  background: var(--sf-blue);
+  border-color: var(--sf-blue);
+  color: var(--sf-white);
+}
+.sf-btn-submit:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+}
+.sf-btn-submit[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+/* ---------- Services nav ---------- */
+.sf-about__nav {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sf-about__nav a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-decoration: none;
+  overflow-wrap: break-word;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sf-about__nav a:hover {
+  background: var(--sf-gray-50);
+  color: var(--sf-navy);
+}
+.sf-about__nav a:focus-visible {
+  outline: 2px solid var(--sf-blue);
+  outline-offset: 2px;
+}
+.sf-about__map {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+/* ==================================================================
+   Organization Hierarchy chart
+
+   Scoped under its own .org-chart class, as a self-contained block.
+
+   IMPORTANT: this block must keep using SINGLE selectors. An earlier
+   version had a two-selector rule (".x .a:disabled, .x .b[readonly] { }")
+   immediately before these rules, and the CSS minifier merged it with
+   every following rule into a ":is(...)" group - so .org-chart__level,
+   .org-chart__node and the rest all required a .mantine-Input-input:disabled
+   ancestor that a chart never has. Every chart rule silently became inert
+   and the section rendered as a bulleted list. Nothing below uses a
+   comma-separated selector list, so this cannot happen again.
+   ================================================================== */
+
+.org-chart {
+  margin-top: 32px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+@media (max-width: 639.98px) {
+  .org-chart {
+    margin-top: 24px;
+    padding: 16px;
+  }
+}
+
+/* ---------- Header ---------- */
+.org-chart__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.org-chart__title {
+  margin: 0;
+  color: #0b2a6f;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+}
+.org-chart__sub {
+  margin: 4px 0 0;
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+}
+.org-chart__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Levels ---------- */
+/* Every level is a plain ul. list-style/margin/padding are reset here so no
+   bullets survive, even if a later stylesheet adds markers to a bare ul. */
+.org-chart ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.org-chart__level {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 12px;
+}
+.org-chart__heading {
+  margin: 20px 0 12px;
+  color: #0b2a6f;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+.org-chart__heading-count {
+  color: #4b5563;
+  font-weight: 400;
+}
+.org-chart__connector {
+  width: 2px;
+  height: 24px;
+  margin: 12px auto;
+  background: #cbd5e1;
+}
+
+/* ---------- Node cards ---------- */
+.org-chart__node {
+  flex: 0 1 240px;
+  min-width: 0;
+  box-sizing: border-box;
+  display: block;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid #0b2a6f;
+  border-radius: 8px;
+  text-align: center;
+  /* Long names wrap instead of widening the card until it overlaps its
+     neighbours. align-items:stretch on the level gives every card in a row
+     the same height. */
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.org-chart__node--top {
+  border-top-color: #0b2a6f;
+  background: #eef3ff;
+}
+.org-chart__node--staff {
+  border-top-color: #1d4ed8;
+  background: #eef3ff;
+}
+.org-chart__node--brgy {
+  border-top-color: #e8712b;
+  background: #fff;
+}
+/* Name and role are separate BLOCK elements, so they can never run together
+   on one line ("Marlyn E. AgbayaniMayor"). */
+.org-chart__name {
+  display: block;
+  color: #0b2a6f;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.org-chart__role {
+  display: block;
+  margin-top: 2px;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Layout ----------
+   1024px+ : up to 4 per row (240px basis)
+   640-1023: 2-3 per row
+   480-639  : 2 per row
+   <480     : 1 per row, full width
+   min-width:0 on the node plus flex-basis 240px is what guarantees no
+   horizontal scrolling from 320px upwards. */
+@media (max-width: 1023.98px) {
+  .org-chart__node {
+    flex: 0 1 calc(33.333% - 8px);
+  }
+}
+@media (max-width: 639.98px) {
+  .org-chart__node {
+    flex: 0 1 calc(50% - 6px);
+  }
+}
+@media (max-width: 479.98px) {
+  .org-chart__node {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .org-chart,
+  .org-chart * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+

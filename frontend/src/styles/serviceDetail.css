@@ -1,0 +1,543 @@
+/* ==================================================================
+   Service detail pages (/services/...) - restyle to match the
+   redesigned landing page.
+
+   Reuses the design tokens and the shared .btn-primary / .btn-secondary
+   classes defined in home.css (navy / blue / orange accent, focus-visible,
+   reduced-motion). Bootstrap classes are deliberately not used for any
+   new markup on these pages.
+
+   Only presentational rules live here; no page logic is affected.
+   ================================================================== */
+
+/* ---------- Page shell ---------- */
+.sf-detail {
+  background: var(--sf-gray-50);
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.7;
+  /* 32px top so the content clears the sticky navbar, 80px bottom so the
+     floating help / back-to-top buttons never cover the last line. */
+  padding: 32px 0 80px;
+  text-align: left;
+}
+
+/* Same container as the navbar: identical max-width + 1.25rem side padding,
+   so the back link / h1 line up with the wordmark above. */
+.sf-detail__container {
+  max-width: var(--sf-maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* ---------- Two columns on desktop, single column below ---------- */
+.sf-detail__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+.sf-detail__main {
+  min-width: 0;
+}
+.sf-detail__aside {
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+@media (min-width: 1024px) {
+  .sf-detail__grid {
+    /* ~2/3 main + ~1/3 sidebar, 32px gutter */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .sf-detail__aside {
+    position: sticky;
+    top: 88px; /* directly below the sticky navbar */
+    align-self: start;
+  }
+}
+
+/* ---------- Back link (replaces the big navy pill) ---------- */
+.sf-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin: 0 0 20px;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--sf-navy);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  appearance: none;
+  transition: color 150ms ease;
+}
+.sf-detail__back:hover {
+  color: var(--sf-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sf-detail__back svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.sf-detail__back:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+}
+
+/* ---------- Headings ---------- */
+.sf-detail h1,
+.sf-detail .sf-detail__title {
+  font-size: clamp(1.75rem, 3vw, 2.125rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--sf-navy);
+  margin: 0;
+}
+.sf-detail__head {
+  margin: 0 0 24px;
+}
+/* Small orange accent line, same as .sf-section__rule on the landing page. */
+.sf-detail__rule {
+  width: 56px;
+  height: 3px;
+  opacity: 1;
+  background: var(--sf-orange);
+  border: 0;
+  margin: 0.75rem 0 0;
+}
+.sf-detail h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--sf-navy);
+  margin: 0 0 1rem;
+}
+.sf-detail h3 {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--sf-navy);
+  margin: 0 0 0.5rem;
+}
+.sf-detail h4 {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.35rem;
+}
+/* Breathing room between stacked sections inside the main column. */
+.sf-detail__content > h2 {
+  margin-top: 2rem;
+}
+.sf-detail__content > h2:first-child {
+  margin-top: 0;
+}
+
+/* ---------- Hero image: fixed 16/9, cover, thin border ---------- */
+.sf-detail__hero {
+  margin: 0 0 24px;
+}
+.sf-detail__hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  border: 1px solid var(--sf-gray-200);
+  background: var(--sf-white);
+}
+
+/* ---------- Intro paragraph: a touch larger, never justified ---------- */
+.sf-detail__intro {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  max-width: 72ch;
+  margin: 0 0 24px;
+  color: #374151;
+}
+.sf-detail__intro > p {
+  margin: 0 0 1rem;
+  max-width: none;
+  font-size: inherit;
+}
+.sf-detail__intro > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Body text: left aligned, 75-character measure ---------- */
+.sf-detail p,
+.sf-detail li,
+.sf-detail dd,
+.sf-detail dt,
+.sf-detail td,
+.sf-detail th {
+  text-align: left;
+  color: #374151;
+}
+.sf-detail__content p,
+.sf-detail__content ul,
+.sf-detail__content ol {
+  max-width: 72ch;
+}
+.sf-detail p {
+  margin: 0 0 1rem;
+}
+.sf-detail ul,
+.sf-detail ol {
+  padding-left: 1.5rem;
+  margin: 0 0 1rem;
+}
+.sf-detail ul {
+  list-style: disc;
+}
+.sf-detail ol {
+  list-style: decimal;
+}
+.sf-detail li + li {
+  margin-top: 8px;
+}
+.sf-detail .sf-card ul:last-child,
+.sf-detail .sf-card ol:last-child,
+.sf-detail .sf-card p:last-child {
+  margin-bottom: 0;
+}
+/* Safety net: no justified text anywhere on these pages. */
+.sf-detail .text-justify {
+  text-align: left !important;
+}
+/* Mantine's "dimmed" grey fails WCAG AA; this muted slate passes on
+   both white and --sf-gray-50. */
+.sf-muted {
+  color: #4B5563;
+  font-size: 0.9375rem;
+}
+
+/* ---------- Cards ---------- */
+.sf-card {
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 0 0 24px;
+}
+.sf-card > *:last-child {
+  margin-bottom: 0;
+}
+.sf-card p {
+  max-width: 72ch;
+}
+/* Cards separated from the following section heading already carry 24px. */
+.sf-detail__content > .sf-card + h2,
+.sf-detail__content > .sf-card-pair + h2 {
+  margin-top: 0.5rem;
+}
+/* A heading that follows a paragraph inside a block needs its own air. */
+.sf-detail p + h2,
+.sf-detail p + h3 {
+  margin-top: 1.5rem;
+}
+/* No trailing gap after the final block of the main column. */
+.sf-detail__content > *:last-child {
+  margin-bottom: 0;
+}
+/* Divider used between sub-sections of a card. */
+.sf-card hr {
+  opacity: 1;
+  border: 0;
+  border-top: 1px solid var(--sf-gray-200);
+  margin: 24px 0;
+}
+/* Media sitting inside a card. */
+.sf-card .sf-video {
+  margin-bottom: 1rem;
+}
+
+/* Two-column card pairs (e.g. Purpose and Importance / Core Strategies) */
+.sf-card-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin: 0 0 24px;
+}
+.sf-card-pair > .sf-card {
+  margin: 0;
+  height: 100%;
+}
+@media (min-width: 768px) {
+  .sf-card-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+/* Sub-items: orange left rule, no extra indentation. */
+.sf-subitems {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.sf-subitem {
+  border-left: 3px solid var(--sf-orange);
+  padding-left: 16px;
+}
+.sf-subitem > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Video: 16/9 responsive wrapper, no autoplay ---------- */
+.sf-detail__video {
+  margin: 0 0 24px;
+}
+.sf-detail__video h2 {
+  margin-bottom: 12px;
+}
+.sf-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--sf-gray-200);
+  background: var(--sf-navy-deep);
+}
+.sf-video iframe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ---------- Tabs: underlined, horizontally scrollable ---------- */
+.sf-tabs__scroll {
+  position: relative;
+  margin: 0 0 24px;
+}
+.sf-tabs {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  border-bottom: 1px solid var(--sf-gray-200);
+  scrollbar-width: none;
+}
+.sf-tabs::-webkit-scrollbar {
+  display: none;
+}
+.sf-tabs__list {
+  display: flex;
+  align-items: stretch;
+  min-width: max-content;
+  margin: 0;
+  padding: 0;
+}
+.sf-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #4B5563;
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+.sf-tab:hover {
+  background: var(--sf-gray-100);
+  color: var(--sf-navy);
+}
+.sf-tab[aria-selected='true'] {
+  color: var(--sf-navy);
+  border-bottom-color: var(--sf-navy);
+}
+.sf-tab:focus-visible {
+  outline: 3px solid var(--sf-orange);
+  outline-offset: -3px;
+  border-radius: var(--sf-radius-sm);
+}
+/* Panel content appears instantly - no animation. */
+.sf-tabs__panel {
+  animation: none;
+}
+/* Inactive panels stay in the DOM so aria-controls always resolves, but
+   they are removed from the accessibility tree and the layout. */
+.sf-tabs__panel[hidden] {
+  display: none;
+}
+/* Scroll hint on narrow screens: the row never wraps, it scrolls. */
+@media (max-width: 1023.98px) {
+  .sf-tabs__scroll::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 1px;
+    width: 44px;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(245, 247, 250, 0), var(--sf-gray-50) 78%);
+  }
+}
+
+/* ---------- Partner agencies ---------- */
+.sf-partners {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .sf-partners {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .sf-partners {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sf-partner {
+  display: flex;
+  flex-direction: column;
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 0;
+}
+.sf-partner__logo {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin-bottom: 16px;
+  background: var(--sf-gray-50);
+  border: 1px solid var(--sf-gray-100);
+  border-radius: 6px;
+}
+.sf-partner__logo img {
+  max-width: 80%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.sf-partner h3 {
+  text-align: left;
+}
+.sf-partner p {
+  font-size: 0.9688rem;
+  max-width: none;
+  margin: 0;
+  color: #374151;
+}
+/* In the sidebar the column is narrow, so the partner cards always stack and
+   sit as light tiles inside the white sidebar card. */
+.sf-detail__aside .sf-partners {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.sf-detail__aside .sf-partner {
+  background: var(--sf-gray-50);
+  border-color: var(--sf-gray-100);
+  padding: 16px;
+}
+.sf-detail__aside .sf-partner__logo {
+  background: var(--sf-white);
+  border-color: var(--sf-gray-200);
+  margin-bottom: 12px;
+}
+
+/* ---------- Sidebar cards ---------- */
+.sf-scard {
+  background: var(--sf-white);
+  border: 1px solid var(--sf-gray-200);
+  border-radius: 8px;
+  padding: 24px;
+}
+.sf-scard__title {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--sf-navy);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--sf-gray-100);
+}
+.sf-detail__map {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--sf-gray-100);
+  margin-bottom: 12px;
+}
+.sf-detail__address {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #4B5563;
+  max-width: none;
+  margin: 0 0 16px;
+}
+.sf-detail__actions {
+  display: grid;
+  gap: 8px;
+}
+.sf-detail__actions .btn-primary,
+.sf-detail__actions .btn-secondary {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* ---------- Buttons: keep the landing-page look, drop the global glow.
+   global.css gives every hovered button a blue glow + a 1px lift; the
+   service pages stay still and only change colour / border / underline. */
+.sf-detail .btn-primary,
+.sf-detail .btn-secondary,
+.sf-detail .sf-detail__back {
+  transform: none;
+  box-shadow: none;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
+    text-decoration-color 150ms ease, text-underline-offset 150ms ease;
+}
+.sf-detail .btn-primary:hover,
+.sf-detail .btn-secondary:hover,
+.sf-detail .sf-detail__back:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sf-detail *,
+  .sf-detail *::before,
+  .sf-detail *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+

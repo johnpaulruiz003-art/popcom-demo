@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Center, Loader, Text, Button } from '@mantine/core';
+import { Center, Loader, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 
 import { getPmoQuestionnairePublic } from '../../api/pmoAdmin.js';
@@ -103,13 +103,13 @@ export function MeifTemplate() {
     <section className="py-4 bg-white">
       <div className="container">
         <div className="mb-3">
-          <Button
-            size="xs"
-            variant="outline"
+          <button
+            type="button"
+            className="btn-secondary sf-btn--sm"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/services'))}
           >
             Back to Services
-          </Button>
+          </button>
         </div>
         <div className="meif-print-root">
           <style>{`

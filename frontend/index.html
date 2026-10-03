@@ -15,31 +15,30 @@
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfQjbjv+BmG1x1o1x0SAtf5NCzlyL+G9PZZgFZ3jZ1S3YFh8C+R2G6JQ=="
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
+    />
+    <!-- Landing page typography: Inter with system-ui fallback (see styles/home.css) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
     />
     <!-- Global font overrides for consistent typography -->
     <style>
       :root {
-        --sf-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+        --sf-font: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
       }
       html, body { font-family: var(--sf-font); overflow-x: clip; max-width: 100%; }
       *, *::before, *::after { box-sizing: border-box; }
       h1, h2, h3, h4, h5, h6 { font-weight: 700; }
       .nav-link { font-weight: 500; }
-      .navbar-nav .nav-link { padding-left: 0.75rem; padding-right: 0.75rem; letter-spacing: 0.2px; }
-      .navbar .nav-link { transition: color 180ms ease, transform 180ms ease; }
-      .navbar .nav-link:hover { color: #0d6efd; transform: translateY(-1px); }
 
-      /* Header animation (applies to Mantine AppShell header and Bootstrap navbar) */
-      @keyframes headerFadeSlide {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      header, .navbar {
-        animation: headerFadeSlide 600ms ease-out both;
-      }
+      /* The landing page navbar is sticky via .sf-navbar in styles/home.css.
+         No entrance animation is applied to headers, to keep the site calm and
+           to respect prefers-reduced-motion. */
 
       /* Hide scrollbars globally while preserving scroll behavior */
       html, body {
