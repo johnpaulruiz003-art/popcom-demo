@@ -25,7 +25,7 @@ import diagramIUD from '../content/education Web/Diagram/IUDDiagram.png';
 // Brochure / booklet pages. Each booklet uses its own folder so the covers and
 // the page carousel never repeat an image.
 import bookletRisks1 from '../content/education Booklets/Mayroon Bang Dapat Katakutan Sa Family Planning/B1IMG1.jpg';
-import bookletRisks2 from '../content/education Booklets/Mayroon Bang Dapat Katakutan Sa Family Planning/B1IMG2.JPG';
+import bookletRisks2 from '../content/education Booklets/Mayroon Bang Dapat Katakutan Sa Family Planning/B1IMG2.jpg';
 import bookletRisks3 from '../content/education Booklets/Mayroon Bang Dapat Katakutan Sa Family Planning/B1IMG3.JPG';
 import bookletTeen1 from '../content/education Booklets/Pregnancy Among Adolescents/B5IMG1.JPG';
 import bookletTeen2 from '../content/education Booklets/Pregnancy Among Adolescents/B5IMG2.JPG';
