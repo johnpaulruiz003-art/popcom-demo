@@ -185,6 +185,10 @@
   border-top: 0;
 }
 .sf-faq__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   flex: 1;
   min-width: 0;
   padding: 16px 20px;
@@ -203,6 +207,11 @@
   appearance: none;
   transition: background-color 150ms ease, border-color 150ms ease;
 }
+.sf-faq__question {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
 .sf-faq__trigger:hover {
   background: #f5f7fa;
 }
@@ -219,11 +228,10 @@
   flex: none;
   width: 16px;
   height: 16px;
-  margin-right: 20px;
   color: var(--sf-navy);
   transition: transform 150ms ease;
 }
-.sf-faq__row[data-open] .sf-faq__chevron {
+.sf-faq__trigger[data-active] .sf-faq__chevron {
   transform: rotate(180deg);
 }
 /* The admin buttons are outside the trigger, so they need their own
@@ -470,7 +478,7 @@
     animation-duration: 0.001ms !important;
   }
   /* No chevron rotation under reduced motion. */
-  .sf-faq__row[data-open] .sf-faq__chevron {
+  .sf-faq__trigger[data-active] .sf-faq__chevron {
     transform: none;
   }
 }

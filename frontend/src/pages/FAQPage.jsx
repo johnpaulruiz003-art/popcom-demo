@@ -238,36 +238,37 @@ export function FAQPage() {
                           unstyled
                           className="sf-faq__item"
                         >
-                          <Accordion.Control unstyled chevron={null} className="sf-faq__trigger">
-                            {item.question}
-                          </Accordion.Control>
+                          <div className="sf-faq__row">
+                            <Accordion.Control unstyled chevron={null} className="sf-faq__trigger">
+                              <span className="sf-faq__question">{item.question}</span>
+                              <IconChevronDown className="sf-faq__chevron" aria-hidden="true" />
+                            </Accordion.Control>
 
-                          {/* SIBLINGS of the trigger button, never nested
-                              inside it (invalid HTML, breaks keyboard use). */}
-                          {isAdmin ? (
-                            <div className="sf-faq__actions">
-                              <button
-                                type="button"
-                                className="sf-btn-icon"
-                                aria-label={`Edit FAQ: ${item.question}`}
-                                title="Edit FAQ"
-                                onClick={() => openEdit(item)}
-                              >
-                                <IconPencil aria-hidden="true" />
-                              </button>
-                              <button
-                                type="button"
-                                className="sf-btn-icon sf-btn-danger"
-                                aria-label={`Delete FAQ: ${item.question}`}
-                                title="Delete FAQ"
-                                onClick={() => handleDelete(item.id)}
-                              >
-                                <IconTrash aria-hidden="true" />
-                              </button>
-                            </div>
-                          ) : null}
-
-                          <IconChevronDown className="sf-faq__chevron" aria-hidden="true" />
+                            {/* SIBLINGS of the trigger button, never nested
+                                inside it (invalid HTML, breaks keyboard use). */}
+                            {isAdmin ? (
+                              <div className="sf-faq__actions">
+                                <button
+                                  type="button"
+                                  className="sf-btn-icon"
+                                  aria-label={`Edit FAQ: ${item.question}`}
+                                  title="Edit FAQ"
+                                  onClick={() => openEdit(item)}
+                                >
+                                  <IconPencil aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="sf-btn-icon sf-btn-danger"
+                                  aria-label={`Delete FAQ: ${item.question}`}
+                                  title="Delete FAQ"
+                                  onClick={() => handleDelete(item.id)}
+                                >
+                                  <IconTrash aria-hidden="true" />
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
 
                           <Accordion.Panel unstyled className="sf-faq__answer">
                             {answerToParagraphs(item.answer).length > 0 ? (
